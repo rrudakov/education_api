@@ -16,12 +16,12 @@ Content-Type: application/json
 #+BEGIN_SRC js
 // POST http://127.0.0.1:3000/people/add
 // HTTP/1.1 201 Created
-// Location: http://127.0.0.1:3000/people/3
+// Location: http://127.0.0.1:3000/people/1
 // Content-Type: application/json
 // Content-Length: 0
 // Server: http-kit
-// Date: Tue, 28 Jan 2020 13:43:00 GMT
-// Request duration: 0.007988s
+// Date: Tue, 28 Jan 2020 13:54:08 GMT
+// Request duration: 0.039556s
 #+END_SRC
 ** Get all people
 #+begin_src restclient
