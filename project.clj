@@ -4,6 +4,7 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.0"]
+                 [aero "1.1.6"]
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-mock "0.4.0"]
                  [metosin/compojure-api "2.0.0-alpha30"]
@@ -17,6 +18,6 @@
                  [cheshire "5.9.0"]
                  [http-kit "2.3.0"]]
   :repl-options {:init-ns ring-learn.core}
-  :aliases {"migrate"  ["run" "-m" "ring-learn.database.component/migrate"]
-            "rollback" ["run" "-m" "ring-learn.database.component/rollback"]}
+  :aliases {"migrate"  ["run" "-m" "ring-learn.database.component/migrate" "--"]
+            "rollback" ["run" "-m" "ring-learn.database.component/rollback" "--"]}
   :main ring-learn.core)

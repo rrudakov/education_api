@@ -13,11 +13,13 @@
         (:id))))
 
 (defn get-user
-  [database username]
+  "Fetch user from database by ID."
+  [database id]
   (j/query (:connection database)
-           ["SELECT * FROM users WHERE user_name = ?" username]))
+           ["SELECT * FROM users WHERE id = ?" id]))
 
 (defn get-all-users
   [database]
-  (j/query (:connection database)
-           ["SELECT * FROM users"]))
+  (->> (j/query (:connection database)
+                ["SELECT * FROM users"])
+       (map (fn [u] (dissoc u :user_password)))))

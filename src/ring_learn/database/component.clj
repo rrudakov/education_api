@@ -1,15 +1,9 @@
 (ns ring-learn.database.component
   (:require [com.stuartsierra.component :as component]
             [ragtime.jdbc :as jdbc]
-            [ragtime.repl :as repl])
+            [ragtime.repl :as repl]
+            [ring-learn.config :as config])
   (:import com.mchange.v2.c3p0.ComboPooledDataSource))
-
-(def db-spec
-  {:dbtype "postgresql"
-   :host "127.0.0.1"
-   :dbname "clojuredb"
-   :user "clojure"
-   :password "123456"})
 
 (defn pool
   [spec]
@@ -24,32 +18,32 @@
 
 ;; Migrations
 (defn load-db-config
-  []
-  {:datastore (jdbc/sql-database db-spec)
+  [profile]
+  {:datastore (jdbc/sql-database (config/db-spec (config/config profile)))
    :migrations (jdbc/load-resources "migrations")})
 
 (defn migrate
-  []
-  (repl/migrate (load-db-config)))
+  [profile]
+  (repl/migrate (load-db-config profile)))
 
 (defn rollback
-  []
-  (repl/rollback (load-db-config)))
+  [profile]
+  (repl/rollback (load-db-config profile)))
 
 ;; Global database connection pool
-(defrecord Database [connection]
+(defrecord Database [connection db-spec]
   component/Lifecycle
 
-  (start [component]
+  (start [this]
     (println ";; Starting database")
     (let [conn (pool db-spec)]
-      (assoc component :connection conn)))
+      (assoc this :connection conn)))
 
-  (stop [component]
+  (stop [this]
     (println ";; Stopping database")
     (.close (:datasource connection))
-    (assoc component :connection nil)))
+    (assoc this :connection nil)))
 
 (defn new-database
-  []
-  (map->Database {}))
+  [config]
+  (->Database {} (config/db-spec config)))

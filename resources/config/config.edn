@@ -1,0 +1,11 @@
+{:secrets #include #join [#env HOME "/.secrets.edn"]
+
+ :database
+ {:dbtype "postgresql"
+  :host #or [#env DB_HOST "127.0.0.1"]
+  :dbname #or [#env DB_NAME "clojuredb"]
+  :user #or [#env DB_USER "clojure"]
+  :password #profile {:dev #ref [:secrets :db-password-dev]
+                      :prod #ref [:secrets :db-password-prod]}}
+ :app
+ {:port #long #or [#env APP_PORT 3000]}}

@@ -5,4 +5,4 @@
 (defn -main
   "Run HTTP server."
   [& args]
-  (component/start (api-system)))
+  (component/start (api-system :prod)))

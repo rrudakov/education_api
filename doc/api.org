@@ -52,3 +52,43 @@ GET http://127.0.0.1:3000/people
 // Date: Tue, 28 Jan 2020 13:43:06 GMT
 // Request duration: 0.012089s
 #+END_SRC
+* Users
+** Add
+#+begin_src restclient
+POST http://127.0.0.1:3000/api/users
+Content-Type: application/json
+{
+  "user_password": "rr",
+  "user_email": "string",
+  "is_admin": true,
+  "user_name": "string"
+}
+#+end_src
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "message": "Resource already exist"
+}
+// POST http://127.0.0.1:3000/api/users
+// HTTP/1.1 409 Conflict
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 36
+// Server: http-kit
+// Date: Tue, 18 Feb 2020 07:58:27 GMT
+// Request duration: 0.021982s
+#+END_SRC
+** Get all users
+#+begin_src restclient
+GET http://127.0.0.1:3000/api/users
+#+end_src
+
+#+RESULTS:
+#+BEGIN_SRC js
+// GET http://127.0.0.1:3000/api/users
+// HTTP/1.1 404 Not Found
+// Content-Length: 0
+// Server: http-kit
+// Date: Wed, 19 Feb 2020 07:50:12 GMT
+// Request duration: 0.002210s
+#+END_SRC
