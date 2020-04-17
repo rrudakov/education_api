@@ -15,7 +15,7 @@
 
 (defn api-routes
   "Define top-level API routes."
-  [db]
+  [db config]
   (api
    {:swagger
     {:ui "/"
@@ -37,4 +37,4 @@
                       y :- Long]
        :summary "Adds two numbers together"
        (ok {:result (+ x y)}))
-     (users-routes db))))
+     (users-routes db config))))

@@ -12,6 +12,11 @@
   [config]
   (get-in config [:app :port]))
 
+(defn token-sign-secret
+  "Return token sign secret."
+  [config]
+  (get-in config [:app :tokensign]))
+
 (defn db-spec
   "Return database specification from the `config`."
   [config]

@@ -8,4 +8,5 @@
   :password #profile {:dev #ref [:secrets :db-password-dev]
                       :prod #ref [:secrets :db-password-prod]}}
  :app
- {:port #long #or [#env APP_PORT 3000]}}
+ {:port #long #or [#env APP_PORT 3000]
+  :tokensign #ref [:secrets :tokensign]}}

@@ -5,14 +5,15 @@
             [ring.middleware.defaults :refer [api-defaults wrap-defaults]]
             [ring-learn.config :as config]))
 
-(defrecord WebServer [srv port db]
+(defrecord WebServer [srv config db]
   component/Lifecycle
 
   (start [this]
-    (println (str ";; Running web server at http://127.0.0.1:" port "/"))
-    (assoc this :srv
-           (server/run-server (wrap-defaults (api-routes db) api-defaults)
-                              {:port port})))
+    (let [port (config/application-port config)]
+      (println (str ";; Running web server at http://127.0.0.1:" port "/"))
+      (assoc this :srv
+             (server/run-server (wrap-defaults (api-routes db config) api-defaults)
+                                {:port port}))))
 
   (stop [this]
     (println ";; Stopping web server")
@@ -22,4 +23,4 @@
 (defn new-webserver
   [config]
   (component/using
-   (map->WebServer {:port (config/application-port config)}) [:db]))
+   (map->WebServer {:config config}) [:db]))
