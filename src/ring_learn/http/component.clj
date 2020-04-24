@@ -1,9 +1,10 @@
 (ns ring-learn.http.component
-  (:require [com.stuartsierra.component :as component]
+  (:require [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
+            [com.stuartsierra.component :as component]
             [org.httpkit.server :as server]
+            [ring-learn.config :as config]
             [ring-learn.http.routes :refer [api-routes]]
-            [ring.middleware.defaults :refer [api-defaults wrap-defaults]]
-            [ring-learn.config :as config]))
+            [ring.middleware.defaults :refer [api-defaults wrap-defaults]]))
 
 (defrecord WebServer [srv config db]
   component/Lifecycle
@@ -12,8 +13,13 @@
     (let [port (config/application-port config)]
       (println (str ";; Running web server at http://127.0.0.1:" port "/"))
       (assoc this :srv
-             (server/run-server (wrap-defaults (api-routes db config) api-defaults)
-                                {:port port}))))
+             (server/run-server
+              (-> db
+                  (api-routes config)
+                  (wrap-authorization (config/auth-backend config))
+                  (wrap-authentication (config/auth-backend config))
+                  (wrap-defaults api-defaults))
+              {:port port}))))
 
   (stop [this]
     (println ";; Stopping web server")
