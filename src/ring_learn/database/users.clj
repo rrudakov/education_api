@@ -3,19 +3,25 @@
             [buddy.sign.jwt :as jwt]
             [clj-time.core :as t]
             [clojure.java.jdbc :as j]
-            [ring-learn.config :as config]))
+            [ring-learn.config :as config]
+            [ring-learn.database.roles :as roles]))
 
 (defn add-user
   "Create new `user` in `database`."
   [database user]
-  (let [{:keys [user_name user_password user_email is_admin]} user]
-    (-> (j/insert! (:connection database) :users
-                {:user_name user_name
-                 :user_password (hs/encrypt user_password)
-                 :user_email user_email
-                 :is_admin is_admin})
-        (first)
-        (:id))))
+  (j/with-db-transaction [conn (:connection database)]
+    (let [{:keys [user_name user_password user_email]} user
+          user_id (-> (j/insert! conn :users
+                                 {:user_name user_name
+                                  :user_password (hs/encrypt user_password)
+                                  :user_email user_email})
+                      (first)
+                      (:id))
+          guest_role (roles/get-role-by-name database "guest")]
+      (j/insert! conn :user_roles
+                 {:user_id user_id
+                  :role_id (:id guest_role)})
+      user_id)))
 
 (defn get-user
   "Fetch user from `database` by `id`."
