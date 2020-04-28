@@ -8,7 +8,7 @@
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-mock "0.4.0"]
                  [metosin/compojure-api "2.0.0-alpha31"]
-                 [metosin/ring-swagger-ui "3.25.0"]
+                 ;; [metosin/ring-swagger-ui "3.25.0"]
                  [ragtime "0.8.0"]
                  [org.clojure/java.jdbc "0.7.11"]
                  [org.postgresql/postgresql "42.2.10"]

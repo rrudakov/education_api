@@ -23,20 +23,27 @@
                   :role_id (:id guest_role)})
       user_id)))
 
+(defn- enrich-user-with-roles
+  "Fetch roles for `user` and assoc `:roles` key with them."
+  [database user]
+  (-> user
+      (assoc :roles (roles/get-user-roles database user))
+      (dissoc :user_password)))
+
 (defn get-user
   "Fetch user from `database` by `id`."
   [database id]
-  (-> (j/get-by-id (:connection database) :users id)
-      (dissoc :user_password)))
+  (let [conn (:connection database)
+        user (j/get-by-id conn :users id)]
+    (enrich-user-with-roles database user)))
 
 (defn get-all-users
   "Fetch all users from `database`."
   [database]
-  (->> (j/query (:connection database)
-                ["SELECT * FROM users"])
-       (map (fn [u] (dissoc u :user_password)))))
+  (->> (j/query (:connection database) ["SELECT * FROM users"])
+       (map (partial enrich-user-with-roles database))))
 
-(defn get-user-by-username
+(defn- get-user-by-username
   "Fetch user from `database` by `username`."
   [database username]
   (j/get-by-id (:connection database) :users username :user_name))
@@ -48,7 +55,7 @@
         noauth [false {:message "Invalid username or password"}]]
     (if user
       (if (hs/check (:password credentials) (:user_password user))
-        [true {:user (dissoc user :user_password)}]
+        [true {:user (enrich-user-with-roles database user)}]
         noauth)
       noauth)))
 

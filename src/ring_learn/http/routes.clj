@@ -2,7 +2,10 @@
   (:require [buddy.auth :refer [authenticated?]]
             [compojure.api.sweet :refer [api context GET]]
             [ring-learn.http.endpoints.users :refer [users-routes]]
-            [ring.util.http-response :refer [conflict internal-server-error ok bad-request]])
+            ring-learn.http.restructure
+            [ring.util.http-response
+             :refer
+             [bad-request conflict internal-server-error ok]])
   (:import org.postgresql.util.PSQLException))
 
 (defn sql-exception-handler
