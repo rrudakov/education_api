@@ -1,8 +1,9 @@
 (ns ring-learn.http.endpoints.users
   (:require [compojure.api.sweet :refer [context GET POST]]
             [ring-learn.database.users :as usersdb]
+            [ring-learn.http.restructure :refer [require-roles]]
             [ring.swagger.schema :refer [describe]]
-            [ring.util.http-response :refer [created ok unauthorized not-found]]
+            [ring.util.http-response :refer [created not-found ok unauthorized]]
             [schema.core :as s]))
 
 ;; Model definitions
@@ -15,6 +16,7 @@
   {:id s/Int
    :user_name s/Str
    :user_email s/Str
+   :roles #{s/Str}
    :created_on s/Inst
    :updated_on s/Inst})
 
@@ -52,26 +54,30 @@
   [db user]
   (created (str (usersdb/add-user db user))))
 
+;; Define routes
 (defn users-routes
   "Define routes for users endpoint."
   [db config]
   (context "" []
    :tags ["users"]
    (GET "/users" []
+     :middleware [[require-roles #{:moderator}]]
      :return [User]
      :summary "Return the entire list of users from database"
      (all-users-handler db))
    (GET "/users/:id" []
+     :middleware [[require-roles #{:moderator}]]
      :path-params [id :- (describe s/Int "Specify user ID")]
      :return User
      :summary "Fetch user from database by ID"
      (get-user-handler db id))
    (POST "/users" []
+     :middleware [[require-roles #{:admin}]]
      :body [user UserCreateRequest]
      :return (describe s/Int "New ID for created user")
      :summary "Create new user"
      (add-user-handler db user))
-   (POST "/authorize" []
+   (POST "/login" []
      :body [credentials LoginRequest]
      :return (describe Token "JWT token for following authorized requests")
      :summary "Authorize user using provided credentials"

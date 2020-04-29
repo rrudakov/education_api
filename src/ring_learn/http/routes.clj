@@ -1,8 +1,7 @@
 (ns ring-learn.http.routes
-  (:require [buddy.auth :refer [authenticated?]]
-            [compojure.api.sweet :refer [api context GET]]
+  (:require [compojure.api.sweet :refer [api context GET]]
             [ring-learn.http.endpoints.users :refer [users-routes]]
-            ring-learn.http.restructure
+            [ring-learn.http.restructure :refer [require-roles]]
             [ring.util.http-response
              :refer
              [bad-request conflict internal-server-error ok]])
@@ -38,7 +37,7 @@
      :tags ["plus"]
 
      (GET "/plus" []
-       :auth-rules authenticated?
+       :middleware [[require-roles #{:moderator}]]
        :return {:result Long}
        :query-params [x :- Long
                       y :- Long]

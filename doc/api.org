@@ -52,16 +52,35 @@ GET http://127.0.0.1:3000/people
 // Date: Tue, 28 Jan 2020 13:43:06 GMT
 // Request duration: 0.012089s
 #+END_SRC
+* Plus
+#+begin_src restclient :async t
+GET http://127.0.0.1:3000/api/plus?x=23&y=32
+Accept: application/json
+Authorization: Token eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjoxLCJ1c2VyX25hbWUiOiJycnVkYWtvdiIsInVzZXJfZW1haWwiOiJycnVkYWtvdkBwbS5tZSIsImNyZWF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInVwZGF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInJvbGVzIjpbImd1ZXN0Il19LCJleHAiOjE1ODgyMzY3MTB9.nlzfD0rWF2mwVE-jN2H5OOtUf1zhXLtkFzY9mFGx-rbZc21DboICzrRVNA7T9N64-Df360qEpNptpL6X_rEPsg
+#+end_src
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "message": "You don't have access to this resource!"
+}
+// GET http://127.0.0.1:3000/api/plus?x=23&y=32
+// HTTP/1.1 403 Forbidden
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 53
+// Server: http-kit
+// Date: Wed, 29 Apr 2020 10:07:52 GMT
+// Request duration: 20.305814s
+#+END_SRC
 * Users
-** Add
-#+begin_src restclient
+** Register
+#+begin_src restclient :async
 POST http://127.0.0.1:3000/api/users
 Content-Type: application/json
 {
-  "user_password": "rr",
-  "user_email": "string",
-  "is_admin": true,
-  "user_name": "string"
+  "user_password": "123456",
+  "user_email": "rrudakov@pm.me",
+  "user_name": "rrudakov"
 }
 #+end_src
 
@@ -75,8 +94,8 @@ Content-Type: application/json
 // Content-Type: application/json; charset=utf-8
 // Content-Length: 36
 // Server: http-kit
-// Date: Tue, 18 Feb 2020 07:58:27 GMT
-// Request duration: 0.021982s
+// Date: Mon, 27 Apr 2020 19:25:41 GMT
+// Request duration: 0.491134s
 #+END_SRC
 ** Get all users
 #+begin_src restclient
@@ -85,10 +104,64 @@ GET http://127.0.0.1:3000/api/users
 
 #+RESULTS:
 #+BEGIN_SRC js
+[
+  {
+    "user_email": "rrudakov@pm.me",
+    "is_admin": false,
+    "updated_on": "2020-04-17T14:22:16Z",
+    "created_on": "2020-04-17T14:22:16Z",
+    "id": 1,
+    "user_name": "rrudakov"
+  }
+]
 // GET http://127.0.0.1:3000/api/users
-// HTTP/1.1 404 Not Found
-// Content-Length: 0
+// HTTP/1.1 200 OK
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 152
 // Server: http-kit
-// Date: Wed, 19 Feb 2020 07:50:12 GMT
-// Request duration: 0.002210s
+// Date: Mon, 27 Apr 2020 17:40:33 GMT
+// Request duration: 0.062479s
+#+END_SRC
+** Get user by ID
+#+begin_src restclient
+GET http://127.0.0.1:3000/api/users/3
+#+end_src
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "message": "User with id 3 not found!"
+}
+// GET http://127.0.0.1:3000/api/users/3
+// HTTP/1.1 404 Not Found
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 39
+// Server: http-kit
+// Date: Mon, 27 Apr 2020 17:46:37 GMT
+// Request duration: 0.094216s
+#+END_SRC
+
+* Authentication
+** Authentication
+#+begin_src restclient :async t
+POST http://127.0.0.1:3000/api/authorize
+Content-Type: application/json
+{
+  "username": "rrudakov",
+  "password": "123456"
+}
+#+end_src
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "token": "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjoxLCJ1c2VyX25hbWUiOiJycnVkYWtvdiIsInVzZXJfZW1haWwiOiJycnVkYWtvdkBwbS5tZSIsImNyZWF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInVwZGF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInJvbGVzIjpbImd1ZXN0Il19LCJleHAiOjE1ODgyMzk2OTd9.3J0eHX3Xk5a_VfEnHR1EGFQTMvv_Qlw-aDbeMUpoSHB01l06-Ctw8JH3KHWnTSAvn9sJ2DrkF9I3mGip4sIAVQ"
+}
+// POST http://127.0.0.1:3000/api/authorize
+// HTTP/1.1 200 OK
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 356
+// Server: http-kit
+// Date: Wed, 29 Apr 2020 09:41:37 GMT
+// Request duration: 1.838014s
 #+END_SRC
