@@ -9,9 +9,7 @@
   [spec]
   (let [cpds (doto (ComboPooledDataSource.)
                (.setDriverClass "org.postgresql.Driver")
-               (.setJdbcUrl (str "jdbc:" (:dbtype spec) "://" (:host spec) "/" (:dbname spec)))
-               (.setUser (:user spec))
-               (.setPassword (:password spec))
+               (.setJdbcUrl (:uri spec))
                (.setMaxIdleTimeExcessConnections (* 30 60))
                (.setMaxIdleTime (* 3 60 60)))]
     {:datasource cpds}))
@@ -19,8 +17,9 @@
 ;; Migrations
 (defn load-db-config
   [profile]
-  {:datastore (jdbc/sql-database (config/db-spec (config/config profile)))
-   :migrations (jdbc/load-resources "migrations")})
+  (let [db-uri (:uri (config/db-spec (config/config profile)))]
+    {:datastore (jdbc/sql-database {:connection-uri db-uri})
+     :migrations (jdbc/load-resources "migrations")}))
 
 (defn migrate
   [profile]
