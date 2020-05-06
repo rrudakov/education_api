@@ -1,8 +1,8 @@
-{:secrets #profile {:dev #include #join [#env HOME "/.secrets.edn"]
-                    :prod {}}
+{:secrets #profile {:dev #include #join [#env HOME "/.secrets.edn"]}
 
  :database
- {:uri #env JDBC_DATABASE_URL}
+ {:url #profile {:dev #ref [:secrets :dburi]
+                 :prod #env JDBC_DATABASE_URL}}
  :app
  {:port #long #or [#env PORT 3000]
   :tokensign #profile {:dev #ref [:secrets :tokensign]

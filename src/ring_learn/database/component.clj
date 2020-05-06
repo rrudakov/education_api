@@ -17,17 +17,17 @@
 ;; Migrations
 (defn load-db-config
   [profile]
-  (let [db-uri (:uri (config/db-spec (config/config profile)))]
+  (let [db-uri (:url (config/db-spec (config/config profile)))]
     {:datastore (jdbc/sql-database {:connection-uri db-uri})
      :migrations (jdbc/load-resources "migrations")}))
 
 (defn migrate
   [profile]
-  (repl/migrate (load-db-config profile)))
+  (repl/migrate (load-db-config (keyword profile))))
 
 (defn rollback
   [profile]
-  (repl/rollback (load-db-config profile)))
+  (repl/rollback (load-db-config (keyword profile))))
 
 ;; Global database connection pool
 (defrecord Database [connection db-spec]
