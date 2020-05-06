@@ -25,4 +25,6 @@
   :repl-options {:init-ns ring-learn.core}
   :aliases {"migrate"  ["run" "-m" "ring-learn.database.component/migrate" "--"]
             "rollback" ["run" "-m" "ring-learn.database.component/rollback" "--"]}
+  :uberjar-name "education-api-standalone.jar"
+  :profiles {:uberjar {:aot :all}}
   :main ring-learn.core)
