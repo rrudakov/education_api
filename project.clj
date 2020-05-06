@@ -26,5 +26,6 @@
   :aliases {"migrate"  ["run" "-m" "ring-learn.database.component/migrate" "--"]
             "rollback" ["run" "-m" "ring-learn.database.component/rollback" "--"]}
   :uberjar-name "education-api-standalone.jar"
+  :min-lein-version "2.0.0"
   :profiles {:uberjar {:aot :all}}
   :main ring-learn.core)
