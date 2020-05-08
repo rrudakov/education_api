@@ -4,19 +4,22 @@
             [ring-learn.http.restructure :refer [require-roles]]
             [ring.swagger.schema :refer [describe]]
             [ring.util.http-response :refer [created not-found ok unauthorized]]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [clj-time.core :as t]
+            [buddy.sign.jwt :as jwt]
+            [ring-learn.config :as config]))
 
 ;; Model definitions
 (s/defschema UserCreateRequest
-  {:user_name s/Str
-   :user_password s/Str
-   :user_email s/Str})
+  {:username s/Str
+   :password s/Str
+   :email s/Str})
 
 (s/defschema User
   {:id s/Int
-   :user_name s/Str
-   :user_email s/Str
-   :roles #{s/Str}
+   :username s/Str
+   :email s/Str
+   :roles #{s/Keyword}
    :created_on s/Inst
    :updated_on s/Inst})
 
@@ -27,11 +30,35 @@
 (s/defschema Token
   {:token s/Str})
 
+;; Converters
+(defn to-user-response
+  "Convert database user to user response."
+  [{:users/keys [id user_name user_email created_on updated_on roles]}]
+  {:id id
+   :username user_name
+   :email user_email
+   :roles roles
+   :created_on created_on
+   :updated_on updated_on})
+
+;; Helpers
+(defn create-auth-token
+  "Create authorization token based on `credentials`."
+  [db config credentials]
+  (let [[ok? res] (usersdb/auth-user db credentials)
+        exp (t/plus (t/now) (t/days 1))]
+    (if ok?
+      [true {:token (-> res
+                        (update-in [:user] to-user-response)
+                        (assoc :exp exp)
+                        (jwt/sign (config/token-sign-secret config) {:alg :hs512}))}]
+      [false res])))
+
 ;; Handlers
 (defn- login-handler
   "Handle login request."
   [db config credentials]
-  (let [[ok? res] (usersdb/create-auth-token db config credentials)]
+  (let [[ok? res] (create-auth-token db config credentials)]
     (if ok?
       (ok res)
       (unauthorized res))))
@@ -39,7 +66,10 @@
 (defn- all-users-handler
   "Return all users list."
   [db]
-  (ok (usersdb/get-all-users db)))
+  (->> db
+       usersdb/get-all-users
+       (map to-user-response)
+       ok))
 
 (defn- get-user-handler
   "Get user by ID handler."
@@ -47,7 +77,7 @@
   (let [user (usersdb/get-user db id)]
     (if (nil? user)
       (not-found {:message (str "User with id " id " not found!")})
-      (ok user))))
+      (ok (to-user-response user)))))
 
 (defn- add-user-handler
   "Create new user handler."
@@ -61,7 +91,6 @@
   (context "" []
    :tags ["users"]
    (GET "/users" []
-     :middleware [[require-roles #{:moderator}]]
      :return [User]
      :summary "Return the entire list of users from database"
      (all-users-handler db))
@@ -72,7 +101,6 @@
      :summary "Fetch user from database by ID"
      (get-user-handler db id))
    (POST "/users" []
-     :middleware [[require-roles #{:admin}]]
      :body [user UserCreateRequest]
      :return (describe s/Int "New ID for created user")
      :summary "Create new user"

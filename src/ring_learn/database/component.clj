@@ -1,23 +1,16 @@
 (ns ring-learn.database.component
   (:require [com.stuartsierra.component :as component]
+            [next.jdbc :as j]
+            [next.jdbc.connection :as connection]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as repl]
             [ring-learn.config :as config])
   (:import com.mchange.v2.c3p0.ComboPooledDataSource))
 
-(defn pool
-  [spec]
-  (let [cpds (doto (ComboPooledDataSource.)
-               (.setDriverClass "org.postgresql.Driver")
-               (.setJdbcUrl (:uri spec))
-               (.setMaxIdleTimeExcessConnections (* 30 60))
-               (.setMaxIdleTime (* 3 60 60)))]
-    {:datasource cpds}))
-
 ;; Migrations
 (defn load-db-config
   [profile]
-  (let [db-uri (:url (config/db-spec (config/config profile)))]
+  (let [db-uri (:url (config/db-config (config/config profile)))]
     {:datastore (jdbc/sql-database {:connection-uri db-uri})
      :migrations (jdbc/load-resources "migrations")}))
 
@@ -30,19 +23,24 @@
   (repl/rollback (load-db-config (keyword profile))))
 
 ;; Global database connection pool
-(defrecord Database [connection db-spec]
+(defrecord Database [db-spec datasource]
   component/Lifecycle
 
   (start [this]
     (println ";; Starting database")
-    (let [conn (pool db-spec)]
-      (assoc this :connection conn)))
+    (if datasource
+      this
+      (assoc this :datasource
+             (connection/->pool ComboPooledDataSource db-spec))))
 
   (stop [this]
     (println ";; Stopping database")
-    (.close (:datasource connection))
-    (assoc this :connection nil)))
+    (if datasource
+      (do
+        (.close datasource)
+        (assoc this :datasource nil))
+      this)))
 
 (defn new-database
   [config]
-  (->Database {} (config/db-spec config)))
+  (map->Database {:db-spec (config/db-spec config)}))

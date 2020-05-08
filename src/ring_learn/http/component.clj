@@ -10,21 +10,27 @@
   component/Lifecycle
 
   (start [this]
-    (let [port (config/application-port config)]
-      (println (str ";; Running web server at http://127.0.0.1:" port "/"))
-      (assoc this :srv
-             (server/run-server
-              (-> db
-                  (api-routes config)
-                  (wrap-authorization (config/auth-backend config))
-                  (wrap-authentication (config/auth-backend config))
-                  (wrap-defaults api-defaults))
-              {:port port}))))
+    (if srv
+      this
+      (let [port (config/application-port config)
+            auth-backend (config/auth-backend config)]
+        (println (str ";; Running web server at http://127.0.0.1:" port "/"))
+        (assoc this :srv
+               (server/run-server
+                (-> db
+                    (api-routes config)
+                    (wrap-authorization auth-backend)
+                    (wrap-authentication auth-backend)
+                    (wrap-defaults api-defaults))
+                {:port port})))))
 
   (stop [this]
-    (println ";; Stopping web server")
-    (srv :timeout 100)
-    (reduce #(assoc %1 %2 nil) this [:srv :db])))
+    (if srv
+      (do
+        (println ";; Stopping web server")
+        (srv :timeout 100)
+        (reduce #(assoc %1 %2 nil) this [:srv :db]))
+      this)))
 
 (defn new-webserver
   [config]

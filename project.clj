@@ -10,12 +10,12 @@
                  [metosin/compojure-api "2.0.0-alpha31"]
                  ;; [metosin/ring-swagger-ui "3.25.0"]
                  [ragtime "0.8.0"]
-                 [org.clojure/java.jdbc "0.7.11"]
+                 [seancorfield/next.jdbc "1.0.424"]
                  [org.postgresql/postgresql "42.2.10"]
                  [com.mchange/c3p0 "0.9.5.2"]
                  [com.stuartsierra/dependency "0.2.0"]
                  [com.stuartsierra/component "0.4.0"]
-                 ;; Security
+                 ;; Security0
                  [buddy/buddy-hashers "1.4.0"]
                  [buddy/buddy-sign "3.1.0"]
                  [buddy/buddy-auth "2.2.0"]
