@@ -1,10 +1,12 @@
-# ring_learn
+# Education API
 
-A Clojure library designed to ... well, that part is up to you.
+![Clojure CI](https://github.com/rrudakov/ring_leart/workflows/Clojure%20CI/badge.svg?branch=master)
+
+A Clojure ring-based application.
 
 ## Usage
 
-FIXME
+It runs automatically on heroku.
 
 ## License
 
