@@ -6,7 +6,9 @@
 (defn get-all-roles
   "Fetch all roles from `database`."
   [database]
-  (sql/query (:datasource database) ["SELECT * FROM roles"] {}))
+  (->> ["SELECT * FROM roles"]
+       (sql/query (:datasource database))
+       (map #(update-in % [:roles/role_name] keyword))))
 
 (defn get-role-by-name
   "Get role from `database` by `name`."

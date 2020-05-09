@@ -2,11 +2,13 @@
   (:require [buddy.hashers :as hs]
             [buddy.sign.jwt :as jwt]
             [clj-time.core :as t]
+            [clojure.set :as set]
             [next.jdbc :as jdbc]
+            next.jdbc.date-time
+            [next.jdbc.result-set :as rs]
             [next.jdbc.sql :as sql]
             [ring-learn.config :as config]
-            [ring-learn.database.roles :as roles]
-            [next.jdbc.result-set :as rs]))
+            [ring-learn.database.roles :as roles]))
 
 (defn add-user
   "Create new `user` in `database`."
@@ -34,23 +36,31 @@
 (defn get-user
   "Fetch user from `database` by `id`."
   [database id]
-  (let [conn (:datasource database)
-        user (sql/get-by-id conn :users id {})]
-    (if user
-      (enrich-user-with-roles database user)
-      nil)))
+  (let [conn (:datasource database)]
+    (some->> (sql/get-by-id conn :users id)
+             (enrich-user-with-roles database))))
 
 (defn get-all-users
   "Fetch all users from `database`."
   [database]
-  (->> {}
-       (sql/query (:datasource database) ["SELECT * FROM users"])
+  (->> (sql/query (:datasource database) ["SELECT * FROM users"])
        (map (partial enrich-user-with-roles database))))
 
-(defn assign-roles
-  "Assign or update `roles` for particular user."
-  [database user-id roles]
-  ())
+(defn update-user
+  "Update `user` and `roles`."
+  [database id user]
+  (let [available-roles (roles/get-all-roles database)]
+    (jdbc/with-transaction [conn (:datasource database)]
+      (let [{:keys [roles]} user
+            new-roles (->> available-roles
+                           (filter #(some #{(:roles/role_name %)} roles))
+                           (map :roles/id))]
+        (sql/delete! conn :user_roles {:user_id id})
+        (sql/insert-multi! conn :user_roles
+                           [:user_id :role_id]
+                           (for [role new-roles]
+                             [id role]))
+        (sql/update! conn :users {:updated_on (java.time.Instant/now)} {:id id})))))
 
 (defn- get-user-by-username
   "Fetch user from `database` by `username`."
