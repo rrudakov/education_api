@@ -20,8 +20,8 @@
   [database user]
   (let [user_id (:users/id user)
         conn (:datasource database)]
-    (->> {}
-         (sql/query conn ["SELECT r.role_name FROM user_roles AS ur LEFT JOIN roles AS r ON ur.role_id = r.id WHERE ur.user_id = ?" user_id])
+    (->> ["SELECT r.role_name FROM user_roles AS ur LEFT JOIN roles AS r ON ur.role_id = r.id WHERE ur.user_id = ?" user_id]
+         (sql/query conn)
          (map :roles/role_name)
          (map str/lower-case)
          (map keyword)
