@@ -21,6 +21,7 @@
                     (api-routes config)
                     (wrap-authorization auth-backend)
                     (wrap-authentication auth-backend)
+                    (muuntaja.middleware/wrap-format)
                     (wrap-defaults api-defaults))
                 {:port port})))))
 

@@ -1,77 +1,6 @@
-#+TITLE: REST API examples
+#+TITLE: Education REST API examples
 #+AUTHOR: Roman Rudakov
 #+EMAIL: rrudakov@pm.me
-* People
-** Add
-#+begin_src restclient
-POST http://127.0.0.1:3000/people/add
-Content-Type: application/json
-{
-    "firstname": "Roman",
-    "lastname": "Rudakov"
-}
-#+end_src
-
-#+RESULTS:
-#+BEGIN_SRC js
-// POST http://127.0.0.1:3000/people/add
-// HTTP/1.1 201 Created
-// Location: http://127.0.0.1:3000/people/1
-// Content-Type: application/json
-// Content-Length: 0
-// Server: http-kit
-// Date: Tue, 28 Jan 2020 13:54:08 GMT
-// Request duration: 0.039556s
-#+END_SRC
-** Get all people
-#+begin_src restclient
-GET http://127.0.0.1:3000/people
-#+end_src
-
-#+RESULTS:
-#+BEGIN_SRC js
-[
-  {
-    "firstname": "Roman",
-    "surname": "Rudakov"
-  },
-  {
-    "firstname": "Roman",
-    "surname": "Rudakov"
-  },
-  {
-    "firstname": "Roman",
-    "surname": "Rudakov"
-  }
-]
-// GET http://127.0.0.1:3000/people
-// HTTP/1.1 200 OK
-// Content-Type: application-json
-// Content-Length: 164
-// Server: http-kit
-// Date: Tue, 28 Jan 2020 13:43:06 GMT
-// Request duration: 0.012089s
-#+END_SRC
-* Plus
-#+begin_src restclient :async t
-GET http://127.0.0.1:3000/api/plus?x=23&y=32
-Accept: application/json
-Authorization: Token eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjoxLCJ1c2VyX25hbWUiOiJycnVkYWtvdiIsInVzZXJfZW1haWwiOiJycnVkYWtvdkBwbS5tZSIsImNyZWF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInVwZGF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInJvbGVzIjpbImd1ZXN0Il19LCJleHAiOjE1ODgyMzY3MTB9.nlzfD0rWF2mwVE-jN2H5OOtUf1zhXLtkFzY9mFGx-rbZc21DboICzrRVNA7T9N64-Df360qEpNptpL6X_rEPsg
-#+end_src
-
-#+RESULTS:
-#+BEGIN_SRC js
-{
-  "message": "You don't have access to this resource!"
-}
-// GET http://127.0.0.1:3000/api/plus?x=23&y=32
-// HTTP/1.1 403 Forbidden
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 53
-// Server: http-kit
-// Date: Wed, 29 Apr 2020 10:07:52 GMT
-// Request duration: 20.305814s
-#+END_SRC
 * Users
 ** Register
 #+begin_src restclient :async
@@ -100,27 +29,53 @@ Content-Type: application/json
 ** Get all users
 #+begin_src restclient
 GET http://127.0.0.1:3000/api/users
+Accept: application/json
+Authorization: Token eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjo0LCJ1c2VybmFtZSI6InJydWRha292IiwiZW1haWwiOiJycnVkYWtvZkBwbS5tZSIsInJvbGVzIjpbImFkbWluIiwiZ3Vlc3QiXSwiY3JlYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIiwidXBkYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIn0sImV4cCI6MTU4OTI5NTE4Mn0.hWEpLCD7ephjQ3SltFLcMUFYi27zO9gNZBh0n55VULR_SrBBWiYTnSnE2OJUHhDyak9OZ2Au5VuPp5KdNa7sAA
 #+end_src
 
 #+RESULTS:
 #+BEGIN_SRC js
 [
   {
-    "user_email": "rrudakov@pm.me",
-    "is_admin": false,
-    "updated_on": "2020-04-17T14:22:16Z",
-    "created_on": "2020-04-17T14:22:16Z",
-    "id": 1,
-    "user_name": "rrudakov"
+    "id": 4,
+    "username": "rrudakov",
+    "email": "rrudakof@pm.me",
+    "roles": [
+      "admin",
+      "guest"
+    ],
+    "created_on": "2020-05-07T15:13:36Z",
+    "updated_on": "2020-05-07T15:13:36Z"
+  },
+  {
+    "id": 11,
+    "username": "rrudakov2",
+    "email": "rrudakov@pm.me2",
+    "roles": [
+      "admin",
+      "moderator"
+    ],
+    "created_on": "2020-05-08T20:20:15Z",
+    "updated_on": "2020-05-09T19:38:27Z"
+  },
+  {
+    "id": 13,
+    "username": "roma",
+    "email": "rrudakov@pm.me",
+    "roles": [
+      "moderator"
+    ],
+    "created_on": "2020-05-11T13:25:42Z",
+    "updated_on": "2020-05-11T13:26:48Z"
   }
 ]
 // GET http://127.0.0.1:3000/api/users
 // HTTP/1.1 200 OK
 // Content-Type: application/json; charset=utf-8
-// Content-Length: 152
+// Content-Length: 463
 // Server: http-kit
-// Date: Mon, 27 Apr 2020 17:40:33 GMT
-// Request duration: 0.062479s
+// Date: Mon, 11 May 2020 14:56:48 GMT
+// Request duration: 0.013609s
 #+END_SRC
 ** Get user by ID
 #+begin_src restclient
@@ -144,7 +99,7 @@ GET http://127.0.0.1:3000/api/users/3
 * Authentication
 ** Authentication
 #+begin_src restclient :async t
-POST http://127.0.0.1:3000/api/authorize
+POST http://127.0.0.1:3000/api/login
 Content-Type: application/json
 {
   "username": "rrudakov",
@@ -155,13 +110,101 @@ Content-Type: application/json
 #+RESULTS:
 #+BEGIN_SRC js
 {
-  "token": "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjoxLCJ1c2VyX25hbWUiOiJycnVkYWtvdiIsInVzZXJfZW1haWwiOiJycnVkYWtvdkBwbS5tZSIsImNyZWF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInVwZGF0ZWRfb24iOiIyMDIwLTA0LTI3VDE5OjI1OjIzWiIsInJvbGVzIjpbImd1ZXN0Il19LCJleHAiOjE1ODgyMzk2OTd9.3J0eHX3Xk5a_VfEnHR1EGFQTMvv_Qlw-aDbeMUpoSHB01l06-Ctw8JH3KHWnTSAvn9sJ2DrkF9I3mGip4sIAVQ"
+  "token": "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjo0LCJ1c2VybmFtZSI6InJydWRha292IiwiZW1haWwiOiJycnVkYWtvZkBwbS5tZSIsInJvbGVzIjpbImFkbWluIiwiZ3Vlc3QiXSwiY3JlYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIiwidXBkYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIn0sImV4cCI6MTU4OTI5NTE4Mn0.hWEpLCD7ephjQ3SltFLcMUFYi27zO9gNZBh0n55VULR_SrBBWiYTnSnE2OJUHhDyak9OZ2Au5VuPp5KdNa7sAA"
 }
-// POST http://127.0.0.1:3000/api/authorize
+// POST http://127.0.0.1:3000/api/login
 // HTTP/1.1 200 OK
 // Content-Type: application/json; charset=utf-8
-// Content-Length: 356
+// Content-Length: 359
 // Server: http-kit
-// Date: Wed, 29 Apr 2020 09:41:37 GMT
-// Request duration: 1.838014s
+// Date: Mon, 11 May 2020 14:53:02 GMT
+// Request duration: 0.541608s
+#+END_SRC
+
+* Articles
+** Get latest articles
+#+begin_src restclient
+GET http://127.0.0.1:3000/api/articles
+Content-Type: application/edn
+#+end_src
+
+#+RESULTS:
+#+BEGIN_SRC js
+{
+  "schema": "[{:id Int, :user_id Int, :title java.lang.String, :featured_image java.lang.String, :updated_on java.util.Date}]",
+  "errors": [
+    {
+      "articles/updated_on": "disallowed-key",
+      "articles/title": "disallowed-key",
+      "updated_on": "missing-required-key",
+      "title": "missing-required-key",
+      "featured_image": "missing-required-key",
+      "id": "missing-required-key",
+      "articles/featured_image": "disallowed-key",
+      "articles/id": "disallowed-key",
+      "user_id": "missing-required-key",
+      "articles/user_id": "disallowed-key"
+    },
+    {
+      "articles/updated_on": "disallowed-key",
+      "articles/title": "disallowed-key",
+      "updated_on": "missing-required-key",
+      "title": "missing-required-key",
+      "featured_image": "missing-required-key",
+      "id": "missing-required-key",
+      "articles/featured_image": "disallowed-key",
+      "articles/id": "disallowed-key",
+      "user_id": "missing-required-key",
+      "articles/user_id": "disallowed-key"
+    },
+    {
+      "articles/updated_on": "disallowed-key",
+      "articles/title": "disallowed-key",
+      "updated_on": "missing-required-key",
+      "title": "missing-required-key",
+      "featured_image": "missing-required-key",
+      "id": "missing-required-key",
+      "articles/featured_image": "disallowed-key",
+      "articles/id": "disallowed-key",
+      "user_id": "missing-required-key",
+      "articles/user_id": "disallowed-key"
+    }
+  ],
+  "type": "compojure.api.exception/response-validation",
+  "coercion": "schema",
+  "value": [
+    {
+      "articles/id": 1,
+      "articles/user_id": 4,
+      "articles/title": "New article",
+      "articles/featured_image": "https://google.photo",
+      "articles/updated_on": "2020-05-10T19:00:08Z"
+    },
+    {
+      "articles/id": 3,
+      "articles/user_id": 4,
+      "articles/title": "New article",
+      "articles/featured_image": "https://google.photo",
+      "articles/updated_on": "2020-05-10T19:32:46Z"
+    },
+    {
+      "articles/id": 5,
+      "articles/user_id": 11,
+      "articles/title": "Some title",
+      "articles/featured_image": "https://featured-image",
+      "articles/updated_on": "2020-05-11T11:47:57Z"
+    }
+  ],
+  "in": [
+    "response",
+    "body"
+  ]
+}
+// GET http://127.0.0.1:3000/api/articles
+// HTTP/1.1 500 Internal Server Error
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 1797
+// Server: http-kit
+// Date: Mon, 11 May 2020 14:52:11 GMT
+// Request duration: 0.058634s
 #+END_SRC

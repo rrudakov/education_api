@@ -1,21 +1,29 @@
 (ns ring-learn.http.endpoints.users
-  (:require [compojure.api.sweet :refer [context GET POST]]
+  (:require [buddy.sign.jwt :as jwt]
+            [clj-time.core :as t]
+            [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
+            [ring-learn.config :as config]
             [ring-learn.database.users :as usersdb]
             [ring-learn.http.restructure :refer [require-roles]]
             [ring.swagger.schema :refer [describe]]
-            [ring.util.http-response :refer [created not-found ok unauthorized]]
-            [schema.core :as s]
-            [clj-time.core :as t]
-            [buddy.sign.jwt :as jwt]
-            [ring-learn.config :as config]))
+            [ring.util.http-response
+             :refer
+             [created no-content not-found ok unauthorized]]
+            [schema.core :as s]))
 
 ;; Model definitions
 (s/defschema UserCreateRequest
+  "Request for register new user."
   {:username s/Str
    :password s/Str
    :email s/Str})
 
+(s/defschema UserUpdateRequest
+  "Request for updating existing user."
+  {:roles #{s/Keyword}})
+
 (s/defschema User
+  "User response object."
   {:id s/Int
    :username s/Str
    :email s/Str
@@ -24,10 +32,12 @@
    :updated_on s/Inst})
 
 (s/defschema LoginRequest
+  "Request for login user."
   {:username s/Str
    :password s/Str})
 
 (s/defschema Token
+  "Response for successful authorization."
   {:token s/Str})
 
 ;; Converters
@@ -84,6 +94,20 @@
   [db user]
   (created (str (usersdb/add-user db user))))
 
+(defn- update-user-handler
+  "Update existing user by `user-id`."
+  [db user-id user]
+  (do
+    (usersdb/update-user db user-id user)
+    (no-content)))
+
+(defn- delete-user-handler
+  "Delete existing user handler."
+  [db user-id]
+  (do
+    (usersdb/delete-user db user-id)
+    (no-content)))
+
 ;; Define routes
 (defn users-routes
   "Define routes for users endpoint."
@@ -91,6 +115,7 @@
   (context "" []
    :tags ["users"]
    (GET "/users" []
+     :middleware [[require-roles #{:moderator}]]
      :return [User]
      :summary "Return the entire list of users from database"
      (all-users-handler db))
@@ -103,8 +128,21 @@
    (POST "/users" []
      :body [user UserCreateRequest]
      :return (describe s/Int "New ID for created user")
-     :summary "Create new user"
+     :summary "Register new user"
      (add-user-handler db user))
+   (PATCH "/users/:id" []
+     :middleware [[require-roles #{:admin}]]
+     :body [user UserUpdateRequest]
+     :return nil
+     :path-params [id :- (describe s/Int "Specify user ID")]
+     :summary "Update user (only roles updating is supported now)"
+     (update-user-handler db id user))
+   (DELETE "/users/:id" []
+     :middleware [[require-roles #{:admin}]]
+     :return nil
+     :path-params [id :- (describe s/Int "Specify user ID")]
+     :summary "Delete user by ID"
+     (delete-user-handler db id))
    (POST "/login" []
      :body [credentials LoginRequest]
      :return (describe Token "JWT token for following authorized requests")
