@@ -10,6 +10,7 @@
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-mock "0.4.0"]
                  [metosin/compojure-api "2.0.0-alpha31"]
+                 [ring-cors "0.1.13"]
                  [http-kit "2.3.0"]
                  ;; No support for OpenAPI 3.0
                  ;; [metosin/ring-swagger-ui "3.25.0"]

@@ -4,6 +4,7 @@
             [org.httpkit.server :as server]
             [ring-learn.config :as config]
             [ring-learn.http.routes :refer [api-routes]]
+            [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer [api-defaults wrap-defaults]]))
 
 (defrecord WebServer [srv config db]
@@ -19,6 +20,9 @@
                (server/run-server
                 (-> db
                     (api-routes config)
+                    (wrap-cors :access-control-allow-origin [#".*"]
+                               :access-control-allow-headers ["Origin" "Accept" "Content-Type" "Authorization" "X-Requested-With" "Cache-Control"]
+                               :access-control-allow-methods [:get :post :patch :put :delete])
                     (wrap-authorization auth-backend)
                     (wrap-authentication auth-backend)
                     (muuntaja.middleware/wrap-format)
