@@ -34,7 +34,8 @@
                    :contact {:name "Roman Rudakov"
                              :email "rrudakov@pm.me"}}
             :tags [{:name "users" :description "Users management"}
-                   {:name "roles" :description "Roles management"}]
+                   {:name "roles" :description "Roles management"}
+                   {:name "articles" :description "Articles management"}]
             :securityDefinitions {:api_key {:type "apiKey" :name "Authorization" :in "header"}}}}
     :exceptions
     {:handlers
