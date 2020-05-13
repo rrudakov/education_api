@@ -9,8 +9,7 @@
 ;; Model definitions
 (s/defschema ArticleCreateRequest
   "Request for creating new article."
-  {:user_id s/Int
-   :title s/Str
+  {:title s/Str
    :body s/Str
    :featured_image s/Str
    :is_main_featured s/Bool})
@@ -65,8 +64,10 @@
 (defn- create-article-handler
   "Create new article handler."
   [db article]
-  (let [new-id (str (articlesdb/add-article db article))]
-    (created (str "/articles/" new-id) {:id new-id})))
+  (fn [{:keys [identity]}]
+    (let [user (:user identity)
+          new-id (str (articlesdb/add-article db user article))]
+      (created (str "/articles/" new-id) {:id new-id}))))
 
 (defn- update-article-handler
   "Update existing article handler."

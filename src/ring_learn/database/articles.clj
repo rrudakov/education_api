@@ -10,11 +10,12 @@
 
 (defn add-article
   "Create new `article` in database."
-  [conn article]
-  (let [{:keys [user_id title body featured_image is_main_featured]
-         :or {is_main_featured false}} article]
+  [conn user article]
+  (let [{:keys [title body featured_image is_main_featured]
+         :or {is_main_featured false}} article
+        user-id (:id user)]
     (->> (sql/insert! conn :articles
-                      {:user_id user_id
+                      {:user_id user-id
                        :title title
                        :body body
                        :featured_image featured_image
