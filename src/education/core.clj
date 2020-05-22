@@ -1,6 +1,6 @@
-(ns ring-learn.core
+(ns education.core
   (:require [com.stuartsierra.component :as component]
-            [ring-learn.system :refer [api-system]]))
+            [education.system :refer [api-system]]))
 
 (defn -main
   "Run HTTP server."

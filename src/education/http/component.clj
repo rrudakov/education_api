@@ -1,9 +1,9 @@
-(ns ring-learn.http.component
+(ns education.http.component
   (:require [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [com.stuartsierra.component :as component]
+            [education.config :as config]
+            [education.http.routes :refer [api-routes]]
             [org.httpkit.server :as server]
-            [ring-learn.config :as config]
-            [ring-learn.http.routes :refer [api-routes]]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer [api-defaults wrap-defaults]]))
 

@@ -1,10 +1,10 @@
-(ns ring-learn.database.component
+(ns education.database.component
   (:require [com.stuartsierra.component :as component]
+            [education.config :as config]
             [next.jdbc :as j]
             [next.jdbc.connection :as connection]
             [ragtime.jdbc :as jdbc]
-            [ragtime.repl :as repl]
-            [ring-learn.config :as config])
+            [ragtime.repl :as repl])
   (:import com.mchange.v2.c3p0.ComboPooledDataSource))
 
 ;; Migrations

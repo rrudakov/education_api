@@ -1,9 +1,9 @@
-(ns ring-learn.database.users-test
-  (:require [clojure.test :as t]
-            [next.jdbc.sql :as sql]
-            [ring-learn.database.roles :as roles]
-            [ring-learn.database.users :as sut]
-            [buddy.hashers :as hs]))
+(ns education.database.users-test
+  (:require [buddy.hashers :as hs]
+            [clojure.test :as t]
+            [education.database.roles :as roles]
+            [education.database.users :as sut]
+            [next.jdbc.sql :as sql]))
 
 (def password
   "Password for test users."

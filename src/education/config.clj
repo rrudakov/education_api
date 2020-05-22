@@ -1,4 +1,4 @@
-(ns ring-learn.config
+(ns education.config
   (:require [aero.core :refer [read-config]]
             [buddy.auth :refer [throw-unauthorized]]
             [buddy.auth.backends.token :refer [jws-backend]]

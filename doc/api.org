@@ -125,86 +125,95 @@ Content-Type: application/json
 ** Get latest articles
 #+begin_src restclient
 GET http://127.0.0.1:3000/api/articles
-Content-Type: application/edn
+Origin: http://localhost:81
 #+end_src
 
 #+RESULTS:
 #+BEGIN_SRC js
-{
-  "schema": "[{:id Int, :user_id Int, :title java.lang.String, :featured_image java.lang.String, :updated_on java.util.Date}]",
-  "errors": [
-    {
-      "articles/updated_on": "disallowed-key",
-      "articles/title": "disallowed-key",
-      "updated_on": "missing-required-key",
-      "title": "missing-required-key",
-      "featured_image": "missing-required-key",
-      "id": "missing-required-key",
-      "articles/featured_image": "disallowed-key",
-      "articles/id": "disallowed-key",
-      "user_id": "missing-required-key",
-      "articles/user_id": "disallowed-key"
-    },
-    {
-      "articles/updated_on": "disallowed-key",
-      "articles/title": "disallowed-key",
-      "updated_on": "missing-required-key",
-      "title": "missing-required-key",
-      "featured_image": "missing-required-key",
-      "id": "missing-required-key",
-      "articles/featured_image": "disallowed-key",
-      "articles/id": "disallowed-key",
-      "user_id": "missing-required-key",
-      "articles/user_id": "disallowed-key"
-    },
-    {
-      "articles/updated_on": "disallowed-key",
-      "articles/title": "disallowed-key",
-      "updated_on": "missing-required-key",
-      "title": "missing-required-key",
-      "featured_image": "missing-required-key",
-      "id": "missing-required-key",
-      "articles/featured_image": "disallowed-key",
-      "articles/id": "disallowed-key",
-      "user_id": "missing-required-key",
-      "articles/user_id": "disallowed-key"
-    }
-  ],
-  "type": "compojure.api.exception/response-validation",
-  "coercion": "schema",
-  "value": [
-    {
-      "articles/id": 1,
-      "articles/user_id": 4,
-      "articles/title": "New article",
-      "articles/featured_image": "https://google.photo",
-      "articles/updated_on": "2020-05-10T19:00:08Z"
-    },
-    {
-      "articles/id": 3,
-      "articles/user_id": 4,
-      "articles/title": "New article",
-      "articles/featured_image": "https://google.photo",
-      "articles/updated_on": "2020-05-10T19:32:46Z"
-    },
-    {
-      "articles/id": 5,
-      "articles/user_id": 11,
-      "articles/title": "Some title",
-      "articles/featured_image": "https://featured-image",
-      "articles/updated_on": "2020-05-11T11:47:57Z"
-    }
-  ],
-  "in": [
-    "response",
-    "body"
-  ]
-}
+[
+  {
+    "updated_on": "2020-05-10T19:00:08Z",
+    "title": "New article",
+    "featured_image": "https://google.photo",
+    "id": 1,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-10T19:32:46Z",
+    "title": "New article",
+    "featured_image": "https://google.photo",
+    "id": 3,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-11T11:47:57Z",
+    "title": "Some title",
+    "featured_image": "https://featured-image",
+    "id": 5,
+    "user_id": 11
+  },
+  {
+    "updated_on": "2020-05-11T21:09:51Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 7,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-11T21:11:30Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 8,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-11T21:14:15Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 9,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-13T16:29:39Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 11,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-13T16:30:13Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 12,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-13T16:31:17Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 13,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-13T16:35:56Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 14,
+    "user_id": 4
+  },
+  {
+    "updated_on": "2020-05-13T16:39:41Z",
+    "title": "",
+    "featured_image": "",
+    "id": 15,
+    "user_id": 4
+  }
+]
 // GET http://127.0.0.1:3000/api/articles
-// HTTP/1.1 500 Internal Server Error
+// HTTP/1.1 200 OK
 // Content-Type: application/json; charset=utf-8
-// Content-Length: 1797
+// Content-Length: 1216
 // Server: http-kit
-// Date: Mon, 11 May 2020 14:52:11 GMT
-// Request duration: 0.058634s
+// Date: Wed, 13 May 2020 20:31:10 GMT
+// Request duration: 0.059589s
 #+END_SRC

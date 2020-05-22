@@ -1,8 +1,8 @@
-(ns ring-learn.system
+(ns education.system
   (:require [com.stuartsierra.component :as component]
-            [ring-learn.database.component :refer [new-database]]
-            [ring-learn.http.component :refer [new-webserver]]
-            [ring-learn.config :as config]))
+            [education.config :as config]
+            [education.database.component :refer [new-database]]
+            [education.http.component :refer [new-webserver]]))
 
 (defn api-system
   [profile]

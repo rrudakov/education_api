@@ -1,7 +1,7 @@
-(ns ring-learn.http.endpoints.articles
+(ns education.http.endpoints.articles
   (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
-            [ring-learn.database.articles :as articlesdb]
-            [ring-learn.http.restructure :refer [require-roles]]
+            [education.database.articles :as articlesdb]
+            [education.http.restructure :refer [require-roles]]
             [ring.swagger.schema :refer [describe]]
             [ring.util.http-response :refer [created no-content not-found ok]]
             [schema.core :as s]))

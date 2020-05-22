@@ -1,4 +1,4 @@
-(ns ring-learn.http.restructure
+(ns education.http.restructure
   (:require [buddy.auth :refer [authenticated?]]
             [compojure.api.meta :refer [restructure-param]]
             [ring.util.http-response :refer [forbidden unauthorized]]

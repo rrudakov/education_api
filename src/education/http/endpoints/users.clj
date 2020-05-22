@@ -1,10 +1,10 @@
-(ns ring-learn.http.endpoints.users
+(ns education.http.endpoints.users
   (:require [buddy.sign.jwt :as jwt]
             [clj-time.core :as t]
             [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
-            [ring-learn.config :as config]
-            [ring-learn.database.users :as usersdb]
-            [ring-learn.http.restructure :refer [require-roles]]
+            [education.config :as config]
+            [education.database.users :as usersdb]
+            [education.http.restructure :refer [require-roles]]
             [ring.swagger.schema :refer [describe]]
             [ring.util.http-response
              :refer

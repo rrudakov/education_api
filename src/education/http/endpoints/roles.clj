@@ -1,7 +1,7 @@
-(ns ring-learn.http.endpoints.roles
+(ns education.http.endpoints.roles
   (:require [compojure.api.sweet :refer [context GET]]
-            [ring-learn.database.roles :as rolesdb]
-            [ring-learn.http.restructure :refer [require-roles]]
+            [education.database.roles :as rolesdb]
+            [education.http.restructure :refer [require-roles]]
             [ring.util.http-response :refer [ok]]
             [schema.core :as s]))
 

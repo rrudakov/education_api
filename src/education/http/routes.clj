@@ -1,8 +1,8 @@
-(ns ring-learn.http.routes
+(ns education.http.routes
   (:require [compojure.api.sweet :refer [api context]]
-            [ring-learn.http.endpoints.articles :refer [articles-routes]]
-            [ring-learn.http.endpoints.roles :refer [roles-routes]]
-            [ring-learn.http.endpoints.users :refer [users-routes]]
+            [education.http.endpoints.articles :refer [articles-routes]]
+            [education.http.endpoints.roles :refer [roles-routes]]
+            [education.http.endpoints.users :refer [users-routes]]
             [ring.util.http-response
              :refer
              [bad-request conflict internal-server-error not-found]])
@@ -23,6 +23,7 @@
   "Define top-level API routes."
   [{:keys [datasource]} config]
   (api
+   {:coercion :spec}
    {:swagger
     {:ui "/swagger"
      :spec "/swagger.json"
