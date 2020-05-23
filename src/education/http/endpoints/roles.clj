@@ -2,12 +2,8 @@
   (:require [compojure.api.sweet :refer [context GET]]
             [education.database.roles :as rolesdb]
             [education.http.restructure :refer [require-roles]]
-            [ring.util.http-response :refer [ok]]
-            [schema.core :as s]))
-
-(s/defschema Role
-  {:id s/Int
-   :name s/Keyword})
+            [education.specs.roles :as specs]
+            [ring.util.http-response :refer [ok]]))
 
 (defn- to-roles-response
   "Convert database roles to roles response."
@@ -31,6 +27,6 @@
     :tags ["roles"]
     (GET "/roles" []
         :middleware [[require-roles #{:admin}]]
-        :return #{Role}
+        :return ::specs/roles-response
         :summary "Return list of all available roles"
         (roles-handler db))))

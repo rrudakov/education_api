@@ -1,44 +1,14 @@
 (ns education.http.endpoints.users
   (:require [buddy.sign.jwt :as jwt]
-            [clj-time.core :as t]
             [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.config :as config]
             [education.database.users :as usersdb]
             [education.http.restructure :refer [require-roles]]
+            [education.specs.users :as specs]
             [ring.swagger.schema :refer [describe]]
             [ring.util.http-response
              :refer
-             [created no-content not-found ok unauthorized]]
-            [schema.core :as s]))
-
-;; Model definitions
-(s/defschema UserCreateRequest
-  "Request for register new user."
-  {:username s/Str
-   :password s/Str
-   :email s/Str})
-
-(s/defschema UserUpdateRequest
-  "Request for updating existing user."
-  {:roles #{s/Keyword}})
-
-(s/defschema User
-  "User response object."
-  {:id s/Int
-   :username s/Str
-   :email s/Str
-   :roles #{s/Keyword}
-   :created_on s/Inst
-   :updated_on s/Inst})
-
-(s/defschema LoginRequest
-  "Request for login user."
-  {:username s/Str
-   :password s/Str})
-
-(s/defschema Token
-  "Response for successful authorization."
-  {:token s/Str})
+             [created no-content not-found ok unauthorized]]))
 
 ;; Converters
 (defn to-user-response
@@ -56,7 +26,7 @@
   "Create authorization token based on `credentials`."
   [db config credentials]
   (let [[ok? res] (usersdb/auth-user db credentials)
-        exp (t/plus (t/now) (t/days 1))]
+        exp (.plusSeconds (java.time.Instant/now) (* 60 60 24))]
     (if ok?
       [true {:token (-> res
                         (update-in [:user] to-user-response)
@@ -116,35 +86,35 @@
    :tags ["users"]
    (GET "/users" []
      :middleware [[require-roles #{:moderator}]]
-     :return [User]
+     :return ::specs/user-response      ;List
      :summary "Return the entire list of users from database"
      (all-users-handler db))
    (GET "/users/:id" []
      :middleware [[require-roles #{:moderator}]]
-     :path-params [id :- (describe s/Int "Specify user ID")]
-     :return User
+     :path-params [id :- (describe ::specs/id "Specify user ID")]
+     :return ::specs/user-response
      :summary "Fetch user from database by ID"
      (get-user-handler db id))
    (POST "/users" []
-     :body [user UserCreateRequest]
-     :return (describe s/Int "New ID for created user")
+     :body [user ::specs/user-create-request]
+     :return (describe ::specs/id "New ID for created user")
      :summary "Register new user"
      (add-user-handler db user))
    (PATCH "/users/:id" []
      :middleware [[require-roles #{:admin}]]
-     :body [user UserUpdateRequest]
-     :return nil
-     :path-params [id :- (describe s/Int "Specify user ID")]
+     :body [user ::specs/user-update-request]
+     :return {}
+     :path-params [id :- (describe ::specs/id "Specify user ID")]
      :summary "Update user (only roles updating is supported now)"
      (update-user-handler db id user))
    (DELETE "/users/:id" []
      :middleware [[require-roles #{:admin}]]
-     :return nil
-     :path-params [id :- (describe s/Int "Specify user ID")]
+     :return {}
+     :path-params [id :- (describe ::specs/id "Specify user ID")]
      :summary "Delete user by ID"
      (delete-user-handler db id))
    (POST "/login" []
-     :body [credentials LoginRequest]
-     :return (describe Token "JWT token for following authorized requests")
+     :body [credentials ::specs/login-request]
+     :return (describe ::specs/token-response "JWT token for following authorized requests")
      :summary "Authorize user using provided credentials"
      (login-handler db config credentials))))

@@ -23,7 +23,6 @@
   "Define top-level API routes."
   [{:keys [datasource]} config]
   (api
-   {:coercion :spec}
    {:swagger
     {:ui "/swagger"
      :spec "/swagger.json"
@@ -43,6 +42,7 @@
      {PSQLException (sql-exception-handler)}}}
 
    (context "/api" []
+     :coercion :spec
      (users-routes datasource config)
      (articles-routes datasource)
      (roles-routes datasource))))
