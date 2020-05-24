@@ -29,6 +29,9 @@
 (s/def ::article-short
   (s/keys :req-un [::id ::user_id ::title ::featured_image ::updated_on]))
 
+(s/def ::articles-short
+  (s/coll-of ::article-short :kind set? :into #{}))
+
 (s/def ::article-full
   (s/keys :req-un [::id ::user_id ::title ::body ::featured_image ::created_on ::updated_on]))
 

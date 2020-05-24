@@ -3,7 +3,8 @@
             [education.database.roles :as rolesdb]
             [education.http.restructure :refer [require-roles]]
             [education.specs.roles :as specs]
-            [ring.util.http-response :refer [ok]]))
+            [ring.util.http-response :refer [ok]]
+            [education.specs.error :as err]))
 
 (defn- to-roles-response
   "Convert database roles to roles response."
@@ -29,4 +30,6 @@
         :middleware [[require-roles #{:admin}]]
         :return ::specs/roles-response
         :summary "Return list of all available roles"
+        :responses {401 {:description "Access denied!"
+                         :schema ::err/error-response}}
         (roles-handler db))))

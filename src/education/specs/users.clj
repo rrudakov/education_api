@@ -1,6 +1,7 @@
 (ns education.specs.users
   (:require [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [spec-tools.core :as st]))
 
 (def email-regex
   "Check new email addresses using this regex."
@@ -29,6 +30,8 @@
 (s/def ::user-update-request (s/keys :req-un [::roles]))
 
 (s/def ::user-response (s/keys :req-un [::id ::username ::email ::roles ::created_on ::updated_on]))
+
+(s/def ::users-response (s/coll-of ::user-response :kind set? :into #{}))
 
 (s/def ::login-request (s/keys :req-un [::username ::password]))
 

@@ -4,6 +4,7 @@
             [education.config :as config]
             [education.database.users :as usersdb]
             [education.http.restructure :refer [require-roles]]
+            [education.specs.error :as err]
             [education.specs.users :as specs]
             [ring.swagger.schema :refer [describe]]
             [ring.util.http-response
@@ -86,35 +87,55 @@
    :tags ["users"]
    (GET "/users" []
      :middleware [[require-roles #{:moderator}]]
-     :return ::specs/user-response      ;List
+     :return ::specs/users-response
      :summary "Return the entire list of users from database"
+     :responses {401 {:description "Access denied!"
+                      :schema ::err/error-response}}
      (all-users-handler db))
    (GET "/users/:id" []
      :middleware [[require-roles #{:moderator}]]
-     :path-params [id :- (describe ::specs/id "Specify user ID")]
+     :path-params [id :- ::specs/id]
      :return ::specs/user-response
      :summary "Fetch user from database by ID"
+     :responses {404 {:description "User not found!"
+                      :schema ::err/error-response}
+                 401 {:description "Access denied!"
+                      :schema ::err/error-response}}
      (get-user-handler db id))
    (POST "/users" []
      :body [user ::specs/user-create-request]
-     :return (describe ::specs/id "New ID for created user")
+     :return ::specs/id
      :summary "Register new user"
+     :responses {409 {:description "User already exist!"
+                      :schema ::err/error-response}
+                 400 {:description "Invalid request body!"
+                      :schema ::err/error-response}}
      (add-user-handler db user))
    (PATCH "/users/:id" []
      :middleware [[require-roles #{:admin}]]
      :body [user ::specs/user-update-request]
      :return {}
-     :path-params [id :- (describe ::specs/id "Specify user ID")]
+     :path-params [id :- ::specs/id]
      :summary "Update user (only roles updating is supported now)"
+     :responses {401 {:description "Access denied!"
+                      :schema ::err/error-response}}
      (update-user-handler db id user))
    (DELETE "/users/:id" []
      :middleware [[require-roles #{:admin}]]
      :return {}
-     :path-params [id :- (describe ::specs/id "Specify user ID")]
+     :path-params [id :- ::specs/id]
      :summary "Delete user by ID"
+     :responses {401 {:description "Access denied!"
+                      :schema ::err/error-response}}
      (delete-user-handler db id))
    (POST "/login" []
      :body [credentials ::specs/login-request]
-     :return (describe ::specs/token-response "JWT token for following authorized requests")
+     :return ::specs/token-response
      :summary "Authorize user using provided credentials"
+     :responses {200 {:description "Success!"
+                      :schema ::specs/token-response}
+                 400 {:description "Invalid request body!"
+                      :schema ::err/error-response}
+                 401 {:description "Invalid username or password!"
+                      :schema ::err/error-response}}
      (login-handler db config credentials))))

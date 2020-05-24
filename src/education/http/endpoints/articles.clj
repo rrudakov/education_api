@@ -4,7 +4,8 @@
             [education.http.restructure :refer [require-roles]]
             [education.specs.articles :as specs]
             [ring.swagger.schema :refer [describe]]
-            [ring.util.http-response :refer [created no-content not-found ok]]))
+            [ring.util.http-response :refer [created no-content not-found ok]]
+            [education.specs.error :as err]))
 
 ;; Converters
 (defn to-short-article-response
@@ -84,34 +85,40 @@
     :tags ["articles"]
     (POST "/articles" []
       :middleware [[require-roles #{:moderator}]]
-      :body [article (describe ::specs/article-create-request "New article to be created")]
-      :return (describe ::specs/id "ID of created article")
+      :body [article ::specs/article-create-request]
+      :return ::specs/id
       :summary "Create new article"
+      :responses {401 {:description "Access denied!"
+                       :schema ::err/error-response}}
       (create-article-handler db article))
     (PATCH "/articles/:id" []
       :middleware [[require-roles #{:moderator}]]
-      :body [article (describe ::specs/article-update-request "Request body with updated fields")]
-      :path-params [id :- (describe ::specs/id "Specify article ID")]
+      :body [article ::specs/article-update-request]
+      :path-params [id :- ::specs/id]
       :summary "Update existing article by article ID"
+      :responses {401 {:description "Access denied!"
+                       :schema ::err/error-response}}
       (update-article-handler db id article))
     (GET "/articles" []
-      :return (describe ::specs/article-short "List of short article objects") ;List
-      :query-params [{limit :-  (describe ::specs/limit "Limit maximum articles") 100}
-                     {user_id :- (describe ::specs/user_id "Return only articles for this author") nil}]
+      :return ::specs/articles-short
+      :query-params [{limit :- ::specs/limit 100}
+                     {user_id :- ::specs/user_id nil}]
       :summary "Get list of latest articles"
       (get-all-articles-handler {:db db :limit limit :user-id user_id}))
     (GET "/articles/:id" []
-      :return (describe ::specs/article-full "Full article object")
-      :path-params [id :- (describe ::specs/id "Specify article ID")]
+      :return ::specs/article-full
+      :path-params [id :- ::specs/id]
       :summary "Get full article by article ID"
       (get-article-by-id-handler db id))
     (GET "/articles/featured/main" []
-      :return (describe ::specs/article-short "Main featured article object")
+      :return ::specs/article-short
       :summary "Get main featured article"
       (get-last-main-featured-article-handler db))
     (DELETE "/articles/:id" []
       :middleware [[require-roles #{:moderator}]]
-      :path-params [id :- (describe ::specs/id "Specify article ID")]
+      :path-params [id :- ::specs/id]
       :return {}
       :summary "Delete article by ID"
+      :responses {401 {:description "Access denied!"
+                       :schema ::err/error-response}}
       (delete-article-handler db id))))
