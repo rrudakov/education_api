@@ -5,31 +5,34 @@
 
 (def article-owerview-sql-map
   "Base sqlmap for selecting many articles."
-  (hsql/build :select [:id :user_id :title :featured_image :updated_on]
+  (hsql/build :select [:id :user_id :title :featured_image :updated_on :description]
               :from :articles))
 
 (defn add-article
   "Create new `article` in database."
   [conn user article]
-  (let [{:keys [title body featured_image is_main_featured]
-         :or {is_main_featured false}} article
+  (let [{:keys [title body featured_image is_main_featured description]
+         :or {is_main_featured false
+              description "No description..."}} article
         user-id (:id user)]
     (->> (sql/insert! conn :articles
                       {:user_id user-id
                        :title title
                        :body body
                        :featured_image featured_image
+                       :description description
                        :is_main_featured is_main_featured})
          (:articles/id))))
 
 (defn update-article
   "Update existing `article`."
   [conn article-id article]
-  (let [{:keys [title body featured_image is_main_featured]} article
+  (let [{:keys [title body featured_image is_main_featured description]} article
         values {:title title
                 :body body
                 :featured_image featured_image
-                :is_main_featured is_main_featured}
+                :is_main_featured is_main_featured
+                :description description}
         values-for-update (assoc (apply dissoc values (for [[k v] values :when (nil? v)] k))
                                  :updated_on (java.time.Instant/now))]
     (sql/update! conn :articles values-for-update {:id article-id})))

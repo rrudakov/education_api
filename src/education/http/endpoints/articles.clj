@@ -10,19 +10,21 @@
 ;; Converters
 (defn to-short-article-response
   "Convert database article to article response."
-  [{:articles/keys [id user_id title featured_image updated_on]}]
+  [{:articles/keys [id user_id title featured_image updated_on description]}]
   {:id id
    :user_id user_id
    :title title
    :featured_image featured_image
-   :updated_on updated_on})
+   :updated_on updated_on
+   :description description})
 
 (defn to-full-article-response
   "Convert database article to full article response."
-  [{:articles/keys [id user_id title body featured_image created_on updated_on]}]
+  [{:articles/keys [id user_id title body featured_image created_on updated_on description]}]
   {:id id
    :user_id user_id
    :title title
+   :description description
    :body body
    :featured_image featured_image
    :created_on created_on
