@@ -1,16 +1,10 @@
-(ns ring-learn.database.users
+(ns education.database.users
   (:require [buddy.hashers :as hs]
-            [buddy.sign.jwt :as jwt]
-            [clj-time.core :as t]
-            [clojure.set :as set]
+            [education.database.roles :as roles]
+            [honeysql.core :as hsql]
             [next.jdbc :as jdbc]
             next.jdbc.date-time
-            [next.jdbc.result-set :as rs]
-            [next.jdbc.sql :as sql]
-            [ring-learn.config :as config]
-            [ring-learn.database.roles :as roles]
-            [honeysql.core :as hsql]
-            [next.jdbc :as j]))
+            [next.jdbc.sql :as sql]))
 
 (defn add-user
   "Create new `user` in database."
@@ -68,7 +62,7 @@
 (defn delete-user
   "Delete user from database by `user-id`."
   [conn user-id]
-  (j/with-transaction [tx conn]
+  (jdbc/with-transaction [tx conn]
     (sql/delete! tx :user_roles {:user_id user-id})
     (sql/delete! tx :users {:id user-id})))
 

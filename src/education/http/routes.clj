@@ -1,8 +1,9 @@
-(ns ring-learn.http.routes
-  (:require [compojure.api.sweet :refer [api context]]
-            [ring-learn.http.endpoints.articles :refer [articles-routes]]
-            [ring-learn.http.endpoints.roles :refer [roles-routes]]
-            [ring-learn.http.endpoints.users :refer [users-routes]]
+(ns education.http.routes
+  (:require [compojure.api.exception :as ex]
+            [compojure.api.sweet :refer [api context]]
+            [education.http.endpoints.articles :refer [articles-routes]]
+            [education.http.endpoints.roles :refer [roles-routes]]
+            [education.http.endpoints.users :refer [users-routes]]
             [ring.util.http-response
              :refer
              [bad-request conflict internal-server-error not-found]])
@@ -17,7 +18,22 @@
       "23503" (not-found {:message "Resource not found"})
       "23502" (bad-request {:message "Bad request"})
       (internal-server-error {:message (.getServerErrorMessage e)
-                              :errorCode (.getSQLState e)}))))
+                              :error_code (.getSQLState e)}))))
+
+(defn request-validation-handler
+  "Verify request body and raise error."
+  []
+  (fn [^Exception e data request]
+    (bad-request {:message "Please check request data"
+                  :details (.getMessage e)})))
+
+(defn response-validation-handler
+  "Return error in case of invalid response."
+  []
+  (fn [^Exception e data request]
+    (internal-server-error
+     {:message "Something went wrong! Please, be patient,  we're working on fix!"
+      :details (.getMessage e)})))
 
 (defn api-routes
   "Define top-level API routes."
@@ -39,9 +55,12 @@
             :securityDefinitions {:api_key {:type "apiKey" :name "Authorization" :in "header"}}}}
     :exceptions
     {:handlers
-     {PSQLException (sql-exception-handler)}}}
+     {PSQLException (sql-exception-handler)
+      ::ex/request-validation (request-validation-handler)
+      ::ex/response-validation (response-validation-handler)}}}
 
    (context "/api" []
+     :coercion :spec
      (users-routes datasource config)
      (articles-routes datasource)
      (roles-routes datasource))))

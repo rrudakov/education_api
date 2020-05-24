@@ -1,4 +1,4 @@
-(ns ring-learn.database.articles
+(ns education.database.articles
   (:require [honeysql.core :as hsql]
             next.jdbc.date-time
             [next.jdbc.sql :as sql]))

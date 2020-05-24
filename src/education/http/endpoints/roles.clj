@@ -1,13 +1,10 @@
-(ns ring-learn.http.endpoints.roles
+(ns education.http.endpoints.roles
   (:require [compojure.api.sweet :refer [context GET]]
-            [ring-learn.database.roles :as rolesdb]
-            [ring-learn.http.restructure :refer [require-roles]]
+            [education.database.roles :as rolesdb]
+            [education.http.restructure :refer [require-roles]]
+            [education.specs.roles :as specs]
             [ring.util.http-response :refer [ok]]
-            [schema.core :as s]))
-
-(s/defschema Role
-  {:id s/Int
-   :name s/Keyword})
+            [education.specs.error :as err]))
 
 (defn- to-roles-response
   "Convert database roles to roles response."
@@ -31,6 +28,8 @@
     :tags ["roles"]
     (GET "/roles" []
         :middleware [[require-roles #{:admin}]]
-        :return #{Role}
+        :return ::specs/roles-response
         :summary "Return list of all available roles"
+        :responses {401 {:description "Access denied!"
+                         :schema ::err/error-response}}
         (roles-handler db))))

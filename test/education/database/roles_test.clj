@@ -1,8 +1,8 @@
-(ns ring-learn.database.roles-test
+(ns education.database.roles-test
   (:require [buddy.hashers :as hs]
             [clojure.test :as t]
-            [next.jdbc.sql :as sql]
-            [ring-learn.database.roles :as sut]))
+            [education.database.roles :as sut]
+            [next.jdbc.sql :as sql]))
 
 (def db-roles
   "Mocked roles from database."

@@ -1,6 +1,6 @@
-(ns ring-learn.core-test
+(ns education.core-test
   (:require [clojure.test :refer :all]
-            [ring-learn.core :refer :all]
+            [education.core :refer :all]
             [ring.mock.request :as mock]))
 
 ;; (deftest simple-body-page-test

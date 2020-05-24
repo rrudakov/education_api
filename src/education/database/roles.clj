@@ -1,4 +1,4 @@
-(ns ring-learn.database.roles
+(ns education.database.roles
   (:require [clojure.string :as str]
             [next.jdbc.sql :as sql]
             [next.jdbc.result-set :as rs]
