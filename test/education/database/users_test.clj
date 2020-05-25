@@ -40,16 +40,14 @@
                    #'roles/get-user-roles (fn [_ _] user-roles1)}
     #(t/testing "Test get existing user successfully"
        (t/is (= (assoc test-user1 :users/roles user-roles1)
-                (sut/get-user nil 4))
-             "Wrong user was returned"))))
+                (sut/get-user nil 4))))))
 
 (t/deftest get-user-not-found-test
   (with-redefs-fn {#'sql/get-by-id (fn [_ _ _] nil)
                    #'roles/get-user-roles (fn [_ _] user-roles1)}
     #(t/testing "Test get non-existing user"
        (t/is (= nil
-                (sut/get-user nil 4))
-             "Result should be nil"))))
+                (sut/get-user nil 4))))))
 
 (t/deftest get-all-users-test
   (with-redefs-fn {#'sql/query (fn [_ _] [test-user1 test-user2])
@@ -61,8 +59,7 @@
     #(t/testing "Test fetching all users from database"
        (t/is (= (list (assoc test-user1 :users/roles user-roles1)
                       (assoc test-user2 :users/roles user-roles2))
-                (sut/get-all-users nil))
-             "Wrong user list"))))
+                (sut/get-all-users nil))))))
 
 (t/deftest auth-user-successful-test
   (with-redefs-fn {#'sql/get-by-id (fn [_ _ _ _ _] test-user1)
@@ -70,24 +67,21 @@
     #(t/testing "Test successful authorization"
        (let [[res user] (sut/auth-user nil {:username (:users/user_name test-user1)
                                             :password password})]
-         (t/is (= true res) "Wrong authorization result")
-         (t/is (= (assoc test-user1 :users/roles user-roles1) (:user user))
-               "Wrong authenticated user object")))))
+         (t/is (= true res))
+         (t/is (= (assoc test-user1 :users/roles user-roles1) (:user user)))))))
 
 (t/deftest auth-user-not-found
   (with-redefs-fn {#'sql/get-by-id (fn [_ _ _ _ _] nil)}
     #(t/testing "Test authorization of non-existing user"
        (let [[res msg] (sut/auth-user nil {:username "nonexist"
                                            :password password})]
-         (t/is (= false res) "Wrong authorization result")
-         (t/is (= {:message "Invalid username or password"} msg)
-               "Wrong error message")))))
+         (t/is (= false res))
+         (t/is (= {:message "Invalid username or password"} msg))))))
 
 (t/deftest auth-user-wrong-password
   (with-redefs-fn {#'sql/get-by-id (fn [_ _ _ _ _] test-user1)}
     #(t/testing "Test authorization with wrong password"
        (let [[res msg] (sut/auth-user nil {:username (:users/user_name test-user1)
                                            :password "wrong_password"})]
-         (t/is (= false res) "Wrong authorization result")
-         (t/is (= {:message "Invalid username or password"} msg)
-               "Wrong error message")))))
+         (t/is (= false res))
+         (t/is (= {:message "Invalid username or password"} msg))))))
