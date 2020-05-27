@@ -11,31 +11,31 @@
 (defn to-short-article-response
   "Convert database article to article response."
   [{:articles/keys [id user_id title featured_image updated_on description]}]
-  {:id id
-   :user_id user_id
-   :title title
+  {:id             id
+   :user_id        user_id
+   :title          title
    :featured_image featured_image
-   :updated_on updated_on
-   :description description})
+   :updated_on     updated_on
+   :description    (or description articlesdb/default-article-description)})
 
 (defn to-full-article-response
   "Convert database article to full article response."
   [{:articles/keys [id user_id title body featured_image created_on updated_on description]}]
-  {:id id
-   :user_id user_id
-   :title title
-   :description description
-   :body body
+  {:id             id
+   :user_id        user_id
+   :title          title
+   :description    (or description articlesdb/default-article-description)
+   :body           body
    :featured_image featured_image
-   :created_on created_on
-   :updated_on updated_on})
+   :created_on     created_on
+   :updated_on     updated_on})
 
 ;; Handlers
 (defn- create-article-handler
   "Create new article handler."
   [db article]
   (fn [{:keys [identity]}]
-    (let [user (:user identity)
+    (let [user   (:user identity)
           new-id (str (articlesdb/add-article db user article))]
       (created (str "/articles/" new-id) {:id new-id}))))
 
@@ -91,7 +91,7 @@
       :return ::specs/id
       :summary "Create new article"
       :responses {401 {:description "Access denied!"
-                       :schema ::err/error-response}}
+                       :schema      ::err/error-response}}
       (create-article-handler db article))
     (PATCH "/articles/:id" []
       :middleware [[require-roles #{:moderator}]]
@@ -99,7 +99,7 @@
       :path-params [id :- ::specs/id]
       :summary "Update existing article by article ID"
       :responses {401 {:description "Access denied!"
-                       :schema ::err/error-response}}
+                       :schema      ::err/error-response}}
       (update-article-handler db id article))
     (GET "/articles" []
       :return ::specs/articles-short
@@ -122,5 +122,5 @@
       :return {}
       :summary "Delete article by ID"
       :responses {401 {:description "Access denied!"
-                       :schema ::err/error-response}}
+                       :schema      ::err/error-response}}
       (delete-article-handler db id))))
