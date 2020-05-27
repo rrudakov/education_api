@@ -8,7 +8,6 @@
                  [aero "1.1.6"]
                  ;; Ring and compojure
                  [ring/ring-defaults "0.3.2"]
-                 [ring/ring-mock "0.4.0"]
                  [metosin/compojure-api "2.0.0-alpha31"]
                  ;; [metosin/spec-tools "0.10.3"]
                  [ring-cors "0.1.13"]
@@ -35,5 +34,7 @@
             "rollback" ["run" "-m" "education.database.component/rollback" "--"]}
   :uberjar-name "education-api-standalone.jar"
   :min-lein-version "2.0.0"
-  :profiles {:uberjar {:aot :all}}
+  :profiles {:dev {:dependencies [[tortue/spy "2.0.0"]
+                                  [ring/ring-mock "0.4.0"]]}
+             :uberjar {:aot :all}}
   :main education.core)
