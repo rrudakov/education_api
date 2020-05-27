@@ -110,7 +110,7 @@
   (t/testing "Test get all articles default database query"
     (with-redefs [sql/query (fn [_ q] q)]
       (let [[query limit] (sut/get-all-articles nil)]
-        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles ORDER BY updated_on LIMIT ?" query))
+        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles ORDER BY updated_on DESC LIMIT ?" query))
         (t/is (= 100 limit))))))
 
 (t/deftest get-all-articles-test-query-with-limit
@@ -120,12 +120,20 @@
             [_ limit]   (sut/get-all-articles nil limit-param)]
         (t/is (= limit-param limit))))))
 
+(t/deftest get-latest-full-sized-articles-query
+  (t/testing "Test get latest full sized articles database query"
+    (with-redefs [sql/query (fn [_ q] q)]
+      (let [number-param 30
+            [query number] (sut/get-latest-full-sized-articles nil number-param)]
+        (t/is (= "SELECT id, user_id, title, body, featured_image, created_on, updated_on, description FROM articles ORDER BY updated_on DESC LIMIT ?" query))
+        (t/is (= number-param number ))))))
+
 (t/deftest get-user-articles-test-default-query
   (t/testing "Test get user articles default database query"
     (with-redefs [sql/query (fn [_ q] q)]
       (let [user-id-param         42
             [query user-id limit] (sut/get-user-articles nil user-id-param)]
-        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles WHERE user_id = ? ORDER BY updated_on LIMIT ?" query))
+        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles WHERE user_id = ? ORDER BY updated_on DESC LIMIT ?" query))
         (t/is (= limit 100))
         (t/is (= user-id user-id-param))))))
 

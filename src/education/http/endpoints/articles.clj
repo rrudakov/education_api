@@ -56,6 +56,14 @@
          (map to-short-article-response)
          ok)))
 
+(defn- get-latest-full-articles-handler
+  "Get latest full articles handler."
+  [db number]
+  (let [articles (articlesdb/get-latest-full-sized-articles db number)]
+    (->> articles
+         (map to-full-article-response)
+         ok)))
+
 (defn- get-article-by-id-handler
   "Get article by `article-id` handler."
   [db article-id]
@@ -84,6 +92,7 @@
   "Define routes for articles endpoint."
   [db]
   (context "" []
+    :coercion :spec
     :tags ["articles"]
     (POST "/articles" []
       :middleware [[require-roles #{:moderator}]]
@@ -107,6 +116,11 @@
                      {user_id :- ::specs/user_id nil}]
       :summary "Get list of latest articles"
       (get-all-articles-handler {:db db :limit limit :user-id user_id}))
+    (GET "/articles/latest" []
+      :return ::specs/articles-full
+      :query-params [limit :- ::specs/limit]
+      :summary "Get latest full articles"
+      (get-latest-full-articles-handler db limit))
     (GET "/articles/:id" []
       :return ::specs/article-full
       :path-params [id :- ::specs/id]

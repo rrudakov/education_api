@@ -5,7 +5,24 @@
 
 (def article-owerview-sql-map
   "Base sqlmap for selecting many articles."
-  (hsql/build :select [:id :user_id :title :featured_image :updated_on :description]
+  (hsql/build :select [:id
+                       :user_id
+                       :title
+                       :featured_image
+                       :updated_on
+                       :description]
+              :from :articles))
+
+(def article-full-sql-map
+  "Base sqlmap for selection full sized article."
+  (hsql/build :select [:id
+                       :user_id
+                       :title
+                       :body
+                       :featured_image
+                       :created_on
+                       :updated_on
+                       :description]
               :from :articles))
 
 (def default-article-description
@@ -47,9 +64,18 @@
    (get-all-articles conn 100))
   ([conn limit]
    (->> limit
-        (hsql/build article-owerview-sql-map :order-by :updated_on :limit)
+        (hsql/build article-owerview-sql-map :order-by [[:updated_on :desc]] :limit)
         hsql/format
         (sql/query conn))))
+
+(defn get-latest-full-sized-articles
+  "Fetch `number` of latest articles with all fields."
+  [conn number]
+  (->> (hsql/build article-full-sql-map
+                   :order-by [[:updated_on :desc]]
+                   :limit number)
+       hsql/format
+       (sql/query conn)))
 
 (defn get-user-articles
   "Fetch recent articles from database for particular `user`."
@@ -57,7 +83,7 @@
   ([conn user-id limit]
    (->> (hsql/build article-owerview-sql-map
                     :where [:= :user_id user-id]
-                    :order-by :updated_on
+                    :order-by [[:updated_on :desc]]
                     :limit limit)
         hsql/format
         (sql/query conn))))
