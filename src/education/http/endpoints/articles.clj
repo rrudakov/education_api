@@ -92,7 +92,6 @@
   "Define routes for articles endpoint."
   [db]
   (context "" []
-    :coercion :spec
     :tags ["articles"]
     (POST "/articles" []
       :middleware [[require-roles #{:moderator}]]
