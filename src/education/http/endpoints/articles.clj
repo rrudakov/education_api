@@ -98,7 +98,9 @@
       :body [article ::specs/article-create-request]
       :return ::specs/id
       :summary "Create new article"
-      :responses {401 {:description "Access denied!"
+      :responses {401 {:description "Not authorized!"
+                       :schema      ::err/error-response}
+                  403 {:description "Access denied!"
                        :schema      ::err/error-response}}
       (create-article-handler db article))
     (PATCH "/articles/:id" []
