@@ -1,6 +1,7 @@
 (ns education.http.routes
   (:require [compojure.api.exception :as ex]
             [compojure.api.sweet :refer [api context]]
+            [education.http.constants :refer :all]
             [education.http.endpoints.articles :refer [articles-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.users :refer [users-routes]]
@@ -14,9 +15,9 @@
   []
   (fn [^PSQLException e data request]
     (case (.getSQLState e)
-      "23505" (conflict {:message "Resource already exist"})
-      "23503" (not-found {:message "Resource not found"})
-      "23502" (bad-request {:message "Bad request"})
+      "23505" (conflict {:message conflict-error-message})
+      "23503" (not-found {:message not-found-error-message})
+      "23502" (bad-request {:message bad-request-error-message})
       (internal-server-error {:message (.getServerErrorMessage e)
                               :error_code (.getSQLState e)}))))
 
@@ -24,7 +25,7 @@
   "Verify request body and raise error."
   []
   (fn [^Exception e data request]
-    (bad-request {:message "Please check request data"
+    (bad-request {:message bad-request-error-message
                   :details (.getMessage e)})))
 
 (defn response-validation-handler
@@ -32,7 +33,7 @@
   []
   (fn [^Exception e data request]
     (internal-server-error
-     {:message "Something went wrong! Please, be patient,  we're working on fix!"
+     {:message server-error-message
       :details (.getMessage e)})))
 
 (defn api-routes

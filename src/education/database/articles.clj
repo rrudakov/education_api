@@ -56,7 +56,7 @@
                 :description description}
         values-for-update (assoc (apply dissoc values (for [[k v] values :when (nil? v)] k))
                                  :updated_on (java.time.Instant/now))]
-    (sql/update! conn :articles values-for-update {:id article-id})))
+    (:next.jdbc/update-count (sql/update! conn :articles values-for-update {:id article-id}))))
 
 (defn get-all-articles
   "Fetch recent articles from database."

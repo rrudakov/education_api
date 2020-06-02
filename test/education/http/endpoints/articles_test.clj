@@ -2,9 +2,10 @@
   (:require [cheshire.core :as cheshire]
             [clojure.test :as t]
             [education.database.articles :as articlesdb]
+            [education.http.constants :refer :all]
             [education.http.endpoints.test-app :refer [test-api-routes-with-auth]]
             [education.http.routes :as r]
-            [education.test-data :refer [test-auth-token test-config]]
+            [education.test-data :refer :all]
             [ring.mock.request :as mock]
             [spy.core :as spy])
   (:import java.time.Instant))
@@ -56,15 +57,18 @@
   (t/testing "Test POST /articles authorized with valid request body"
     (let [new-article-id 54]
      (with-redefs [articlesdb/add-article (spy/mock (fn [_ u a] new-article-id))]
-       (let [db       (spy/spy)
+       (let [role :moderator
+             user-expected (assoc auth-user-deserialized :roles (vector (name role)))
+             db       (spy/spy)
              app      (test-api-routes-with-auth db)
              response (app (-> (mock/request :post "/api/articles")
                                (mock/content-type "application/json")
-                               (mock/header :authorization (test-auth-token #{:moderator}))
+                               (mock/header :authorization (test-auth-token #{role}))
                                (mock/body (cheshire/generate-string test-article-request-valid))))
              body (parse-body (:body response))]
          (t/is (= 201 (:status response)))
-         (t/is (= {:id (str new-article-id)} body)))))))
+         (t/is (= {:id (str new-article-id)} body))
+         (t/is (spy/called-once-with?  articlesdb/add-article nil user-expected test-article-request-valid)))))))
 
 (t/deftest create-article-test-not-authorized
   (t/testing "Test POST /articles without authorization header"
@@ -76,7 +80,8 @@
                               (mock/body (cheshire/generate-string test-article-request-valid))))
             body (parse-body (:body response))]
         (t/is (= 401 (:status response)))
-        (t/is (= {:message "You are not authorized!"} body))))))
+        (t/is (spy/not-called? articlesdb/add-article))
+        (t/is (= {:message not-authorized-error-message} body))))))
 
 (t/deftest create-article-test-no-access
   (t/testing "Test POST /articles authorized with guest role"
@@ -89,7 +94,8 @@
                               (mock/body (cheshire/generate-string test-article-request-valid))))
             body (parse-body (:body response))]
         (t/is (= 403 (:status response)))
-        (t/is (= {:message "You don't have access to this resource!"} body))))))
+        (t/is (spy/not-called? articlesdb/add-article))
+        (t/is (= {:message no-access-error-message} body))))))
 
 (t/deftest create-article-test-request-body-validation
   (t/testing "Test POST /articles authorized bad requests"
@@ -106,10 +112,97 @@
           400 (dissoc test-article-request-valid :featured_image)
           400 (dissoc test-article-request-valid :is_main_featured))
         (t/are [body-expected request] (= body-expected (:message (parse-body (:body (app (req request))))))
-          "Please check request data" (dissoc test-article-request-valid :title)
-          "Please check request data" (dissoc test-article-request-valid :body)
-          "Please check request data" (dissoc test-article-request-valid :featured_image)
-          "Please check request data" (dissoc test-article-request-valid :is_main_featured))))))
+          bad-request-error-message (dissoc test-article-request-valid :title)
+          bad-request-error-message (dissoc test-article-request-valid :body)
+          bad-request-error-message (dissoc test-article-request-valid :featured_image)
+          bad-request-error-message (dissoc test-article-request-valid :is_main_featured))))))
+
+(t/deftest update-article-test-success
+  (t/testing "Test PATCH /article/:id authorized with valid body"
+    (with-redefs [articlesdb/update-article (spy/mock (fn [_ _ _] 1))]
+      (let [article-id 43
+            db (spy/spy)
+            app (test-api-routes-with-auth db)
+            response (app (-> (mock/request :patch (str "/api/articles/" article-id))
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (test-auth-token #{:moderator}))
+                              (mock/body (cheshire/generate-string test-article-request-valid))))]
+        (t/is (= 204 (:status response)))
+        (t/is (spy/called-once-with? articlesdb/update-article
+                                     nil
+                                     article-id
+                                     test-article-request-valid))))))
+
+(t/deftest update-article-test-not-authorized
+  (t/testing "Test PATCH /articles/:id without authorization header"
+    (with-redefs [articlesdb/update-article (spy/spy)]
+      (let [db (spy/spy)
+            app (test-api-routes-with-auth db)
+            response (app (-> (mock/request :patch "/api/articles/43")
+                              (mock/content-type "application/json")
+                              (mock/body (cheshire/generate-string test-article-request-valid))))
+            body (parse-body (:body response))]
+        (t/is (= 401 (:status response)))
+        (t/is (spy/not-called? articlesdb/update-article))
+        (t/is (= {:message not-authorized-error-message} body))))))
+
+(t/deftest update-article-test-no-access
+  (t/testing "Test PATCH /articles/:id with guest role"
+    (with-redefs [articlesdb/update-article (spy/spy)]
+      (let [db (spy/spy)
+            app (test-api-routes-with-auth db)
+            response (app (-> (mock/request :patch "/api/articles/44")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (test-auth-token #{:guest}))
+                              (mock/body (cheshire/generate-string test-article-request-valid))))
+            body (parse-body (:body response))]
+        (t/is (= 403 (:status response)))
+        (t/is (spy/not-called? articlesdb/update-article))
+        (t/is (= {:message no-access-error-message} body))))))
+
+(t/deftest update-article-test-invalid-id
+  (t/testing "Test PATCH /articles/:id with invalid id"
+    (with-redefs [articlesdb/update-article (spy/spy)]
+      (let [article-id-param "invalid"
+            db (spy/spy)
+            app (test-api-routes-with-auth db)
+            response (app (-> (mock/request :patch (str "/api/articles/" article-id-param))
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (test-auth-token #{:moderator}))
+                              (mock/body (cheshire/generate-string test-article-request-valid))))
+            body (parse-body (:body response))]
+        (t/is (= 400 (:status response)))
+        (t/is (spy/not-called? articlesdb/update-article))
+        (t/is (contains? body :message))
+        (t/is (= bad-request-error-message (:message body)))))))
+
+(t/deftest update-article-test-does-not-exist
+  (t/testing "Test PATCH /articles/:id with non-existing article id"
+    (with-redefs [articlesdb/update-article (spy/mock (fn [_ _ _] 0))]
+      (let [db (spy/spy)
+            app (test-api-routes-with-auth db)
+            response (app (-> (mock/request :patch "/api/articles/456")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string test-article-request-valid))))
+            body (parse-body (:body response))]
+        (t/is (= 404 (:status response)))
+        (t/is (spy/called-once? articlesdb/update-article))
+        (t/is (= {:message not-found-error-message} body))))))
+
+(t/deftest update-article-test-database-error
+  (t/testing "Test PATCH /articles/:id unexpected response from database"
+    (with-redefs [articlesdb/update-article (spy/mock (fn [_ _ _] 2))]
+      (let [db (spy/spy)
+            app (test-api-routes-with-auth db)
+            response (app (-> (mock/request :patch "/api/articles/3")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (test-auth-token #{:moderator}))
+                              (mock/body (cheshire/generate-string test-article-request-valid))))
+            body (parse-body (:body response))]
+        (t/is (= 500 (:status response)))
+        (t/is (spy/called-once? articlesdb/update-article))
+        (t/is (= {:message server-error-message} body))))))
 
 (t/deftest get-articles-test-response-body-and-default-limit
   (t/testing "Test GET /articles endpoint response body and default limit parameter"
@@ -182,16 +275,17 @@
         (t/is (= 200 (:status response)))
         (t/is (= user-id-param user-id))
         (t/is (= default-limit limit))
-        (t/is (spy/called-n-times? articlesdb/get-all-articles 0))))))
+        (t/is (spy/not-called? articlesdb/get-all-articles))))))
 
 (t/deftest get-article-test-invalid-limit-param
-  (t/testing "Test GET /articles endpoint limit parameter validation"
-    (let [db          (spy/spy)
-          limit-param "invalid-string"
-          app         (test-api-routes-with-auth db)
-          response    (app (-> (mock/request :get (str "/api/articles?limit=" limit-param))))
-          body        (parse-body (:body response))]
-      (t/is (= 400 (:status response)))
-      (t/is (contains? body :message))
-      (t/is (contains? body :details))
-      (t/is (= "Please check request data" (:message body))))))
+  (doseq [url ["/api/articles?limit=invalid"
+               "/api/articles?user_id=invalid"]]
+    (t/testing "Test GET /articles endpoint query parameter validation"
+      (let [db       (spy/spy)
+            app      (test-api-routes-with-auth db)
+            response (app (-> (mock/request :get url)))
+            body     (parse-body (:body response))]
+        (t/is (= 400 (:status response)))
+        (t/is (contains? body :message))
+        (t/is (contains? body :details))
+        (t/is (= bad-request-error-message (:message body)))))))

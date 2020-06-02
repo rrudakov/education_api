@@ -1,11 +1,14 @@
 (ns education.http.endpoints.articles
   (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.database.articles :as articlesdb]
+            [education.http.constants :refer :all]
             [education.http.restructure :refer [require-roles]]
             [education.specs.articles :as specs]
+            [education.specs.error :as err]
             [ring.swagger.schema :refer [describe]]
-            [ring.util.http-response :refer [created no-content not-found ok]]
-            [education.specs.error :as err]))
+            [ring.util.http-response
+             :refer
+             [created internal-server-error no-content not-found ok]]))
 
 ;; Converters
 (defn to-short-article-response
@@ -42,9 +45,10 @@
 (defn- update-article-handler
   "Update existing article handler."
   [db article-id article]
-  (do
-    (articlesdb/update-article db article-id article)
-    (no-content)))
+  (case (articlesdb/update-article db article-id article)
+    1 (no-content)
+    0 (not-found {:message not-found-error-message})
+    (internal-server-error {:message server-error-message})))
 
 (defn- get-all-articles-handler
   "Get all recent articles handler."
@@ -69,7 +73,7 @@
   [db article-id]
   (let [article (articlesdb/get-article-by-id db article-id)]
     (if (nil? article)
-      (not-found {:message (str "Article with id " article-id " not found!")})
+      (not-found {:message not-found-error-message})
       (ok (to-full-article-response article)))))
 
 (defn- get-last-main-featured-article-handler
@@ -77,7 +81,7 @@
   [db]
   (let [mf-article (articlesdb/get-last-featured-article db)]
     (if (nil? mf-article)
-      (not-found {:message "Main featured article was not found!"})
+      (not-found {:message not-found-error-message})
       (ok (to-short-article-response mf-article)))))
 
 (defn- delete-article-handler

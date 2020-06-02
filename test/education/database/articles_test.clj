@@ -79,32 +79,37 @@
 (t/deftest update-article-test-db-query
   (t/testing "Test update article database query"
     (let [now (Instant/now)]
-      (with-redefs [sql/update! (fn [_ _ q _] q)]
-        (t/is (= {:title          (:title test-request-article)
-                  :body           (:body test-request-article)
-                  :featured_image (:featured_image test-request-article)
-                  :updated_on     now}
-                 (-> (sut/update-article nil (:articles/id test-db-article) test-request-article)
-                     (assoc :updated_on now))))))))
+      (with-redefs [sql/update! (spy/mock (fn [_ _ q _] {:next.jdbc/update-count 1}))]
+        (let [result          (sut/update-article nil (:articles/id test-db-article) test-request-article)
+              [[_ _ query _]] (spy/calls sql/update!)]
+          (t/is (= {:title          (:title test-request-article)
+                    :body           (:body test-request-article)
+                    :featured_image (:featured_image test-request-article)
+                    :updated_on     now}
+                   (assoc query :updated_on now)))
+          (t/is (= 1 result)))))))
 
 (t/deftest update-article-test-table-name
   (t/testing "Test update article database table name"
-    (with-redefs [sql/update! (fn [_ t _ _] t)]
-      (t/is (= :articles
-               (sut/update-article nil nil nil))))))
+    (with-redefs [sql/update! (spy/mock (fn [_ t _ _] {:next.jdbc/update-count 1}))]
+      (let [result (sut/update-article nil nil nil)
+            [[_ table _ _]] (spy/calls sql/update!)]
+        (t/is (= :articles table))))))
 
 (t/deftest update-article-test-empty-body
   (t/testing "Test update article with empty body"
-    (with-redefs [sql/update! (fn [_ _ q _] q)]
-      (t/is (= (list :updated_on)
-               (keys (sut/update-article nil nil {})))))))
+    (with-redefs [sql/update! (spy/mock (fn [_ _ q _] {:next.jdbc/update-count 1}))]
+      (let [result (sut/update-article nil nil {})
+            [[_ _ query _]] (spy/calls sql/update!)]
+        (t/is (= (list :updated_on) (keys query)))))))
 
 (t/deftest update-article-test-article-id
   (t/testing "Test update article database article ID"
     (let [article-id 432]
-      (with-redefs [sql/update! (fn [_ _ _ i] i)]
-        (t/is (= {:id article-id}
-                 (sut/update-article nil article-id nil)))))))
+      (with-redefs [sql/update! (spy/mock (fn [_ _ _ i] {:next.jdbc/update-count 1}))]
+        (let [result (sut/update-article nil article-id nil)
+              [[_ _ _ article-id-param]] (spy/calls sql/update!)]
+          (t/is (= {:id article-id} article-id-param)))))))
 
 (t/deftest get-all-articles-test-default-query
   (t/testing "Test get all articles default database query"
