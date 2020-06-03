@@ -289,3 +289,64 @@
         (t/is (contains? body :message))
         (t/is (contains? body :details))
         (t/is (= bad-request-error-message (:message body)))))))
+
+(t/deftest get-latest-articles-test-response-body
+  (t/testing "Test GET /articles/latest with valid limit parameter"
+    (with-redefs [articlesdb/get-latest-full-sized-articles
+                  (spy/mock
+                   (fn [_ _]
+                     [test-db-full-article-1
+                      test-db-full-article-2]))]
+      (let [limit    88
+            db       (spy/spy)
+            app      (test-api-routes-with-auth db)
+            url      (str "/api/articles/latest?limit=" limit)
+            response (app (-> (mock/request :get url)))
+            body     (parse-body (:body response))]
+        (t/is (= 200 (:status response)))
+        (t/is (spy/called-once-with? articlesdb/get-latest-full-sized-articles nil limit))
+        (t/is (= [{:id             (:articles/id test-db-full-article-1)
+                   :user_id        (:articles/user_id test-db-full-article-1)
+                   :title          (:articles/title test-db-full-article-1)
+                   :description    (:articles/description test-db-full-article-1)
+                   :body           (:articles/body test-db-full-article-1)
+                   :featured_image (:articles/featured_image test-db-full-article-1)
+                   :created_on     (str (:articles/created_on test-db-full-article-1))
+                   :updated_on     (str (:articles/updated_on test-db-full-article-1))}
+                  {:id             (:articles/id test-db-full-article-2)
+                   :user_id        (:articles/user_id test-db-full-article-2)
+                   :title          (:articles/title test-db-full-article-2)
+                   :description    (:articles/description test-db-full-article-2)
+                   :body           (:articles/body test-db-full-article-2)
+                   :featured_image (:articles/featured_image test-db-full-article-2)
+                   :created_on     (str (:articles/created_on test-db-full-article-2))
+                   :updated_on     (str (:articles/updated_on test-db-full-article-2))}]
+                 body))))))
+
+(t/deftest get-latest-articles-test-no-limit-param
+  (doseq [url ["/api/articles/latest"
+               "/api/articles/latest?limit=invalid"]]
+    (t/testing "Test GET /articles/latest limit parameter validation"
+      (with-redefs [articlesdb/get-latest-full-sized-articles (spy/spy)]
+        (let [db       (spy/spy)
+              app      (test-api-routes-with-auth db)
+              response (app (-> (mock/request :get url)))
+              body     (parse-body (:body response))]
+          (t/is (= 400 (:status response)))
+          (t/is (contains? body :message))
+          (t/is (spy/not-called? articlesdb/get-latest-full-sized-articles))
+          (t/is (= bad-request-error-message (:message body))))))))
+
+(t/deftest get-latest-articles-test-default-description
+  (t/testing "Test GET /articles/latest verify default description"
+    (with-redefs [articlesdb/get-latest-full-sized-articles
+                  (spy/mock
+                   (fn [_ _]
+                     [(dissoc test-db-full-article-1 :articles/description)]))]
+      (let [db (spy/spy)
+            app (test-api-routes-with-auth db)
+            response (app (-> (mock/request :get "/api/articles/latest?limit=44")))
+            body (parse-body (:body response))]
+        (t/is (= 200 (:status response)))
+        (t/is (spy/called-once? articlesdb/get-latest-full-sized-articles))
+        (t/is (= default-description (:description (first body))))))))
