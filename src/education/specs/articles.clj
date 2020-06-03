@@ -5,8 +5,7 @@
 
 (s/def ::user_id int?)
 
-(s/def ::user-id-param (s/or :user int?
-                             :all nil))
+(s/def ::user-id-param int?)
 
 (s/def ::title
   (s/and string? #(<= (count %) 100) #(>= (count %) 1)))
