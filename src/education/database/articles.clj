@@ -105,6 +105,16 @@
       (first result)
       nil)))
 
+(defn get-last-featured-articles
+  [conn limit]
+  (->> (hsql/build article-owerview-sql-map
+                   :where [:= :is_main_featured true]
+                   :order-by [[:updated_on :desc]]
+                   :limit limit
+                   :offset 1)
+       hsql/format
+       (sql/query conn)))
+
 (defn delete-article
   "Delete article from database by `article-id`."
   [conn article-id]

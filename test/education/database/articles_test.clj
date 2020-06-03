@@ -115,7 +115,8 @@
   (t/testing "Test get all articles default database query"
     (with-redefs [sql/query (fn [_ q] q)]
       (let [[query limit] (sut/get-all-articles nil)]
-        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles ORDER BY updated_on DESC LIMIT ?" query))
+        (t/is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
+                      "FROM articles ORDER BY updated_on DESC LIMIT ?") query))
         (t/is (= 100 limit))))))
 
 (t/deftest get-all-articles-test-query-with-limit
@@ -130,7 +131,8 @@
     (with-redefs [sql/query (fn [_ q] q)]
       (let [number-param 30
             [query number] (sut/get-latest-full-sized-articles nil number-param)]
-        (t/is (= "SELECT id, user_id, title, body, featured_image, created_on, updated_on, description FROM articles ORDER BY updated_on DESC LIMIT ?" query))
+        (t/is (= (str "SELECT id, user_id, title, body, featured_image, created_on, updated_on, description "
+                      "FROM articles ORDER BY updated_on DESC LIMIT ?") query))
         (t/is (= number-param number ))))))
 
 (t/deftest get-user-articles-test-default-query
@@ -138,7 +140,9 @@
     (with-redefs [sql/query (fn [_ q] q)]
       (let [user-id-param         42
             [query user-id limit] (sut/get-user-articles nil user-id-param)]
-        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles WHERE user_id = ? ORDER BY updated_on DESC LIMIT ?" query))
+        (t/is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
+                      "FROM articles "
+                      "WHERE user_id = ? ORDER BY updated_on DESC LIMIT ?") query))
         (t/is (= limit 100))
         (t/is (= user-id user-id-param))))))
 
@@ -165,7 +169,10 @@
     (with-redefs [sql/query (spy/spy)]
       (sut/get-last-featured-article nil)
       (let [[[_ [query limit]]] (spy/calls sql/query)]
-        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles WHERE is_main_featured = TRUE ORDER BY updated_on DESC LIMIT ?" query))
+        (t/is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
+                      "FROM articles "
+                      "WHERE is_main_featured = TRUE "
+                      "ORDER BY updated_on DESC LIMIT ?") query))
         (t/is (= 1 limit))))))
 
 (t/deftest get-last-featured-article-test-no-results
@@ -178,6 +185,25 @@
     (let [res [1 2 3 4 5 6]]
       (with-redefs [sql/query (fn [_ _] res)]
         (t/is (= (first res) (sut/get-last-featured-article nil)))))))
+
+(t/deftest get-last-featured-articles-test-query
+  (t/testing "Get latest featured article list database query"
+    (with-redefs [sql/query (spy/spy)]
+      (let [limit-param 3
+            _ (sut/get-last-featured-articles nil limit-param)
+            [[_ [query limit offset]]] (spy/calls sql/query)]
+        (t/is (= limit-param limit))
+        (t/is (= 1 offset))
+        (t/is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
+                      "FROM articles "
+                      "WHERE is_main_featured = TRUE "
+                      "ORDER BY updated_on DESC LIMIT ? OFFSET ?") query))))))
+
+(t/deftest get-last-featured-articles-test-no-results
+  (t/testing "Get latest featured article list no results from database"
+    (with-redefs [sql/query (spy/mock (fn [_ _] []))]
+      (let [res (sut/get-last-featured-articles nil 3)]
+        (t/is (= [] res))))))
 
 (t/deftest delete-article-test-table-name
   (t/testing "Delete article database table name"
