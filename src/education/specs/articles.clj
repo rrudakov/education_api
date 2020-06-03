@@ -5,6 +5,8 @@
 
 (s/def ::user_id int?)
 
+(s/def ::user-id-param int?)
+
 (s/def ::title
   (s/and string? #(<= (count %) 100) #(>= (count %) 1)))
 
@@ -36,5 +38,8 @@
 
 (s/def ::article-full
   (s/keys :req-un [::id ::user_id ::title ::body ::featured_image ::created_on ::updated_on ::description]))
+
+(s/def ::articles-full
+  (s/coll-of ::article-full :kind set? :into #{}))
 
 (s/def ::limit int?)

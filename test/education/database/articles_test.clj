@@ -79,38 +79,43 @@
 (t/deftest update-article-test-db-query
   (t/testing "Test update article database query"
     (let [now (Instant/now)]
-      (with-redefs [sql/update! (fn [_ _ q _] q)]
-        (t/is (= {:title          (:title test-request-article)
-                  :body           (:body test-request-article)
-                  :featured_image (:featured_image test-request-article)
-                  :updated_on     now}
-                 (-> (sut/update-article nil (:articles/id test-db-article) test-request-article)
-                     (assoc :updated_on now))))))))
+      (with-redefs [sql/update! (spy/mock (fn [_ _ q _] {:next.jdbc/update-count 1}))]
+        (let [result          (sut/update-article nil (:articles/id test-db-article) test-request-article)
+              [[_ _ query _]] (spy/calls sql/update!)]
+          (t/is (= {:title          (:title test-request-article)
+                    :body           (:body test-request-article)
+                    :featured_image (:featured_image test-request-article)
+                    :updated_on     now}
+                   (assoc query :updated_on now)))
+          (t/is (= 1 result)))))))
 
 (t/deftest update-article-test-table-name
   (t/testing "Test update article database table name"
-    (with-redefs [sql/update! (fn [_ t _ _] t)]
-      (t/is (= :articles
-               (sut/update-article nil nil nil))))))
+    (with-redefs [sql/update! (spy/mock (fn [_ t _ _] {:next.jdbc/update-count 1}))]
+      (let [result (sut/update-article nil nil nil)
+            [[_ table _ _]] (spy/calls sql/update!)]
+        (t/is (= :articles table))))))
 
 (t/deftest update-article-test-empty-body
   (t/testing "Test update article with empty body"
-    (with-redefs [sql/update! (fn [_ _ q _] q)]
-      (t/is (= (list :updated_on)
-               (keys (sut/update-article nil nil {})))))))
+    (with-redefs [sql/update! (spy/mock (fn [_ _ q _] {:next.jdbc/update-count 1}))]
+      (let [result (sut/update-article nil nil {})
+            [[_ _ query _]] (spy/calls sql/update!)]
+        (t/is (= (list :updated_on) (keys query)))))))
 
 (t/deftest update-article-test-article-id
   (t/testing "Test update article database article ID"
     (let [article-id 432]
-      (with-redefs [sql/update! (fn [_ _ _ i] i)]
-        (t/is (= {:id article-id}
-                 (sut/update-article nil article-id nil)))))))
+      (with-redefs [sql/update! (spy/mock (fn [_ _ _ i] {:next.jdbc/update-count 1}))]
+        (let [result (sut/update-article nil article-id nil)
+              [[_ _ _ article-id-param]] (spy/calls sql/update!)]
+          (t/is (= {:id article-id} article-id-param)))))))
 
 (t/deftest get-all-articles-test-default-query
   (t/testing "Test get all articles default database query"
     (with-redefs [sql/query (fn [_ q] q)]
       (let [[query limit] (sut/get-all-articles nil)]
-        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles ORDER BY updated_on LIMIT ?" query))
+        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles ORDER BY updated_on DESC LIMIT ?" query))
         (t/is (= 100 limit))))))
 
 (t/deftest get-all-articles-test-query-with-limit
@@ -120,12 +125,20 @@
             [_ limit]   (sut/get-all-articles nil limit-param)]
         (t/is (= limit-param limit))))))
 
+(t/deftest get-latest-full-sized-articles-query
+  (t/testing "Test get latest full sized articles database query"
+    (with-redefs [sql/query (fn [_ q] q)]
+      (let [number-param 30
+            [query number] (sut/get-latest-full-sized-articles nil number-param)]
+        (t/is (= "SELECT id, user_id, title, body, featured_image, created_on, updated_on, description FROM articles ORDER BY updated_on DESC LIMIT ?" query))
+        (t/is (= number-param number ))))))
+
 (t/deftest get-user-articles-test-default-query
   (t/testing "Test get user articles default database query"
     (with-redefs [sql/query (fn [_ q] q)]
       (let [user-id-param         42
             [query user-id limit] (sut/get-user-articles nil user-id-param)]
-        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles WHERE user_id = ? ORDER BY updated_on LIMIT ?" query))
+        (t/is (= "SELECT id, user_id, title, featured_image, updated_on, description FROM articles WHERE user_id = ? ORDER BY updated_on DESC LIMIT ?" query))
         (t/is (= limit 100))
         (t/is (= user-id user-id-param))))))
 

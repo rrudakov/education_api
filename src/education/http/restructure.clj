@@ -1,8 +1,9 @@
 (ns education.http.restructure
   (:require [buddy.auth :refer [authenticated?]]
+            [clojure.set :as set]
             [compojure.api.meta :refer [restructure-param]]
-            [ring.util.http-response :refer [forbidden unauthorized]]
-            [clojure.set :as set]))
+            [education.http.constants :refer :all]
+            [ring.util.http-response :refer [forbidden unauthorized]]))
 
 (defn- expire?
   "Check if `user` data from token is expired."
@@ -29,12 +30,13 @@
   [handler roles]
   (fn [request]
     (if-not (authenticated? request)
-      (unauthorized {:message "You are not authorized!"})
+      (unauthorized {:message not-authorized-error-message})
       (let [identity (:identity request)]
         (if-not (has-role? (:user identity) roles)
-          (forbidden {:message "You don't have access to this resource!"})
+          (forbidden {:message no-access-error-message})
           (handler request))))))
 
+;; Let's keep it just as an example of multimethod
 ;; (defmethod restructure-param :auth-roles
 ;;   [_ required-roles acc]
 ;;   (update-in acc [:middleware] conj [require-roles required-roles]))

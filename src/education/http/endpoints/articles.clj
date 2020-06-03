@@ -1,11 +1,14 @@
 (ns education.http.endpoints.articles
   (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.database.articles :as articlesdb]
+            [education.http.constants :refer :all]
             [education.http.restructure :refer [require-roles]]
             [education.specs.articles :as specs]
+            [education.specs.error :as err]
             [ring.swagger.schema :refer [describe]]
-            [ring.util.http-response :refer [created no-content not-found ok]]
-            [education.specs.error :as err]))
+            [ring.util.http-response
+             :refer
+             [created internal-server-error no-content not-found ok]]))
 
 ;; Converters
 (defn to-short-article-response
@@ -42,9 +45,10 @@
 (defn- update-article-handler
   "Update existing article handler."
   [db article-id article]
-  (do
-    (articlesdb/update-article db article-id article)
-    (no-content)))
+  (case (articlesdb/update-article db article-id article)
+    1 (no-content)
+    0 (not-found {:message not-found-error-message})
+    (internal-server-error {:message server-error-message})))
 
 (defn- get-all-articles-handler
   "Get all recent articles handler."
@@ -56,12 +60,20 @@
          (map to-short-article-response)
          ok)))
 
+(defn- get-latest-full-articles-handler
+  "Get latest full articles handler."
+  [db number]
+  (let [articles (articlesdb/get-latest-full-sized-articles db number)]
+    (->> articles
+         (map to-full-article-response)
+         ok)))
+
 (defn- get-article-by-id-handler
   "Get article by `article-id` handler."
   [db article-id]
   (let [article (articlesdb/get-article-by-id db article-id)]
     (if (nil? article)
-      (not-found {:message (str "Article with id " article-id " not found!")})
+      (not-found {:message not-found-error-message})
       (ok (to-full-article-response article)))))
 
 (defn- get-last-main-featured-article-handler
@@ -69,7 +81,7 @@
   [db]
   (let [mf-article (articlesdb/get-last-featured-article db)]
     (if (nil? mf-article)
-      (not-found {:message "Main featured article was not found!"})
+      (not-found {:message not-found-error-message})
       (ok (to-short-article-response mf-article)))))
 
 (defn- delete-article-handler
@@ -90,7 +102,9 @@
       :body [article ::specs/article-create-request]
       :return ::specs/id
       :summary "Create new article"
-      :responses {401 {:description "Access denied!"
+      :responses {401 {:description "Not authorized!"
+                       :schema      ::err/error-response}
+                  403 {:description "Access denied!"
                        :schema      ::err/error-response}}
       (create-article-handler db article))
     (PATCH "/articles/:id" []
@@ -107,6 +121,11 @@
                      {user_id :- ::specs/user_id nil}]
       :summary "Get list of latest articles"
       (get-all-articles-handler {:db db :limit limit :user-id user_id}))
+    (GET "/articles/latest" []
+      :return ::specs/articles-full
+      :query-params [limit :- ::specs/limit]
+      :summary "Get latest full articles"
+      (get-latest-full-articles-handler db limit))
     (GET "/articles/:id" []
       :return ::specs/article-full
       :path-params [id :- ::specs/id]
