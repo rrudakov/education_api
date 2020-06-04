@@ -84,6 +84,13 @@
       (not-found {:message not-found-error-message})
       (ok (to-short-article-response mf-article)))))
 
+(defn- get-last-featured-articles-handler
+  "Get last featured articles handler."
+  [db limit]
+  (->> (articlesdb/get-last-featured-articles db limit)
+       (map to-short-article-response)
+       ok))
+
 (defn- delete-article-handler
   "Delete article by `article-id` handler."
   [db article-id]
@@ -135,6 +142,11 @@
       :return ::specs/article-short
       :summary "Get main featured article"
       (get-last-main-featured-article-handler db))
+    (GET "/articles/featured/latest" []
+      :return ::specs/articles-short
+      :query-params [limit :- ::specs/limit]
+      :summary "Get latest featured articles list"
+      (get-last-featured-articles-handler db limit))
     (DELETE "/articles/:id" []
       :middleware [[require-roles #{:moderator}]]
       :path-params [id :- ::specs/id]
