@@ -1,8 +1,7 @@
 (ns education.test-data
-  (:require  [clojure.test :as t]
-             [buddy.sign.jwt :as jwt]
-             [education.config :as config]
-             [cheshire.core :as cheshire])
+  (:require [buddy.sign.jwt :as jwt]
+            [cheshire.core :as cheshire]
+            [education.config :as config])
   (:import java.time.Instant))
 
 (def test-config
@@ -12,9 +11,9 @@
 
 (def auth-user
   "Valid authorized user."
-  {:id 42
-   :username "admin"
-   :email "admin@example.com"
+  {:id         42
+   :username   "admin"
+   :email      "admin@example.com"
    :created_on (Instant/now)
    :updated_on (Instant/now)})
 
