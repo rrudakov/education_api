@@ -8,7 +8,7 @@
             [ring.swagger.schema :refer [describe]]
             [ring.util.http-response
              :refer
-             [created internal-server-error no-content not-found ok]]))
+             [created internal-server-error no-content not-found ok forbidden]]))
 
 ;; Converters
 (defn to-short-article-response
@@ -45,10 +45,13 @@
 (defn- update-article-handler
   "Update existing article handler."
   [db article-id article]
-  (case (articlesdb/update-article db article-id article)
-    1 (no-content)
-    0 (not-found {:message not-found-error-message})
-    (internal-server-error {:message server-error-message})))
+  (fn [{:keys [identity]}]
+    (if (articlesdb/can-update? db (:user identity) article-id)
+      (case (articlesdb/update-article db article-id article)
+        1 (no-content)
+        0 (not-found {:message not-found-error-message})
+        (internal-server-error {:message server-error-message}))
+      (forbidden {:message no-access-error-message}))))
 
 (defn- get-all-articles-handler
   "Get all recent articles handler."
@@ -105,7 +108,7 @@
   (context "" []
     :tags ["articles"]
     (POST "/articles" []
-      :middleware [[require-roles #{:moderator}]]
+      :middleware [[require-roles #{:guest}]]
       :body [article ::specs/article-create-request]
       :return ::specs/id
       :summary "Create new article"
@@ -115,7 +118,7 @@
                        :schema      ::err/error-response}}
       (create-article-handler db article))
     (PATCH "/articles/:id" []
-      :middleware [[require-roles #{:moderator}]]
+      :middleware [[require-roles #{:guest}]]
       :body [article ::specs/article-update-request]
       :path-params [id :- ::specs/id]
       :summary "Update existing article by article ID"

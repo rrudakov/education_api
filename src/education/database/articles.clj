@@ -1,5 +1,6 @@
 (ns education.database.articles
-  (:require [honeysql.core :as hsql]
+  (:require [education.http.restructure :refer [has-role?]]
+            [honeysql.core :as hsql]
             next.jdbc.date-time
             [next.jdbc.sql :as sql]))
 
@@ -33,15 +34,15 @@
   "Create new `article` in database."
   [conn user article]
   (let [{:keys [title body featured_image is_main_featured description]
-         :or {is_main_featured false
-              description default-article-description}} article
-        user-id (:id user)]
+         :or   {is_main_featured false
+                description      default-article-description}} article
+        user-id                                         (:id user)]
     (->> (sql/insert! conn :articles
-                      {:user_id user-id
-                       :title title
-                       :body body
-                       :featured_image featured_image
-                       :description description
+                      {:user_id          user-id
+                       :title            title
+                       :body             body
+                       :featured_image   featured_image
+                       :description      description
                        :is_main_featured is_main_featured})
          (:articles/id))))
 
@@ -119,3 +120,10 @@
   "Delete article from database by `article-id`."
   [conn article-id]
   (sql/delete! conn :articles {:id article-id}))
+
+(defn can-update?
+  "Check whether `user` allowed to update article by `arcicle-id`."
+  [conn user article-id]
+  (or (has-role? user #{:moderator})
+      (let [article-user-id (:articles/user_id (sql/get-by-id conn :articles article-id))]
+        (= (:id user) article-user-id))))

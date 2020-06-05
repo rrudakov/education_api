@@ -13,7 +13,7 @@
       user
       nil)))
 
-(defn- has-role?
+(defn has-role?
   "Check if `user` has one or many of `required-roles`."
   [user required-roles]
   (let [user-roles (->> user :roles (map keyword))
