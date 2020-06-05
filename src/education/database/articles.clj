@@ -34,9 +34,9 @@
   "Create new `article` in database."
   [conn user article]
   (let [{:keys [title body featured_image is_main_featured description]
-         :or   {is_main_featured false
-                description      default-article-description}} article
-        user-id                                         (:id user)]
+         :or {is_main_featured false
+              description default-article-description}} article
+        user-id (:id user)]
     (->> (sql/insert! conn :articles
                       {:user_id          user-id
                        :title            title
