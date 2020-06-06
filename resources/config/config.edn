@@ -1,9 +1,11 @@
 {:secrets #profile {:dev #include #join [#env HOME "/.secrets.edn"]}
 
  :database
- {:url #profile {:dev #ref [:secrets :dburi]
-                 :prod #env JDBC_DATABASE_URL}}
+ {:url #profile
+  {:dev  #ref [:secrets :dburi]
+   :prod #env JDBC_DATABASE_URL}}
  :app
- {:port #long #or [#env PORT 3000]
-  :tokensign #profile {:dev #ref [:secrets :tokensign]
-                       :prod #env SECRET}}}
+ {:port      #long #or [#env PORT 3000]
+  :tokensign #profile
+  {:dev  #ref [:secrets :tokensign]
+   :prod #env SECRET}}}
