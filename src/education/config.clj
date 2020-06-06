@@ -23,9 +23,9 @@
 (defn auth-backend
   "Return authentication back-end."
   [config]
-  (jws-backend {:secret (token-sign-secret config)
+  (jws-backend {:secret     (token-sign-secret config)
                 :token-name "Token"
-                :options {:alg :hs512}}))
+                :options    {:alg :hs512}}))
 
 (defn db-config
   "Return database specification from the `config`."
@@ -38,5 +38,5 @@
   (let [db-uri (:url (db-config config))]
     (-> {:jdbcUrl db-uri}
         (assoc :maxIdleTime (* 3 60 60))
-        (assoc :maxItleTimeExcessConnections (* 3 60 60))
+        (assoc :maxIdleTimeExcessConnections (* 3 60 60))
         (assoc :maxPoolSize 30))))

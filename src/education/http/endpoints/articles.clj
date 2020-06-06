@@ -97,9 +97,13 @@
 (defn- delete-article-handler
   "Delete article by `article-id` handler."
   [db article-id]
-  (do
-    (articlesdb/delete-article db article-id)
-    (no-content)))
+  (fn [{:keys [identity]}]
+    (if (articlesdb/can-update? db (:user identity) article-id)
+      (case (articlesdb/delete-article db article-id)
+        1 (no-content)
+        0 (not-found {:message not-found-error-message})
+        (internal-server-error {:message server-error-message}))
+      (forbidden {:message no-access-error-message}))))
 
 ;; Define routes
 (defn articles-routes
@@ -151,7 +155,7 @@
       :summary "Get latest featured articles list"
       (get-last-featured-articles-handler db limit))
     (DELETE "/articles/:id" []
-      :middleware [[require-roles #{:moderator}]]
+      :middleware [[require-roles #{:guest}]]
       :path-params [id :- ::specs/id]
       :return {}
       :summary "Delete article by ID"

@@ -29,3 +29,8 @@
 (def auth-user-deserialized
   "Authorized user deserialized from authorization token."
   (cheshire/parse-string (cheshire/generate-string auth-user) true))
+
+(defn auth-user-deserialized-with-role
+  "Return authorized user with given `role`."
+  [role]
+  (assoc auth-user-deserialized :roles (vector (name role))))
