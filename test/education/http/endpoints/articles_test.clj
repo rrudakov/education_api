@@ -96,7 +96,7 @@
 (deftest create-article-test-success
   (testing "Test POST /articles authorized with valid request body"
     (let [new-article-id 54]
-      (with-redefs [articlesdb/add-article (spy/mock (fn [_ u a] new-article-id))]
+      (with-redefs [articlesdb/add-article (spy/stub new-article-id)]
         (let [role          :guest
               user-expected (assoc auth-user-deserialized :roles (vector (name role)))
               app           (test-api-routes-with-auth (spy/spy))
@@ -142,8 +142,8 @@
 
 (deftest update-article-test-success
   (testing "Test PATCH /article/:id authorized with valid body"
-    (with-redefs [articlesdb/update-article (spy/mock (fn [_ _ _] 1))
-                  articlesdb/can-update?    (spy/mock (fn [_ _ _] true))]
+    (with-redefs [articlesdb/update-article (spy/stub 1)
+                  articlesdb/can-update?    (spy/stub true)]
       (let [article-id 43
             role       :guest
             app        (test-api-routes-with-auth (spy/spy))
@@ -154,7 +154,7 @@
         (is (= 204 (:status response)))
         (is (spy/called-once-with? articlesdb/can-update?
                                      nil
-                                     (assoc auth-user-deserialized :roles (vector (name role)))
+                                     (auth-user-deserialized-with-role role)
                                      article-id))
         (is (spy/called-once-with? articlesdb/update-article
                                      nil
@@ -176,7 +176,7 @@
 (deftest update-article-test-no-access
   (testing "Test PATCH /articles/:id with guest role"
     (with-redefs [articlesdb/update-article (spy/spy)
-                  articlesdb/can-update?    (spy/mock (fn [_ _ _] false))]
+                  articlesdb/can-update?    (spy/stub false)]
       (let [app      (test-api-routes-with-auth (spy/spy))
             response (app (-> (mock/request :patch "/api/articles/44")
                               (mock/content-type "application/json")
@@ -204,7 +204,7 @@
 
 (deftest update-article-test-does-not-exist
   (testing "Test PATCH /articles/:id with non-existing article id"
-    (with-redefs [articlesdb/update-article (spy/mock (fn [_ _ _] 0))]
+    (with-redefs [articlesdb/update-article (spy/stub 0)]
       (let [app      (test-api-routes-with-auth (spy/spy))
             response (app (-> (mock/request :patch "/api/articles/456")
                               (mock/content-type "application/json")
@@ -217,7 +217,7 @@
 
 (deftest update-article-test-database-error
   (testing "Test PATCH /articles/:id unexpected response from database"
-    (with-redefs [articlesdb/update-article (spy/mock (fn [_ _ _] 2))]
+    (with-redefs [articlesdb/update-article (spy/stub 2)]
       (let [app      (test-api-routes-with-auth (spy/spy))
             response (app (-> (mock/request :patch "/api/articles/3")
                               (mock/content-type "application/json")
@@ -246,9 +246,7 @@
 (deftest get-articles-test-default-description
   (testing "Test GET /articles endpoint return default description"
     (with-redefs [articlesdb/get-all-articles
-                  (spy/mock
-                   (fn [_ _]
-                     [(dissoc test-db-full-article-1 :articles/description)]))]
+                  (spy/stub [(dissoc test-db-full-article-1 :articles/description)])]
       (let [app      (test-api-routes-with-auth (spy/spy))
             response (app (-> (mock/request :get "/api/articles")))
             body     (parse-body (:body response))]
@@ -257,7 +255,7 @@
 
 (deftest get-articles-test-limit-param
   (testing "Test GET /articles endpoint accept optional limit parameter"
-    (with-redefs [articlesdb/get-all-articles (spy/mock (fn [_ _] []))]
+    (with-redefs [articlesdb/get-all-articles (spy/stub [])]
       (let [limit-param 1
             app         (test-api-routes-with-auth (spy/spy))
             response    (app (-> (mock/request :get (str "/api/articles?limit=" limit-param))))
@@ -268,7 +266,7 @@
 
 (deftest get-articles-test-user-id-param
   (testing "Test GET /articles endpoint accept optional user_id parameter"
-    (with-redefs [articlesdb/get-user-articles (spy/mock (fn [_ _ _] []))
+    (with-redefs [articlesdb/get-user-articles (spy/stub [])
                   articlesdb/get-all-articles  (spy/spy)]
       (let [user-id-param       42
             app                 (test-api-routes-with-auth (spy/spy))
@@ -295,10 +293,7 @@
 (deftest get-latest-articles-test-response-body
   (testing "Test GET /articles/latest with valid limit parameter"
     (with-redefs [articlesdb/get-latest-full-sized-articles
-                  (spy/mock
-                   (fn [_ _]
-                     [test-db-full-article-1
-                      test-db-full-article-2]))]
+                  (spy/stub [test-db-full-article-1 test-db-full-article-2])]
       (let [limit    88
             app      (test-api-routes-with-auth (spy/spy))
             url      (str "/api/articles/latest?limit=" limit)
@@ -324,9 +319,7 @@
 (deftest get-latest-articles-test-default-description
   (testing "Test GET /articles/latest verify default description"
     (with-redefs [articlesdb/get-latest-full-sized-articles
-                  (spy/mock
-                   (fn [_ _]
-                     [(dissoc test-db-full-article-1 :articles/description)]))]
+                  (spy/stub [(dissoc test-db-full-article-1 :articles/description)])]
       (let [app      (test-api-routes-with-auth (spy/spy))
             response (app (-> (mock/request :get "/api/articles/latest?limit=44")))
             body     (parse-body (:body response))]
@@ -337,10 +330,7 @@
 (deftest get-last-featured-articles-test-response-body
   (testing "Test GET /articles/featured/latest with valid request"
     (with-redefs [articlesdb/get-last-featured-articles
-                  (spy/mock
-                   (fn [_ _]
-                     [test-db-full-article-1
-                      test-db-full-article-2]))]
+                  (spy/stub [test-db-full-article-1 test-db-full-article-2])]
       (let [limit    33
             app      (test-api-routes-with-auth (spy/spy))
             response (app (-> (mock/request :get (str "/api/articles/featured/latest?limit=" limit))))
@@ -360,3 +350,143 @@
           (is (= 400 (:status response)))
           (is (contains? body :message))
           (is (= bad-request-error-message (:message body))))))))
+
+(deftest get-article-by-id-test-response-body
+  (testing "Test GET /articles/:id with valid article-id"
+    (with-redefs [articlesdb/get-article-by-id (spy/stub test-db-full-article-1)]
+      (let [article-id 99
+            app        (test-api-routes-with-auth (spy/spy))
+            response   (app (-> (mock/request :get (str "/api/articles/" article-id))))
+            body       (parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= test-response-full-article-1 body))
+        (is (spy/called-once-with? articlesdb/get-article-by-id nil article-id))))))
+
+(deftest get-article-by-id-test-article-not-found
+  (testing "Test GET /articles/:id with non-existing article-id"
+    (with-redefs [articlesdb/get-article-by-id (spy/stub nil)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :get "/api/articles/88")))
+            body     (parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (contains? body :message))
+        (is (= not-found-error-message (:message body)))
+        (is (spy/called-once? articlesdb/get-article-by-id))))))
+
+(deftest get-article-by-id-test-id-validation
+  (testing "Test GET /articles/:id with invalid article id"
+    (with-redefs [articlesdb/get-article-by-id (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :get "/api/articles/invalid")))
+            body     (parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (contains? body :message))
+        (is (= bad-request-error-message (:message body)))
+        (is (spy/not-called? articlesdb/get-article-by-id))))))
+
+(deftest get-last-featured-article-test-response-body
+  (testing "Test GET /articles/featured/main exist response body"
+    (with-redefs [articlesdb/get-last-featured-article (spy/stub test-db-full-article-1)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (mock/request :get "/api/articles/featured/main"))
+            body     (parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= test-response-short-article-1 body))
+        (is (spy/called-once? articlesdb/get-last-featured-article))))))
+
+(deftest get-last-featured-article-test-article-not-found
+  (testing "Test GET /articles/featured/main no featured articles in db"
+    (with-redefs [articlesdb/get-last-featured-article (spy/stub nil)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (mock/request :get "/api/articles/featured/main"))
+            body     (parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (contains? body :message))
+        (is (= not-found-error-message (:message body)))
+        (is (spy/called-once? articlesdb/get-last-featured-article))))))
+
+(deftest delete-article-test-existing-article
+  (testing "Test DELETE /articles/:id for existing article-id"
+    (with-redefs [articlesdb/delete-article (spy/stub 1)
+                  articlesdb/can-update?    (spy/stub true)]
+      (let [article-id 532
+            role       :guest
+            app        (test-api-routes-with-auth (spy/spy))
+            response   (app (-> (mock/request :delete (str "/api/articles/" article-id))
+                                (mock/header :authorization (test-auth-token #{role}))))]
+        (is (= 204 (:status response)))
+        (is (spy/called-once-with? articlesdb/can-update?
+                                   nil
+                                   (auth-user-deserialized-with-role role)
+                                   article-id))
+        (is (spy/called-once-with? articlesdb/delete-article nil article-id))))))
+
+(deftest delete-article-test-no-access
+  (testing "Test DELETE /articles/:id with guest role not article owner"
+    (with-redefs [articlesdb/delete-article (spy/spy)
+                  articlesdb/can-update?    (spy/stub false)]
+      (let [article-id 333
+            role       :guest
+            app        (test-api-routes-with-auth (spy/spy))
+            response   (app (-> (mock/request :delete (str "/api/articles/" article-id))
+                                (mock/header :authorization (test-auth-token #{role}))))
+            body       (parse-body (:body response))]
+        (is (= 403 (:status response)))
+        (is (contains? body :message))
+        (is (= no-access-error-message (:message body)))
+        (is (spy/called-once-with? articlesdb/can-update?
+                                   nil
+                                   (auth-user-deserialized-with-role role)
+                                   article-id))
+        (is (spy/not-called? articlesdb/delete-article))))))
+
+(deftest delete-article-test-not-authorized
+  (testing "Test DELETE /articles/:id without authorization token"
+    (with-redefs [articlesdb/delete-article (spy/spy)
+                  articlesdb/can-update?    (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/articles/44")))
+            body     (parse-body (:body response))]
+        (is (= 401 (:status response)))
+        (is (contains? body :message))
+        (is (= not-authorized-error-message (:message body)))
+        (is (spy/not-called? articlesdb/can-update?))
+        (is (spy/not-called? articlesdb/delete-article))))))
+
+(deftest delete-article-test-not-found
+  (testing "Test DELETE /articles/:id for non-existing article-id"
+    (with-redefs [articlesdb/delete-article (spy/stub 0)
+                  articlesdb/can-update?    (spy/stub true)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/articles/84")
+                              (mock/header :authorization (test-auth-token #{:admin}))))
+            body     (parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (contains? body :message))
+        (is (= not-found-error-message (:message body)))))))
+
+(deftest delete-article-test-invalid-asset-id
+  (testing "Test DELETE /articles/:id with invalid article-id parameter"
+    (with-redefs [articlesdb/delete-article (spy/spy)
+                  articlesdb/can-update?    (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/articles/invalid")
+                              (mock/header :authorization (test-auth-token #{:moderator}))))
+            body     (parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (contains? body :message))
+        (is (= bad-request-error-message (:message body)))
+        (is (spy/not-called? articlesdb/delete-article))
+        (is (spy/not-called? articlesdb/can-update?))))))
+
+(deftest delete-article-test-database-error
+  (testing "Test DELETE /articles/:id error from database"
+    (with-redefs [articlesdb/delete-article (spy/stub 2)
+                  articlesdb/can-update?    (spy/stub true)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/articles/834")
+                              (mock/header :authorization (test-auth-token #{:admin}))))
+            body     (parse-body (:body response))]
+        (is (= 500 (:status response)))
+        (is (contains? body :message))
+        (is (= server-error-message (:message body)))))))

@@ -37,4 +37,5 @@
   :profiles {:dev {:dependencies [[tortue/spy "2.0.0"]
                                   [ring/ring-mock "0.4.0"]]}
              :uberjar {:aot :all}}
+  :plugins [[lein-cloverage "1.1.2"]]
   :main education.core)
