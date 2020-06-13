@@ -41,23 +41,31 @@
   [{:keys [datasource]} config]
   (api
    {:swagger
-    {:ui "/swagger"
+    {:ui   "/swagger"
      :spec "/swagger.json"
-     :options {:ui {:jsonEditor true}
-               :spec {}}
-     :data {:info {:version "0.1-alpha"
-                   :title "Education API"
-                   :description "REST API for education application"
-                   :contact {:name "Roman Rudakov"
-                             :email "rrudakov@pm.me"}}
-            :tags [{:name "users" :description "Users management"}
-                   {:name "roles" :description "Roles management"}
-                   {:name "articles" :description "Articles management"}]
-            :securityDefinitions {:api_key {:type "apiKey" :name "Authorization" :in "header"}}}}
+     :options
+     {:ui   {}
+      :spec {}}
+     :data
+     {:info
+      {:version     "0.1-alpha"
+       :title       "Education API"
+       :description "REST API for education application"
+       :contact
+       {:name  "Roman Rudakov"
+        :email "rrudakov@pm.me"}}
+      :tags [{:name "users" :description "Users management"}
+             {:name "roles" :description "Roles management"}
+             {:name "articles" :description "Articles management"}]
+      :securityDefinitions
+      {:api_key
+       {:type "apiKey"
+        :name "Authorization"
+        :in   "header"}}}}
     :exceptions
     {:handlers
-     {PSQLException (sql-exception-handler)
-      ::ex/request-validation (request-validation-handler)
+     {PSQLException            (sql-exception-handler)
+      ::ex/request-validation  (request-validation-handler)
       ::ex/response-validation (response-validation-handler)}}}
 
    (context "/api" []

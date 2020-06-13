@@ -55,8 +55,7 @@
         (sql/delete! tx :user_roles {:user_id id})
         (sql/insert-multi! tx :user_roles
                            [:user_id :role_id]
-                           (for [role new-roles]
-                             [id role]))
+                           (map #(vector id %) new-roles))
         (sql/update! tx :users {:updated_on (java.time.Instant/now)} {:id id})))))
 
 (defn delete-user

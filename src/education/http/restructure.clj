@@ -16,12 +16,12 @@
 (defn has-role?
   "Check if `user` has one or many of `required-roles`."
   [user required-roles]
-  (let [user-roles (->> user :roles (map keyword))
-        has-roles (cond
-                    (some #{:admin} user-roles)     #{:any :guest :moderator :admin}
-                    (some #{:moderator} user-roles) #{:any :guest :moderator}
-                    (some #{:guest} user-roles)     #{:any :guest}
-                    :else #{})
+  (let [user-roles    (->> user :roles (map keyword) set)
+        has-roles     (cond
+                        (contains? user-roles :admin)     #{:any :guest :moderator :admin}
+                        (contains? user-roles :moderator) #{:any :guest :moderator}
+                        (contains? user-roles :guest)     #{:any :guest}
+                        :else                             #{})
         matched-roles (set/intersection has-roles required-roles)]
     (not (empty? matched-roles))))
 
