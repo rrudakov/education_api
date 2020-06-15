@@ -1,10 +1,23 @@
 (ns education.database.users
   (:require [buddy.hashers :as hs]
+            [clojure.set :refer [rename-keys]]
             [education.database.roles :as roles]
             [honeysql.core :as hsql]
             [next.jdbc :as jdbc]
             next.jdbc.date-time
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.result-set :as rs]
+            [next.jdbc.sql :as sql])
+  (:import java.sql.Array))
+
+(extend-protocol rs/ReadableColumn
+  Array
+  (read-column-by-label
+    [^Array v _]
+    (set (map keyword (.getArray v))))
+
+  (read-column-by-index
+    [^Array v _ _]
+    (set (map keyword (.getArray v)))))
 
 (defn add-user
   "Create new `user` in database."
@@ -38,10 +51,20 @@
 (defn get-all-users
   "Fetch all users from `database`."
   [conn]
-  (->> (hsql/build :select :* :from :users)
+  (->> (hsql/build :select [:u.id
+                            :u.user_name
+                            :u.user_email
+                            [:%array_agg.r.role_name :roles]
+                            :u.created_on
+                            :u.updated_on]
+                   :from [[:users :u]]
+                   :left-join [[:user_roles :ur] [:= :ur.user_id :u.id]
+                               [:roles :r] [:= :r.id :ur.role_id]]
+                   :group-by :u.id
+                   :order-by [[:u.id :desc]])
        hsql/format
        (sql/query conn)
-       (map (partial enrich-user-with-roles conn))))
+       (map #(rename-keys % {:roles :users/roles}))))
 
 (defn update-user
   "Update `user` and `roles`."

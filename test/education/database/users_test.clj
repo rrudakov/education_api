@@ -3,7 +3,8 @@
             [clojure.test :refer :all]
             [education.database.roles :as roles]
             [education.database.users :as sut]
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.sql :as sql]
+            [spy.core :as spy]))
 
 (def password
   "Password for test users."
@@ -36,34 +37,39 @@
   #{:admin :guest :moderator})
 
 (deftest get-user-successful-test
-  (with-redefs [sql/get-by-id        (fn [_ _ _] test-user1)
-                roles/get-user-roles (fn [_ _] user-roles1)]
-    (testing "Test get existing user successfully"
-      (is (= (assoc test-user1 :users/roles user-roles1)
-             (sut/get-user nil 4))))))
+  (testing "Test get existing user successfully"
+    (with-redefs [sql/get-by-id        (spy/stub test-user1)
+                  roles/get-user-roles (spy/stub user-roles1)]
+      (let [user-id 4
+            result  (sut/get-user nil user-id)]
+        (is (= (assoc test-user1 :users/roles user-roles1) result))
+        (is (spy/called-once-with? sql/get-by-id nil :users user-id))))))
 
 (deftest get-user-not-found-test
-  (with-redefs [sql/get-by-id        (fn [_ _ _] nil)
-                roles/get-user-roles (fn [_ _] user-roles1)]
-    (testing "Test get non-existing user"
-      (is (= nil (sut/get-user nil 4))))))
+  (testing "Test get non-existing user"
+    (with-redefs [sql/get-by-id        (spy/stub nil)
+                  roles/get-user-roles (spy/stub user-roles1)]
+      (is (= nil (sut/get-user nil 4)))
+      (is (spy/not-called? roles/get-user-roles)))))
 
 (deftest get-all-users-test
-  (with-redefs [sql/query (fn [_ _] [test-user1 test-user2])
-                roles/get-user-roles
-                (fn [_ user]
-                  (let [id (:users/id user)]
-                    (condp = id
-                      (:users/id test-user1) user-roles1
-                      (:users/id test-user2) user-roles2)))]
-    (testing "Test fetching all users from database"
+  (testing "Test fetching all users from database"
+    (with-redefs [sql/query (spy/stub [(assoc test-user1 :roles user-roles1)
+                                       (assoc test-user2 :roles user-roles2)])]
+      (let [result (sut/get-all-users nil)]
       (is (= (list (assoc test-user1 :users/roles user-roles1)
-                   (assoc test-user2 :users/roles user-roles2))
-             (sut/get-all-users nil))))))
+                   (assoc test-user2 :users/roles user-roles2)) result))
+      (is (spy/called-once-with? sql/query nil
+                                 [(str "SELECT u.id, u.user_name, u.user_email, array_agg(r.role_name) AS roles, u.created_on, u.updated_on "
+                                       "FROM users u "
+                                       "LEFT JOIN user_roles ur ON ur.user_id = u.id "
+                                       "LEFT JOIN roles r ON r.id = ur.role_id "
+                                       "GROUP BY u.id "
+                                       "ORDER BY u.id DESC")]))))))
 
 (deftest auth-user-successful-test
-  (with-redefs [sql/get-by-id        (fn [_ _ _ _ _] test-user1)
-                roles/get-user-roles (fn [_ _] user-roles1)]
+  (with-redefs [sql/get-by-id        (spy/stub test-user1)
+                roles/get-user-roles (spy/stub user-roles1)]
     (testing "Test successful authorization"
       (let [[res user] (sut/auth-user nil
                                       {:username (:users/user_name test-user1)
