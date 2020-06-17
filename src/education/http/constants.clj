@@ -11,3 +11,5 @@
 (def no-access-error-message "You don't have access to this resource")
 
 (def server-error-message "Something went wrong! Please, be patient, we're working on fix!")
+
+(def invalid-credentials-error-message "Invalid username or password")

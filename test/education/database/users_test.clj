@@ -3,86 +3,132 @@
             [clojure.test :refer :all]
             [education.database.roles :as roles]
             [education.database.users :as sut]
-            [next.jdbc.sql :as sql]))
+            [education.http.constants :refer :all]
+            [education.test-data :refer :all]
+            [next.jdbc :as jdbc]
+            [next.jdbc.protocols :as p]
+            [next.jdbc.sql :as sql]
+            [spy.core :as spy]))
 
-(def password
-  "Password for test users."
-  "123456")
+(deftest add-user-test
+  (testing "Test add user successful flow return user ID"
+    (with-redefs [sql/insert!            (spy/stub db-test-user1)
+                  roles/get-role-by-name (spy/stub db-guest-role)
+                  p/-transact            (spy/mock (fn [_ f _] (f nil)))
+                  jdbc/transact          (spy/mock (fn [_ f _] (do (f nil) (:users/id db-test-user1))))]
+      (let [new-user-id                        (sut/add-user nil add-user1-request)
+            [[_ users-table users-insert]
+             [_ user-roles-table role-insert]] (spy/calls sql/insert!)]
+        (is (= (:users/id db-test-user1) new-user-id))
+        (is (spy/called-once-with? roles/get-role-by-name nil "guest"))
+        (is (spy/called-n-times? sql/insert! 2))
+        (is (= :users users-table))
+        (is (= [:user_name :user_password :user_email] (keys users-insert)))
+        (is (= {:user_name  (:username add-user1-request)
+                :user_email (:email add-user1-request)}
+               (select-keys users-insert [:user_name :user_email])))
+        (is (hs/check (:password add-user1-request) (:user_password users-insert)))
+        (is (= :user_roles user-roles-table))
+        (is (= {:user_id (:users/id db-test-user1)
+                :role_id (:roles/id db-guest-role)}
+               role-insert))))))
 
-(def test-user1
-  "First mocked testing user."
-  {:users/id            4,
-   :users/user_name     "rrudakov",
-   :users/user_password (hs/encrypt password),
-   :users/user_email    "rrudakof@pm.me",
-   :users/created_on    #inst "2020-05-07T15:13:36.388217000-00:00",
-   :users/updated_on    #inst "2020-05-07T15:13:36.388217000-00:00"})
+(deftest get-user-test
+  (testing "Test get existing user successfully"
+    (with-redefs [sql/get-by-id        (spy/stub db-test-user1)
+                  roles/get-user-roles (spy/stub user1-roles)]
+      (let [user-id 4
+            result  (sut/get-user nil user-id)]
+        (is (= (assoc db-test-user1 :users/roles user1-roles) result))
+        (is (spy/called-once-with? sql/get-by-id nil :users user-id))
+        (is (spy/called-once-with? roles/get-user-roles nil db-test-user1)))))
 
-(def test-user2
-  "Second mocked testing user."
-  {:users/id            11,
-   :users/user_name     "rrudakov2",
-   :users/user_password (hs/encrypt password),
-   :users/user_email    "rrudakov@pm.me2",
-   :users/created_on    #inst "2020-05-08T20:20:15.867832000-00:00",
-   :users/updated_on    #inst "2020-05-09T19:33:55.358506000-00:00"})
-
-(def user-roles1
-  "Roles for first mocked user."
-  #{:admin :guest})
-
-(def user-roles2
-  "Roles for second mocked user."
-  #{:admin :guest :moderator})
-
-(deftest get-user-successful-test
-  (with-redefs [sql/get-by-id        (fn [_ _ _] test-user1)
-                roles/get-user-roles (fn [_ _] user-roles1)]
-    (testing "Test get existing user successfully"
-      (is (= (assoc test-user1 :users/roles user-roles1)
-             (sut/get-user nil 4))))))
-
-(deftest get-user-not-found-test
-  (with-redefs [sql/get-by-id        (fn [_ _ _] nil)
-                roles/get-user-roles (fn [_ _] user-roles1)]
-    (testing "Test get non-existing user"
-      (is (= nil (sut/get-user nil 4))))))
+  (testing "Test get non-existing user"
+    (with-redefs [sql/get-by-id        (spy/stub nil)
+                  roles/get-user-roles (spy/stub user1-roles)]
+      (is (= nil (sut/get-user nil 4)))
+      (is (spy/not-called? roles/get-user-roles)))))
 
 (deftest get-all-users-test
-  (with-redefs [sql/query (fn [_ _] [test-user1 test-user2])
-                roles/get-user-roles
-                (fn [_ user]
-                  (let [id (:users/id user)]
-                    (condp = id
-                      (:users/id test-user1) user-roles1
-                      (:users/id test-user2) user-roles2)))]
-    (testing "Test fetching all users from database"
-      (is (= (list (assoc test-user1 :users/roles user-roles1)
-                   (assoc test-user2 :users/roles user-roles2))
-             (sut/get-all-users nil))))))
+  (testing "Test fetching all users from database"
+    (with-redefs [sql/query (spy/stub [(assoc db-test-user1 :roles user1-roles)
+                                       (assoc db-test-user2 :roles user2-roles)])]
+      (let [result (sut/get-all-users nil)]
+      (is (= (list (assoc db-test-user1 :users/roles user1-roles)
+                   (assoc db-test-user2 :users/roles user2-roles)) result))
+      (is (spy/called-once-with?
+           sql/query nil
+           [(str "SELECT u.id, u.user_name, u.user_email, array_agg(r.role_name) AS roles, u.created_on, u.updated_on "
+                 "FROM users u "
+                 "LEFT JOIN user_roles ur ON ur.user_id = u.id "
+                 "LEFT JOIN roles r ON r.id = ur.role_id "
+                 "GROUP BY u.id "
+                 "ORDER BY u.id DESC")]))))))
 
-(deftest auth-user-successful-test
-  (with-redefs [sql/get-by-id        (fn [_ _ _ _ _] test-user1)
-                roles/get-user-roles (fn [_ _] user-roles1)]
-    (testing "Test successful authorization"
-      (let [[res user] (sut/auth-user nil
-                                      {:username (:users/user_name test-user1)
-                                       :password password})]
+(deftest update-user-test
+  (testing "Test update user roles successful flow"
+    (with-redefs [p/-transact         (spy/mock (fn [_ f _] (f nil)))
+                  jdbc/transact       (spy/mock (fn [_ f _] (f nil)))
+                  sql/delete!         (spy/stub 1)
+                  sql/update!         (spy/stub 1)
+                  sql/insert-multi!   (spy/stub 1)
+                  roles/get-all-roles (spy/stub db-all-roles)]
+      (let [user-id                  (:users/id db-test-user1)
+            _                        (sut/update-user nil user-id update-user1-request)
+            [[_ table query params]] (spy/calls sql/update!)]
+        (is (spy/called-once? roles/get-all-roles))
+        (is (spy/called-once-with? sql/delete! nil :user_roles {:user_id user-id}))
+        (is (spy/called-once-with? sql/insert-multi!
+                                   nil
+                                   :user_roles
+                                   [:user_id :role_id]
+                                   [[user-id 1]
+                                    [user-id 2]]))
+        (is (= :users table))
+        (is (= [:updated_on] (keys query)))
+        (is (= {:id user-id} params))))))
+
+(deftest delete-user-test
+  (testing "Test delete user successful flow"
+    (with-redefs [p/-transact   (spy/mock (fn [_ f _] (f nil)))
+                  jdbc/transact (spy/mock (fn [_ f _] (f nil)))
+                  sql/delete!   (spy/stub nil)]
+
+      (let [user-id                              (:users/id db-test-user1)
+            _                                    (sut/delete-user nil user-id)
+            [[_ roles-table delete-roles-query]
+             [_ users-table delete-users-query]] (spy/calls sql/delete!)]
+        (is (= :user_roles roles-table))
+        (is (= {:user_id user-id} delete-roles-query))
+        (is (= :users users-table))
+        (is (= {:id user-id} delete-users-query))))))
+
+(deftest auth-user-test
+  (testing "Test successful authorization"
+    (with-redefs [sql/get-by-id        (spy/stub db-test-user1)
+                  roles/get-user-roles (spy/stub user1-roles)]
+      (let [[res user] (sut/auth-user nil auth-user1-request)]
         (is (= true res))
-        (is (= (assoc test-user1 :users/roles user-roles1) (:user user)))))))
+        (is (= (assoc db-test-user1 :users/roles user1-roles) (:user user)))
+        (is (spy/called-once-with? sql/get-by-id nil :users (:username auth-user1-request) :user_name {}))
+        (is (spy/called-once-with? roles/get-user-roles nil db-test-user1)))))
 
-(deftest auth-user-not-found
-  (with-redefs [sql/get-by-id (fn [_ _ _ _ _] nil)]
-    (testing "Test authorization of non-existing user"
-      (let [[res msg] (sut/auth-user nil {:username "nonexist"
-                                          :password password})]
+  (testing "Test authorization of non-existing user"
+    (with-redefs [sql/get-by-id        (spy/stub nil)
+                  roles/get-user-roles (spy/spy)]
+      (let [[res msg] (sut/auth-user nil {:username "nonexist" :password password})]
         (is (= false res))
-        (is (= {:message "Invalid username or password"} msg))))))
+        (is (= {:message invalid-credentials-error-message} msg))
+        (is (spy/not-called? roles/get-user-roles)))))
 
-(deftest auth-user-wrong-password
-  (with-redefs [sql/get-by-id (fn [_ _ _ _ _] test-user1)]
-    (testing "Test authorization with wrong password"
-      (let [[res msg] (sut/auth-user nil {:username (:users/user_name test-user1)
-                                          :password "wrong_password"})]
+  (testing "Test authorization with wrong password"
+    (with-redefs [sql/get-by-id        (spy/stub db-test-user1)
+                  roles/get-user-roles (spy/spy)
+                  hs/check             (spy/spy)]
+      (let [wrong-password "wrong-password"
+            [res msg]      (sut/auth-user nil {:username (:username auth-user1-request)
+                                               :password wrong-password})]
         (is (= false res))
-        (is (= {:message "Invalid username or password"} msg))))))
+        (is (= {:message invalid-credentials-error-message} msg))
+        (is (spy/not-called? roles/get-user-roles))
+        (is (spy/called-once-with? hs/check wrong-password (:users/user_password db-test-user1)))))))

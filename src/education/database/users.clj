@@ -1,10 +1,24 @@
 (ns education.database.users
   (:require [buddy.hashers :as hs]
+            [clojure.set :refer [rename-keys]]
             [education.database.roles :as roles]
+            [education.http.constants :refer [invalid-credentials-error-message]]
             [honeysql.core :as hsql]
             [next.jdbc :as jdbc]
             next.jdbc.date-time
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.result-set :as rs]
+            [next.jdbc.sql :as sql])
+  (:import java.sql.Array))
+
+(extend-protocol rs/ReadableColumn
+  Array
+  (read-column-by-label
+    [^Array v _]
+    (set (map keyword (.getArray v))))
+
+  (read-column-by-index
+    [^Array v _ _]
+    (set (map keyword (.getArray v)))))
 
 (defn add-user
   "Create new `user` in database."
@@ -38,10 +52,20 @@
 (defn get-all-users
   "Fetch all users from `database`."
   [conn]
-  (->> (hsql/build :select :* :from :users)
+  (->> (hsql/build :select [:u.id
+                            :u.user_name
+                            :u.user_email
+                            [:%array_agg.r.role_name :roles]
+                            :u.created_on
+                            :u.updated_on]
+                   :from [[:users :u]]
+                   :left-join [[:user_roles :ur] [:= :ur.user_id :u.id]
+                               [:roles :r] [:= :r.id :ur.role_id]]
+                   :group-by :u.id
+                   :order-by [[:u.id :desc]])
        hsql/format
        (sql/query conn)
-       (map (partial enrich-user-with-roles conn))))
+       (map #(rename-keys % {:roles :users/roles}))))
 
 (defn update-user
   "Update `user` and `roles`."
@@ -55,8 +79,7 @@
         (sql/delete! tx :user_roles {:user_id id})
         (sql/insert-multi! tx :user_roles
                            [:user_id :role_id]
-                           (for [role new-roles]
-                             [id role]))
+                           (map #(vector id %) new-roles))
         (sql/update! tx :users {:updated_on (java.time.Instant/now)} {:id id})))))
 
 (defn delete-user
@@ -75,7 +98,7 @@
   "Check user credentials and authorize."
   [conn credentials]
   (let [user (get-user-by-username conn (:username credentials))
-        noauth [false {:message "Invalid username or password"}]]
+        noauth [false {:message invalid-credentials-error-message}]]
     (if user
       (if (hs/check (:password credentials) (:users/user_password user))
         [true {:user (enrich-user-with-roles conn user)}]
