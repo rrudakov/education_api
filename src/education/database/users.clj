@@ -2,6 +2,7 @@
   (:require [buddy.hashers :as hs]
             [clojure.set :refer [rename-keys]]
             [education.database.roles :as roles]
+            [education.http.constants :refer [invalid-credentials-error-message]]
             [honeysql.core :as hsql]
             [next.jdbc :as jdbc]
             next.jdbc.date-time
@@ -97,7 +98,7 @@
   "Check user credentials and authorize."
   [conn credentials]
   (let [user (get-user-by-username conn (:username credentials))
-        noauth [false {:message "Invalid username or password"}]]
+        noauth [false {:message invalid-credentials-error-message}]]
     (if user
       (if (hs/check (:password credentials) (:users/user_password user))
         [true {:user (enrich-user-with-roles conn user)}]
