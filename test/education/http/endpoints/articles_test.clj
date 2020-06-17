@@ -3,8 +3,7 @@
             [clojure.test :refer :all]
             [education.database.articles :as articlesdb]
             [education.http.constants :refer :all]
-            [education.http.endpoints.test-app :refer [test-api-routes-with-auth]]
-            [education.http.routes :as r]
+            [education.http.endpoints.test-app :refer :all]
             [education.test-data :refer :all]
             [ring.mock.request :as mock]
             [spy.core :as spy])
@@ -89,11 +88,7 @@
    :featured_image   "http://image"
    :is_main_featured true})
 
-(defn- parse-body
-  [body]
-  (cheshire/parse-string (slurp body) true))
-
-(deftest create-article-test-success
+(deftest create-article-test
   (testing "Test POST /articles authorized with valid request body"
     (let [new-article-id 54]
       (with-redefs [articlesdb/add-article (spy/stub new-article-id)]
@@ -105,11 +100,10 @@
                                      (mock/header :authorization (test-auth-token #{role}))
                                      (mock/body (cheshire/generate-string test-article-request-valid))))
               body          (parse-body (:body response))]
-         (is (= 201 (:status response)))
-         (is (= {:id (str new-article-id)} body))
-         (is (spy/called-once-with?  articlesdb/add-article nil user-expected test-article-request-valid)))))))
+          (is (= 201 (:status response)))
+          (is (= {:id (str new-article-id)} body))
+          (is (spy/called-once-with?  articlesdb/add-article nil user-expected test-article-request-valid))))))
 
-(deftest create-article-test-not-authorized
   (testing "Test POST /articles without authorization header"
     (with-redefs [articlesdb/add-article (spy/spy)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -119,9 +113,8 @@
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? articlesdb/add-article))
-        (is (= {:message not-authorized-error-message} body))))))
+        (is (= {:message not-authorized-error-message} body)))))
 
-(deftest create-article-test-request-body-validation
   (testing "Test POST /articles authorized bad requests"
     (with-redefs [articlesdb/add-article (spy/spy)]
       (let [app (test-api-routes-with-auth (spy/spy))
@@ -140,7 +133,7 @@
           bad-request-error-message (dissoc test-article-request-valid :featured_image)
           bad-request-error-message (dissoc test-article-request-valid :is_main_featured))))))
 
-(deftest update-article-test-success
+(deftest update-article-test
   (testing "Test PATCH /article/:id authorized with valid body"
     (with-redefs [articlesdb/update-article (spy/stub 1)
                   articlesdb/can-update?    (spy/stub true)]
@@ -153,15 +146,14 @@
                                 (mock/body (cheshire/generate-string test-article-request-valid))))]
         (is (= 204 (:status response)))
         (is (spy/called-once-with? articlesdb/can-update?
-                                     nil
-                                     (auth-user-deserialized-with-role role)
-                                     article-id))
+                                   nil
+                                   (auth-user-deserialized-with-role role)
+                                   article-id))
         (is (spy/called-once-with? articlesdb/update-article
-                                     nil
-                                     article-id
-                                     test-article-request-valid))))))
+                                   nil
+                                   article-id
+                                   test-article-request-valid)))))
 
-(deftest update-article-test-not-authorized
   (testing "Test PATCH /articles/:id without authorization header"
     (with-redefs [articlesdb/update-article (spy/spy)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -171,9 +163,8 @@
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? articlesdb/update-article))
-        (is (= {:message not-authorized-error-message} body))))))
+        (is (= {:message not-authorized-error-message} body)))))
 
-(deftest update-article-test-no-access
   (testing "Test PATCH /articles/:id with guest role"
     (with-redefs [articlesdb/update-article (spy/spy)
                   articlesdb/can-update?    (spy/stub false)]
@@ -185,9 +176,8 @@
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
         (is (spy/not-called? articlesdb/update-article))
-        (is (= {:message no-access-error-message} body))))))
+        (is (= {:message no-access-error-message} body)))))
 
-(deftest update-article-test-invalid-id
   (testing "Test PATCH /articles/:id with invalid id"
     (with-redefs [articlesdb/update-article (spy/spy)]
       (let [article-id-param "invalid"
@@ -200,9 +190,8 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? articlesdb/update-article))
         (is (contains? body :message))
-        (is (= bad-request-error-message (:message body)))))))
+        (is (= bad-request-error-message (:message body))))))
 
-(deftest update-article-test-does-not-exist
   (testing "Test PATCH /articles/:id with non-existing article id"
     (with-redefs [articlesdb/update-article (spy/stub 0)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -213,9 +202,8 @@
             body     (parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (spy/called-once? articlesdb/update-article))
-        (is (= {:message not-found-error-message} body))))))
+        (is (= {:message not-found-error-message} body)))))
 
-(deftest update-article-test-database-error
   (testing "Test PATCH /articles/:id unexpected response from database"
     (with-redefs [articlesdb/update-article (spy/stub 2)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -228,7 +216,7 @@
         (is (spy/called-once? articlesdb/update-article))
         (is (= {:message server-error-message} body))))))
 
-(deftest get-articles-test-response-body-and-default-limit
+(deftest get-articles-test
   (testing "Test GET /articles endpoint response body and default limit parameter"
     (with-redefs [articlesdb/get-all-articles
                   (spy/mock
@@ -241,9 +229,8 @@
             [[_ limit]] (spy/calls articlesdb/get-all-articles)]
         (is (= 200 (:status response)))
         (is (= [test-response-short-article-1 test-response-short-article-2] body))
-        (is (= default-limit limit))))))
+        (is (= default-limit limit)))))
 
-(deftest get-articles-test-default-description
   (testing "Test GET /articles endpoint return default description"
     (with-redefs [articlesdb/get-all-articles
                   (spy/stub [(dissoc test-db-full-article-1 :articles/description)])]
@@ -251,9 +238,8 @@
             response (app (-> (mock/request :get "/api/articles")))
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
-        (is (= [(assoc test-response-short-article-1 :description default-description)] body))))))
+        (is (= [(assoc test-response-short-article-1 :description default-description)] body)))))
 
-(deftest get-articles-test-limit-param
   (testing "Test GET /articles endpoint accept optional limit parameter"
     (with-redefs [articlesdb/get-all-articles (spy/stub [])]
       (let [limit-param 1
@@ -262,9 +248,8 @@
             body        (parse-body (:body response))
             [[_ limit]] (spy/calls articlesdb/get-all-articles)]
         (is (= 200 (:status response)))
-        (is (= limit-param limit))))))
+        (is (= limit-param limit)))))
 
-(deftest get-articles-test-user-id-param
   (testing "Test GET /articles endpoint accept optional user_id parameter"
     (with-redefs [articlesdb/get-user-articles (spy/stub [])
                   articlesdb/get-all-articles  (spy/spy)]
@@ -276,9 +261,8 @@
         (is (= 200 (:status response)))
         (is (= user-id-param user-id))
         (is (= default-limit limit))
-        (is (spy/not-called? articlesdb/get-all-articles))))))
+        (is (spy/not-called? articlesdb/get-all-articles)))))
 
-(deftest get-article-test-invalid-limit-param
   (doseq [url ["/api/articles?limit=invalid"
                "/api/articles?user_id=invalid"]]
     (testing "Test GET /articles endpoint query parameter validation"
@@ -290,7 +274,8 @@
         (is (contains? body :details))
         (is (= bad-request-error-message (:message body)))))))
 
-(deftest get-latest-articles-test-response-body
+
+(deftest get-latest-articles-test
   (testing "Test GET /articles/latest with valid limit parameter"
     (with-redefs [articlesdb/get-latest-full-sized-articles
                   (spy/stub [test-db-full-article-1 test-db-full-article-2])]
@@ -301,9 +286,8 @@
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (spy/called-once-with? articlesdb/get-latest-full-sized-articles nil limit))
-        (is (= [test-response-full-article-1 test-response-full-article-2] body))))))
+        (is (= [test-response-full-article-1 test-response-full-article-2] body)))))
 
-(deftest get-latest-articles-test-no-limit-param
   (doseq [url ["/api/articles/latest"
                "/api/articles/latest?limit=invalid"]]
     (testing "Test GET /articles/latest limit parameter validation"
@@ -314,9 +298,8 @@
           (is (= 400 (:status response)))
           (is (contains? body :message))
           (is (spy/not-called? articlesdb/get-latest-full-sized-articles))
-          (is (= bad-request-error-message (:message body))))))))
+          (is (= bad-request-error-message (:message body)))))))
 
-(deftest get-latest-articles-test-default-description
   (testing "Test GET /articles/latest verify default description"
     (with-redefs [articlesdb/get-latest-full-sized-articles
                   (spy/stub [(dissoc test-db-full-article-1 :articles/description)])]
@@ -327,7 +310,7 @@
         (is (spy/called-once? articlesdb/get-latest-full-sized-articles))
         (is (= default-description (:description (first body))))))))
 
-(deftest get-last-featured-articles-test-response-body
+(deftest get-last-featured-articles-test
   (testing "Test GET /articles/featured/latest with valid request"
     (with-redefs [articlesdb/get-last-featured-articles
                   (spy/stub [test-db-full-article-1 test-db-full-article-2])]
@@ -337,9 +320,8 @@
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= [test-response-short-article-1 test-response-short-article-2] body))
-        (is (spy/called-once-with? articlesdb/get-last-featured-articles nil limit))))))
+        (is (spy/called-once-with? articlesdb/get-last-featured-articles nil limit)))))
 
-(deftest get-last-featured-articles-test-query-validation
   (doseq [url ["/api/articles/featured/latest?limit=invalid"
                "/api/articles/featured/latest"]]
     (testing "Test GET /articles/featured/latest with invalid query parameters"
@@ -351,7 +333,7 @@
           (is (contains? body :message))
           (is (= bad-request-error-message (:message body))))))))
 
-(deftest get-article-by-id-test-response-body
+(deftest get-article-by-id-test
   (testing "Test GET /articles/:id with valid article-id"
     (with-redefs [articlesdb/get-article-by-id (spy/stub test-db-full-article-1)]
       (let [article-id 99
@@ -360,9 +342,8 @@
             body       (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= test-response-full-article-1 body))
-        (is (spy/called-once-with? articlesdb/get-article-by-id nil article-id))))))
+        (is (spy/called-once-with? articlesdb/get-article-by-id nil article-id)))))
 
-(deftest get-article-by-id-test-article-not-found
   (testing "Test GET /articles/:id with non-existing article-id"
     (with-redefs [articlesdb/get-article-by-id (spy/stub nil)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -371,9 +352,8 @@
         (is (= 404 (:status response)))
         (is (contains? body :message))
         (is (= not-found-error-message (:message body)))
-        (is (spy/called-once? articlesdb/get-article-by-id))))))
+        (is (spy/called-once? articlesdb/get-article-by-id)))))
 
-(deftest get-article-by-id-test-id-validation
   (testing "Test GET /articles/:id with invalid article id"
     (with-redefs [articlesdb/get-article-by-id (spy/spy)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -384,7 +364,7 @@
         (is (= bad-request-error-message (:message body)))
         (is (spy/not-called? articlesdb/get-article-by-id))))))
 
-(deftest get-last-featured-article-test-response-body
+(deftest get-last-featured-article-test
   (testing "Test GET /articles/featured/main exist response body"
     (with-redefs [articlesdb/get-last-featured-article (spy/stub test-db-full-article-1)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -392,9 +372,8 @@
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= test-response-short-article-1 body))
-        (is (spy/called-once? articlesdb/get-last-featured-article))))))
+        (is (spy/called-once? articlesdb/get-last-featured-article)))))
 
-(deftest get-last-featured-article-test-article-not-found
   (testing "Test GET /articles/featured/main no featured articles in db"
     (with-redefs [articlesdb/get-last-featured-article (spy/stub nil)]
       (let [app      (test-api-routes-with-auth (spy/spy))
@@ -405,7 +384,7 @@
         (is (= not-found-error-message (:message body)))
         (is (spy/called-once? articlesdb/get-last-featured-article))))))
 
-(deftest delete-article-test-existing-article
+(deftest delete-article-test
   (testing "Test DELETE /articles/:id for existing article-id"
     (with-redefs [articlesdb/delete-article (spy/stub 1)
                   articlesdb/can-update?    (spy/stub true)]
@@ -419,9 +398,8 @@
                                    nil
                                    (auth-user-deserialized-with-role role)
                                    article-id))
-        (is (spy/called-once-with? articlesdb/delete-article nil article-id))))))
+        (is (spy/called-once-with? articlesdb/delete-article nil article-id)))))
 
-(deftest delete-article-test-no-access
   (testing "Test DELETE /articles/:id with guest role not article owner"
     (with-redefs [articlesdb/delete-article (spy/spy)
                   articlesdb/can-update?    (spy/stub false)]
@@ -438,9 +416,8 @@
                                    nil
                                    (auth-user-deserialized-with-role role)
                                    article-id))
-        (is (spy/not-called? articlesdb/delete-article))))))
+        (is (spy/not-called? articlesdb/delete-article)))))
 
-(deftest delete-article-test-not-authorized
   (testing "Test DELETE /articles/:id without authorization token"
     (with-redefs [articlesdb/delete-article (spy/spy)
                   articlesdb/can-update?    (spy/spy)]
@@ -451,9 +428,8 @@
         (is (contains? body :message))
         (is (= not-authorized-error-message (:message body)))
         (is (spy/not-called? articlesdb/can-update?))
-        (is (spy/not-called? articlesdb/delete-article))))))
+        (is (spy/not-called? articlesdb/delete-article)))))
 
-(deftest delete-article-test-not-found
   (testing "Test DELETE /articles/:id for non-existing article-id"
     (with-redefs [articlesdb/delete-article (spy/stub 0)
                   articlesdb/can-update?    (spy/stub true)]
@@ -463,9 +439,8 @@
             body     (parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (contains? body :message))
-        (is (= not-found-error-message (:message body)))))))
+        (is (= not-found-error-message (:message body))))))
 
-(deftest delete-article-test-invalid-asset-id
   (testing "Test DELETE /articles/:id with invalid article-id parameter"
     (with-redefs [articlesdb/delete-article (spy/spy)
                   articlesdb/can-update?    (spy/spy)]
@@ -477,9 +452,8 @@
         (is (contains? body :message))
         (is (= bad-request-error-message (:message body)))
         (is (spy/not-called? articlesdb/delete-article))
-        (is (spy/not-called? articlesdb/can-update?))))))
+        (is (spy/not-called? articlesdb/can-update?)))))
 
-(deftest delete-article-test-database-error
   (testing "Test DELETE /articles/:id error from database"
     (with-redefs [articlesdb/delete-article (spy/stub 2)
                   articlesdb/can-update?    (spy/stub true)]

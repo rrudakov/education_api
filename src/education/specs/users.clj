@@ -31,7 +31,7 @@
 
 (s/def ::user-response (s/keys :req-un [::id ::username ::email ::roles ::created_on ::updated_on]))
 
-(s/def ::users-response (s/coll-of ::user-response :kind set? :into #{}))
+(s/def ::users-response (s/coll-of ::user-response :kind vector? :distinct true :into []))
 
 (s/def ::login-request (s/keys :req-un [::username ::password]))
 
