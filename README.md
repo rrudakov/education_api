@@ -1,6 +1,7 @@
 # Education API
 
 ![Clojure CI](https://github.com/rrudakov/ring_leart/workflows/Clojure%20CI/badge.svg?branch=master)
+[![codecov](https://codecov.io/gh/rrudakov/education_api/branch/master/graph/badge.svg)](https://codecov.io/gh/rrudakov/education_api)
 
 A Clojure ring-based application.
 
