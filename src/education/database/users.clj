@@ -39,9 +39,9 @@
 (defn- enrich-user-with-roles
   "Fetch roles for `user` and assoc `:roles` key with them."
   [conn user]
-  (->> user
-       (roles/get-user-roles conn)
-       (assoc user :users/roles)))
+  (-> user
+      (assoc :users/roles (roles/get-user-roles conn user))
+      (dissoc :users/user_password)))
 
 (defn get-user
   "Fetch user from database by `id`."

@@ -21,7 +21,7 @@
 
 (s/def ::role-request #{"admin" "moderator" "guest"})
 
-(s/def ::roles-request (s/coll-of ::role-request :distinct true))
+(s/def ::roles-request (s/coll-of ::role-request :distinct true :min-count 1))
 
 (s/def ::created_on inst?)
 

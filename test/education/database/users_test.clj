@@ -39,7 +39,9 @@
                   roles/get-user-roles (spy/stub user1-roles)]
       (let [user-id 4
             result  (sut/get-user nil user-id)]
-        (is (= (assoc db-test-user1 :users/roles user1-roles) result))
+        (is (= (-> db-test-user1
+                   (dissoc :users/user_password)
+                   (assoc :users/roles user1-roles)) result))
         (is (spy/called-once-with? sql/get-by-id nil :users user-id))
         (is (spy/called-once-with? roles/get-user-roles nil db-test-user1)))))
 
@@ -51,19 +53,27 @@
 
 (deftest get-all-users-test
   (testing "Test fetching all users from database"
-    (with-redefs [sql/query (spy/stub [(assoc db-test-user1 :roles user1-roles)
-                                       (assoc db-test-user2 :roles user2-roles)])]
+    (with-redefs [sql/query (spy/stub [(-> db-test-user1
+                                           (assoc :roles user1-roles)
+                                           (dissoc :users/user_password))
+                                       (-> db-test-user2
+                                           (assoc :roles user2-roles)
+                                           (dissoc :users/user_password))])]
       (let [result (sut/get-all-users nil)]
-      (is (= (list (assoc db-test-user1 :users/roles user1-roles)
-                   (assoc db-test-user2 :users/roles user2-roles)) result))
-      (is (spy/called-once-with?
-           sql/query nil
-           [(str "SELECT u.id, u.user_name, u.user_email, array_agg(r.role_name) AS roles, u.created_on, u.updated_on "
-                 "FROM users u "
-                 "LEFT JOIN user_roles ur ON ur.user_id = u.id "
-                 "LEFT JOIN roles r ON r.id = ur.role_id "
-                 "GROUP BY u.id "
-                 "ORDER BY u.id DESC")]))))))
+        (is (= (list (-> db-test-user1
+                         (dissoc :users/user_password)
+                         (assoc :users/roles user1-roles))
+                     (-> db-test-user2
+                         (dissoc :users/user_password)
+                         (assoc :users/roles user2-roles))) result))
+        (is (spy/called-once-with?
+             sql/query nil
+             [(str "SELECT u.id, u.user_name, u.user_email, array_agg(r.role_name) AS roles, u.created_on, u.updated_on "
+                   "FROM users u "
+                   "LEFT JOIN user_roles ur ON ur.user_id = u.id "
+                   "LEFT JOIN roles r ON r.id = ur.role_id "
+                   "GROUP BY u.id "
+                   "ORDER BY u.id DESC")]))))))
 
 (deftest update-user-test
   (testing "Test update user roles successful flow"
@@ -109,7 +119,9 @@
                   roles/get-user-roles (spy/stub user1-roles)]
       (let [[res user] (sut/auth-user nil auth-user1-request)]
         (is (= true res))
-        (is (= (assoc db-test-user1 :users/roles user1-roles) (:user user)))
+        (is (= (-> db-test-user1
+                   (assoc :users/roles user1-roles)
+                   (dissoc :users/user_password)) (:user user)))
         (is (spy/called-once-with? sql/get-by-id nil :users (:username auth-user1-request) :user_name {}))
         (is (spy/called-once-with? roles/get-user-roles nil db-test-user1)))))
 

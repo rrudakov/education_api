@@ -107,7 +107,7 @@
                               (mock/header :authorization (test-auth-token #{:admin}))))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (= (sorted-set :details :message) (into (sorted-set) (keys body))))
+        (is (some #{:details :message} (keys body)))
         (is (= bad-request-error-message (:message body)))
         (is (spy/not-called? usersdb/get-user))))))
 
@@ -146,14 +146,14 @@
                                 (mock/body req-body)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (= [:message :details] (keys body)))
+          (is (some #{:message :details} (keys body)))
           (is (= bad-request-error-message (:message body)))
           (is (spy/not-called? usersdb/add-user)))))))
 
 (deftest update-user-test
   (testing "Test PATCH /users/:id with valid request body and admin role"
     (let [user-id 6766]
-      (with-redefs [usersdb/update-user (spy/stub 1)]
+      (with-redefs [usersdb/update-user (spy/stub 0)]
         (let [app      (test-api-routes-with-auth (spy/spy))
               response (app (-> (mock/request :patch (str "/api/users/" user-id))
                                 (mock/content-type "application/json")
@@ -174,4 +174,111 @@
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
         (is (= {:message no-access-error-message} body))
-        (is (spy/not-called? usersdb/update-user))))))
+        (is (spy/not-called? usersdb/update-user)))))
+
+  (testing "Test PATCH /users/:id without authorization token"
+    (with-redefs [usersdb/update-user (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :patch "/api/users/342")
+                              (mock/content-type "application/json")
+                              (mock/body (cheshire/generate-string update-user1-request))))
+            body     (parse-body (:body response))]
+        (is (= 401 (:status response)))
+        (is (= {:message not-authorized-error-message} body))
+        (is (spy/not-called? usersdb/update-user)))))
+
+  (testing "Test PATCH /users/:id with invalid user-id"
+    (with-redefs [usersdb/update-user (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :patch "/api/users/invalid")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string update-user1-request))))
+            body     (parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (some #{:message :details} (keys body)))
+        (is (= bad-request-error-message (:message body)))
+        (is (spy/not-called? usersdb/update-user)))))
+
+  (testing "Test PATCH /users/:id with invalid request body"
+    (with-redefs [usersdb/update-user (spy/spy)]
+      (doseq [req-body [{:roles ["god" "superhero"]}
+                        {:roles []}]]
+        (let [app      (test-api-routes-with-auth (spy/spy))
+              response (app (-> (mock/request :patch "/api/users/invalid")
+                                (mock/content-type "application/json")
+                                (mock/header :authorization (test-auth-token #{:admin}))
+                                (mock/body (cheshire/generate-string req-body))))
+              body     (parse-body (:body response))]
+         (is (= 400 (:status response)))
+         (is (some #{:message :details} (keys body)))
+         (is (= bad-request-error-message (:message body)))
+         (is (spy/not-called? usersdb/update-user)))))))
+
+(deftest delete-user-test
+  (testing "Test DELETE /users/:id with valid user-id and admin role"
+    (let [user-id 666]
+      (with-redefs [usersdb/delete-user (spy/stub 0)]
+        (let [app      (test-api-routes-with-auth (spy/spy))
+              response (app (-> (mock/request :delete (str "/api/users/" user-id))
+                                (mock/header :authorization (test-auth-token #{:admin}))))
+              body     (:body response)]
+          (is (= 204 (:status response)))
+          (is (clojure.string/blank? body))
+          (is (spy/called-once-with? usersdb/delete-user nil user-id))))))
+
+  (testing "Test DELETE /users/:id with valid user-id and moderator role"
+    (with-redefs [usersdb/delete-user (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/users/1")
+                              (mock/header :authorization (test-auth-token #{:moderator}))))
+            body     (parse-body (:body response))]
+        (is (= 403 (:status response)))
+        (is (= {:message no-access-error-message} body))
+        (is (spy/not-called? usersdb/delete-user)))))
+
+  (testing "Test DELETE /users/:id without authorization token"
+    (with-redefs [usersdb/delete-user (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/users/43")))
+            body     (parse-body (:body response))]
+        (is (= 401 (:status response)))
+        (is (= {:message not-authorized-error-message} body))
+        (is (spy/not-called? usersdb/delete-user)))))
+
+  (testing "Test DELETE /users/:id with invalid user-id"
+    (with-redefs [usersdb/delete-user (spy/spy)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/users/invalid")
+                              (mock/header :authorization (test-auth-token #{:admin}))))
+            body     (parse-body (:body response))]
+        (is (= 400 (:status response)))
+         (is (some #{:message :details} (keys body)))
+         (is (= bad-request-error-message (:message body)))
+         (is (spy/not-called? usersdb/delete-user))))))
+
+(deftest login-test
+  (testing "Test POST /login with valid credentials"
+    (with-redefs [usersdb/auth-user (spy/stub db-user-auth-successful)]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :post "/api/login")
+                              (mock/content-type "application/json")
+                              (mock/body (cheshire/generate-string auth-user1-request))))
+            body     (parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (contains? body :token))
+        (is (contains? (parse-token (:token body)) :user))
+        (is (= (assoc auth-user-deserialized :roles (vec (map name user1-roles)))
+               (->> body :token parse-token :user)))
+        (is (spy/called-once-with? usersdb/auth-user nil auth-user1-request)))))
+
+  (testing "Test POST /login bad credentials"
+    (with-redefs [usersdb/auth-user (spy/stub [false {:message invalid-credentials-error-message}])]
+      (let [app      (test-api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :post "/api/login")
+                              (mock/content-type "application/json")
+                              (mock/body (cheshire/generate-string auth-user1-request))))
+            body     (parse-body (:body response))]
+        (is (= 401 (:status response)))
+        (is (= {:message invalid-credentials-error-message} body))
+        (is (spy/called-once-with? usersdb/auth-user nil auth-user1-request))))))
