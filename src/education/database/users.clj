@@ -74,7 +74,7 @@
     (jdbc/with-transaction [tx conn]
       (let [{:keys [roles]} user
             new-roles (->> available-roles
-                           (filter #(some #{(:roles/role_name %)} roles))
+                           (filter #(some #{(:roles/role_name %)} (map keyword roles)))
                            (map :roles/id))]
         (sql/delete! tx :user_roles {:user_id id})
         (sql/insert-multi! tx :user_roles

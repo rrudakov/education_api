@@ -8,12 +8,12 @@
             [ring.util.http-response
              :refer
              [bad-request conflict internal-server-error not-found]])
-  (:import org.postgresql.util.PSQLException))
+  (:import java.sql.SQLException))
 
 (defn sql-exception-handler
   "Database exception mapper."
   []
-  (fn [^PSQLException e data request]
+  (fn [^SQLException e data request]
     (case (.getSQLState e)
       "23505" (conflict {:message conflict-error-message})
       "23503" (not-found {:message not-found-error-message})
@@ -64,7 +64,7 @@
         :in   "header"}}}}
     :exceptions
     {:handlers
-     {PSQLException            (sql-exception-handler)
+     {SQLException             (sql-exception-handler)
       ::ex/request-validation  (request-validation-handler)
       ::ex/response-validation (response-validation-handler)}}}
 

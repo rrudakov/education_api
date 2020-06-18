@@ -41,7 +41,7 @@
 
 (def update-user1-request
   "Update test user request."
-  {:roles #{:admin :moderator}})
+  {:roles ["admin" "moderator"]})
 
 (def db-test-user1
   "First mocked testing user."

@@ -23,7 +23,7 @@
         (is (spy/called-once-with? roles/get-role-by-name nil "guest"))
         (is (spy/called-n-times? sql/insert! 2))
         (is (= :users users-table))
-        (is (= [:user_name :user_password :user_email] (keys users-insert)))
+        (is (= [:user_email :user_name :user_password] (sort (keys users-insert))))
         (is (= {:user_name  (:username add-user1-request)
                 :user_email (:email add-user1-request)}
                (select-keys users-insert [:user_name :user_email])))
