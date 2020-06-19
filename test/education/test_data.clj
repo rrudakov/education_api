@@ -7,9 +7,11 @@
 
 (def test-config
   "Mocked test configuration for using in unit tests."
-  {:app
+  {:database
+   {:url "test_database_url"}
+   :app
    {:tokensign "test_secret"
-    :port 3000}})
+    :port      3000}})
 
 (def password
   "Password for test users."
