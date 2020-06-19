@@ -8,7 +8,8 @@
 (def test-config
   "Mocked test configuration for using in unit tests."
   {:app
-   {:tokensign "test_secret"}})
+   {:tokensign "test_secret"
+    :port 3000}})
 
 (def password
   "Password for test users."
