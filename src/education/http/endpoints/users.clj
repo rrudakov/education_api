@@ -3,11 +3,10 @@
             [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.config :as config]
             [education.database.users :as usersdb]
-            [education.http.constants :refer :all]
+            [education.http.constants :refer [not-found-error-message]]
             [education.http.restructure :refer [require-roles]]
             [education.specs.error :as err]
             [education.specs.users :as specs]
-            [ring.swagger.schema :refer [describe]]
             [ring.util.http-response
              :refer
              [created no-content not-found ok unauthorized]]))
@@ -70,16 +69,14 @@
 (defn- update-user-handler
   "Update existing user by `user-id`."
   [db user-id user]
-  (do
-    (usersdb/update-user db user-id user)
-    (no-content)))
+  (usersdb/update-user db user-id user)
+  (no-content))
 
 (defn- delete-user-handler
   "Delete existing user handler."
   [db user-id]
-  (do
-    (usersdb/delete-user db user-id)
-    (no-content)))
+  (usersdb/delete-user db user-id)
+  (no-content))
 
 ;; Define routes
 (defn users-routes

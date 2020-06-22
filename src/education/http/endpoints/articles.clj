@@ -1,14 +1,15 @@
 (ns education.http.endpoints.articles
   (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.database.articles :as articlesdb]
-            [education.http.constants :refer :all]
+            [education.http.constants
+             :refer
+             [no-access-error-message not-found-error-message server-error-message]]
             [education.http.restructure :refer [require-roles]]
             [education.specs.articles :as specs]
             [education.specs.error :as err]
-            [ring.swagger.schema :refer [describe]]
             [ring.util.http-response
              :refer
-             [created internal-server-error no-content not-found ok forbidden]]))
+             [created forbidden internal-server-error no-content not-found ok]]))
 
 ;; Converters
 (defn to-short-article-response

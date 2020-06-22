@@ -3,6 +3,7 @@
             [com.stuartsierra.component :as component]
             [education.config :as config]
             [education.http.routes :refer [api-routes]]
+            [muuntaja.middleware :refer [wrap-format]]
             [org.httpkit.server :as server]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer [api-defaults wrap-defaults]]))
@@ -13,7 +14,7 @@
   (start [this]
     (if srv
       this
-      (let [port (config/application-port config)
+      (let [port         (config/application-port config)
             auth-backend (config/auth-backend config)]
         (println (str ";; Running web server at http://127.0.0.1:" port "/"))
         (assoc this :srv
@@ -25,7 +26,7 @@
                                :access-control-allow-methods [:get :post :patch :put :delete])
                     (wrap-authorization auth-backend)
                     (wrap-authentication auth-backend)
-                    (muuntaja.middleware/wrap-format)
+                    (wrap-format)
                     (wrap-defaults api-defaults))
                 {:port port})))))
 

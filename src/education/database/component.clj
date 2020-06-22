@@ -1,7 +1,6 @@
 (ns education.database.component
   (:require [com.stuartsierra.component :as component]
             [education.config :as config]
-            [next.jdbc :as j]
             [next.jdbc.connection :as connection]
             [ragtime.jdbc :as jdbc]
             [ragtime.repl :as repl])

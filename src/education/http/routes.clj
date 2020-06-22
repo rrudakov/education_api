@@ -1,7 +1,12 @@
 (ns education.http.routes
   (:require [compojure.api.exception :as ex]
             [compojure.api.sweet :refer [api context]]
-            [education.http.constants :refer :all]
+            [education.http.constants
+             :refer
+             [bad-request-error-message
+              conflict-error-message
+              not-found-error-message
+              server-error-message]]
             [education.http.endpoints.articles :refer [articles-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.users :refer [users-routes]]
@@ -13,25 +18,25 @@
 (defn sql-exception-handler
   "Database exception mapper."
   []
-  (fn [^SQLException e data request]
+  (fn [^SQLException e _ _]
     (case (.getSQLState e)
       "23505" (conflict {:message conflict-error-message})
       "23503" (not-found {:message not-found-error-message})
       "23502" (bad-request {:message bad-request-error-message})
-      (internal-server-error {:message (.getServerErrorMessage e)
+      (internal-server-error {:message    (.getServerErrorMessage e)
                               :error_code (.getSQLState e)}))))
 
 (defn request-validation-handler
   "Verify request body and raise error."
   []
-  (fn [^Exception e data request]
+  (fn [^Exception e _ _]
     (bad-request {:message bad-request-error-message
                   :details (.getMessage e)})))
 
 (defn response-validation-handler
   "Return error in case of invalid response."
   []
-  (fn [^Exception e data request]
+  (fn [^Exception e _ _]
     (internal-server-error
      {:message server-error-message
       :details (.getMessage e)})))
