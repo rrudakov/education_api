@@ -1,29 +1,30 @@
 (ns education.http.component-test
   (:require [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             [clojure.test :refer [deftest is testing]]
+            [com.stuartsierra.component :as component]
             [education.config :as config]
             [education.http.component :as sut]
             [education.http.routes :refer [api-routes]]
-            [education.test-data :refer :all]
+            [education.test-data :refer [test-config]]
+            [muuntaja.middleware :refer [wrap-format]]
             [org.httpkit.server :as server]
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer [api-defaults wrap-defaults]]
-            [spy.core :as spy]
-            [com.stuartsierra.component :as component]))
+            [spy.core :as spy]))
 
-(deftest map->WebServer-start-test
+(deftest map->WebServer-test
   (testing "Test creating new instance of web server"
     (let [auth-backend (config/auth-backend test-config)
           db           "database"
           srv          42]
-      (with-redefs [config/auth-backend             (spy/stub auth-backend)
-                    api-routes                      (spy/spy)
-                    server/run-server               (spy/stub srv)
-                    wrap-authorization              (spy/spy)
-                    wrap-authentication             (spy/spy)
-                    muuntaja.middleware/wrap-format (spy/spy)
-                    wrap-cors                       (spy/spy)
-                    wrap-defaults                   (spy/spy)]
+      (with-redefs [config/auth-backend (spy/stub auth-backend)
+                    api-routes          (spy/spy)
+                    server/run-server   (spy/stub srv)
+                    wrap-authorization  (spy/spy)
+                    wrap-authentication (spy/spy)
+                    wrap-format         (spy/spy)
+                    wrap-cors           (spy/spy)
+                    wrap-defaults       (spy/spy)]
         (let [server                (.start (sut/map->WebServer {:config test-config :db db}))
               [[_ run-server-args]] (spy/calls server/run-server)]
           (is (spy/called-once-with? api-routes db test-config))
@@ -34,15 +35,14 @@
           (is (spy/called-once? wrap-cors))
           (is (spy/called-once-with? wrap-defaults nil api-defaults))
           (is (= srv (:srv server)))
-          (is (= db (:db server))))))))
+          (is (= db (:db server)))))))
 
-(deftest map->WebServer-stop-test
   (testing "Test shutdown instance of web server"
     (let [db  "database"
           srv "server"]
       (with-redefs [config/auth-backend             (spy/spy)
                     api-routes                      (spy/spy)
-                    server/run-server               (spy/stub (fn [& {:keys [timeout] :or {timeout 100}}] srv))
+                    server/run-server               (spy/stub (fn [& _] srv))
                     wrap-authorization              (spy/spy)
                     wrap-authentication             (spy/spy)
                     muuntaja.middleware/wrap-format (spy/spy)
