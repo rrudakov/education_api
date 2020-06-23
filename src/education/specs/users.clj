@@ -7,9 +7,10 @@
 
 (s/def ::id int?)
 
-(s/def ::username (s/and string?
-                         #(re-matches #"^[a-zA-Z]+[a-zA-Z0-9]*$" %)
-                         #(>= (count %) 2)))
+(s/def ::username
+  (s/and string?
+         #(re-matches #"^[a-zA-Z]+[a-zA-Z0-9]*$" %)
+         #(>= (count %) 2)))
 
 (s/def ::password (s/and string? #(>= (count %) 6)))
 

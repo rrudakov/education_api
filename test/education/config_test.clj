@@ -1,7 +1,7 @@
 (ns education.config-test
   (:require [buddy.auth.backends.token :refer [jws-backend]]
             [clojure.java.io :as io]
-            [clojure.test :refer :all]
+            [clojure.test :refer [deftest testing is]]
             [education.config :as sut]
             [spy.core :as spy]))
 
