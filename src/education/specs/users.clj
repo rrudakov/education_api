@@ -1,7 +1,5 @@
 (ns education.specs.users
-  (:require [clojure.spec.alpha :as s]
-            [clojure.string :as str]
-            [spec-tools.core :as st]))
+  (:require [clojure.spec.alpha :as s]))
 
 (def email-regex
   "Check new email addresses using this regex."
@@ -9,7 +7,9 @@
 
 (s/def ::id int?)
 
-(s/def ::username string?)
+(s/def ::username (s/and string?
+                         #(re-matches #"^[a-zA-Z]+[a-zA-Z0-9]*$" %)
+                         #(>= (count %) 2)))
 
 (s/def ::password (s/and string? #(>= (count %) 6)))
 
