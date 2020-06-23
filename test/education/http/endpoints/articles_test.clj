@@ -1,10 +1,22 @@
 (ns education.http.endpoints.articles-test
   (:require [cheshire.core :as cheshire]
-            [clojure.test :refer :all]
+            [clojure.test :refer [are deftest is testing]]
             [education.database.articles :as articlesdb]
-            [education.http.constants :refer :all]
-            [education.http.endpoints.test-app :refer :all]
-            [education.test-data :refer :all]
+            [education.http.constants
+             :refer
+             [bad-request-error-message
+              no-access-error-message
+              not-authorized-error-message
+              not-found-error-message
+              server-error-message]]
+            [education.http.endpoints.test-app
+             :refer
+             [parse-body test-api-routes-with-auth]]
+            [education.test-data
+             :refer
+             [auth-user-deserialized
+              auth-user-deserialized-with-role
+              test-auth-token]]
             [ring.mock.request :as mock]
             [spy.core :as spy])
   (:import java.time.Instant))
@@ -245,7 +257,6 @@
       (let [limit-param 1
             app         (test-api-routes-with-auth (spy/spy))
             response    (app (-> (mock/request :get (str "/api/articles?limit=" limit-param))))
-            body        (parse-body (:body response))
             [[_ limit]] (spy/calls articlesdb/get-all-articles)]
         (is (= 200 (:status response)))
         (is (= limit-param limit)))))
@@ -256,7 +267,6 @@
       (let [user-id-param       42
             app                 (test-api-routes-with-auth (spy/spy))
             response            (app (-> (mock/request :get (str "/api/articles?user_id=" user-id-param))))
-            body                (parse-body (:body response))
             [[_ user-id limit]] (spy/calls articlesdb/get-user-articles)]
         (is (= 200 (:status response)))
         (is (= user-id-param user-id))

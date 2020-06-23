@@ -1,10 +1,13 @@
 (ns education.http.endpoints.roles-test
   (:require [clojure.test :refer [deftest is testing]]
             [education.database.roles :as rolesdb]
-            [education.http.constants :refer :all]
-            [education.http.endpoints.roles :as sut]
-            [education.http.endpoints.test-app :refer :all]
-            [education.test-data :refer :all]
+            [education.http.constants
+             :refer
+             [no-access-error-message not-authorized-error-message]]
+            [education.http.endpoints.test-app
+             :refer
+             [parse-body test-api-routes-with-auth]]
+            [education.test-data :refer [db-all-roles test-auth-token]]
             [ring.mock.request :as mock]
             [spy.core :as spy]))
 

@@ -1,10 +1,32 @@
 (ns education.http.endpoints.users-test
   (:require [cheshire.core :as cheshire]
+            [clojure.string :refer [blank?]]
             [clojure.test :refer [deftest is testing]]
             [education.database.users :as usersdb]
-            [education.http.constants :refer :all]
-            [education.http.endpoints.test-app :refer :all]
-            [education.test-data :refer :all]
+            [education.http.constants
+             :refer
+             [bad-request-error-message
+              conflict-error-message
+              invalid-credentials-error-message
+              no-access-error-message
+              not-authorized-error-message
+              not-found-error-message]]
+            [education.http.endpoints.test-app
+             :refer
+             [parse-body test-api-routes-with-auth]]
+            [education.test-data
+             :refer
+             [add-user1-request
+              auth-user-deserialized
+              auth-user1-request
+              db-test-user1
+              db-test-user2
+              db-user-auth-successful
+              parse-token
+              test-auth-token
+              update-user1-request
+              user1-roles
+              user2-roles]]
             [ring.mock.request :as mock]
             [spy.core :as spy])
   (:import java.sql.SQLException))
@@ -161,7 +183,7 @@
                                 (mock/body (cheshire/generate-string update-user1-request))))
               body     (:body response)]
           (is (= 204 (:status response)))
-          (is (clojure.string/blank? body))
+          (is (blank? body))
           (is (spy/called-once-with? usersdb/update-user nil user-id update-user1-request))))))
 
   (testing "Test PATCH /users/:id with valid request body and moderator role"
