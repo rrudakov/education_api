@@ -1,9 +1,7 @@
 (ns education.config
   (:require [aero.core :refer [read-config]]
-            [buddy.auth :refer [throw-unauthorized]]
             [buddy.auth.backends.token :refer [jws-backend]]
-            [clojure.java.io :as io]
-            [next.jdbc.result-set :as rs]))
+            [clojure.java.io :as io]))
 
 (defn config
   "Read application config from resources."

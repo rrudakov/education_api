@@ -1,6 +1,7 @@
 # Education API
 
 ![Clojure CI](https://github.com/rrudakov/ring_leart/workflows/Clojure%20CI/badge.svg?branch=master)
+[![codecov](https://codecov.io/gh/rrudakov/education_api/branch/master/graph/badge.svg)](https://codecov.io/gh/rrudakov/education_api)
 
 A Clojure ring-based application.
 
@@ -10,7 +11,7 @@ It runs automatically on heroku.
 
 ## License
 
-Copyright © 2020 FIXME
+Copyright © 2020 Roman Rudakov
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at

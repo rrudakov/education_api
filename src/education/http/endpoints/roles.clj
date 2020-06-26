@@ -27,9 +27,9 @@
   (context "" []
     :tags ["roles"]
     (GET "/roles" []
-        :middleware [[require-roles #{:admin}]]
-        :return ::specs/roles-response
-        :summary "Return list of all available roles"
-        :responses {401 {:description "Access denied!"
-                         :schema ::err/error-response}}
-        (roles-handler db))))
+      :middleware [[require-roles #{:admin}]]
+      :return ::specs/roles-response
+      :summary "Return list of all available roles"
+      :responses {401 {:description "Access denied!"
+                       :schema ::err/error-response}}
+      (roles-handler db))))

@@ -1,5 +1,5 @@
 (ns education.database.articles-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [testing is deftest]]
             [education.database.articles :as sut]
             [education.test-data :refer [auth-user-deserialized]]
             [next.jdbc.sql :as sql]
@@ -32,6 +32,7 @@
    :articles/created_on       (Instant/now)
    :articles/updated_on       (Instant/now)})
 
+;; TODO: rework this tests
 (deftest add-article-test-article-id
   (testing "Test return new article ID"
     (with-redefs [sql/insert! (fn [_ _ _] test-db-article)]
@@ -40,7 +41,7 @@
 
 (deftest add-article-test-db-query
   (testing "Test create article database query"
-    (with-redefs [sql/insert! (spy/mock (fn [_ _ q] test-db-article))]
+    (with-redefs [sql/insert! (spy/stub test-db-article)]
       (sut/add-article nil test-user test-request-article)
       (let [[[_ _ query]] (spy/calls sql/insert!)]
         (is (= {:user_id          (:id test-user)
@@ -53,7 +54,7 @@
 
 (deftest add-article-test-table-name
   (testing "test create article database name"
-    (with-redefs [sql/insert! (spy/mock (fn [_ t _] test-db-article))]
+    (with-redefs [sql/insert! (spy/stub test-db-article)]
       (sut/add-article nil nil nil)
       (let [[[_ table _]] (spy/calls sql/insert!)]
         (is (= :articles table))))))
@@ -62,7 +63,7 @@
   (testing "Test create article with provided description and is_main_featured"
     (let [description      "Some custom description"
           is-main-featured true]
-      (with-redefs [sql/insert! (spy/mock (fn [_ _ q] test-db-article))]
+      (with-redefs [sql/insert! (spy/stub test-db-article)]
         (sut/add-article nil
                          test-user
                          (-> test-request-article
@@ -80,7 +81,7 @@
 (deftest update-article-test-db-query
   (testing "Test update article database query"
     (let [now (Instant/now)]
-      (with-redefs [sql/update! (spy/mock (fn [_ _ q _] {:next.jdbc/update-count 1}))]
+      (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
         (let [result          (sut/update-article nil (:articles/id test-db-article) test-request-article)
               [[_ _ query _]] (spy/calls sql/update!)]
           (is (= {:title          (:title test-request-article)
@@ -92,23 +93,23 @@
 
 (deftest update-article-test-table-name
   (testing "Test update article database table name"
-    (with-redefs [sql/update! (spy/mock (fn [_ t _ _] {:next.jdbc/update-count 1}))]
-      (let [result          (sut/update-article nil nil nil)
+    (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
+      (let [_               (sut/update-article nil nil nil)
             [[_ table _ _]] (spy/calls sql/update!)]
         (is (= :articles table))))))
 
 (deftest update-article-test-empty-body
   (testing "Test update article with empty body"
-    (with-redefs [sql/update! (spy/mock (fn [_ _ q _] {:next.jdbc/update-count 1}))]
-      (let [result          (sut/update-article nil nil {})
+    (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
+      (let [_               (sut/update-article nil nil {})
             [[_ _ query _]] (spy/calls sql/update!)]
         (is (= (list :updated_on) (keys query)))))))
 
 (deftest update-article-test-article-id
   (testing "Test update article database article ID"
     (let [article-id 432]
-      (with-redefs [sql/update! (spy/mock (fn [_ _ _ i] {:next.jdbc/update-count 1}))]
-        (let [result                     (sut/update-article nil article-id nil)
+      (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
+        (let [_                          (sut/update-article nil article-id nil)
               [[_ _ _ article-id-param]] (spy/calls sql/update!)]
           (is (= {:id article-id} article-id-param)))))))
 
@@ -129,7 +130,7 @@
 
 (deftest get-latest-full-sized-articles-query
   (testing "Test get latest full sized articles database query"
-    (with-redefs [sql/query (fn [_ q] q)]
+    (with-redefs [sql/query (spy/mock (fn [_ q] q))]
       (let [number-param   30
             [query number] (sut/get-latest-full-sized-articles nil number-param)]
         (is (= (str "SELECT id, user_id, title, body, featured_image, created_on, updated_on, description "
@@ -138,7 +139,7 @@
 
 (deftest get-user-articles-test-default-query
   (testing "Test get user articles default database query"
-    (with-redefs [sql/query (fn [_ q] q)]
+    (with-redefs [sql/query (spy/mock (fn [_ q] q))]
       (let [user-id-param         42
             [query user-id limit] (sut/get-user-articles nil user-id-param)]
         (is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
@@ -149,19 +150,19 @@
 
 (deftest get-user-articles-test-query-with-limit
   (testing "Test get user articles with custom limit param"
-    (with-redefs [sql/query (fn [_ q] q)]
+    (with-redefs [sql/query (spy/mock (fn [_ q] q))]
       (let [limit-param 32
             [_ _ limit] (sut/get-user-articles nil 1 limit-param)]
         (is (= limit-param limit))))))
 
 (deftest get-article-by-id-test-table-name
   (testing "Test get article by ID database table name"
-    (with-redefs [sql/get-by-id (fn [_ t _] t)]
+    (with-redefs [sql/get-by-id (spy/mock (fn [_ t _] t))]
       (is (= :articles (sut/get-article-by-id nil nil))))))
 
 (deftest get-article-by-id-test-article-id-param
   (testing "Test get article by ID article-id param"
-    (with-redefs [sql/get-by-id (fn [_ _ i] i)]
+    (with-redefs [sql/get-by-id (spy/mock (fn [_ _ i] i))]
       (let [article-id-param 42]
         (is (= article-id-param (sut/get-article-by-id nil article-id-param)))))))
 
@@ -178,13 +179,13 @@
 
 (deftest get-last-featured-article-test-no-results
   (testing "Get last featured article no results from database"
-    (with-redefs [sql/query (fn [_ _] [])]
+    (with-redefs [sql/query (spy/stub [])]
       (is (= nil (sut/get-last-featured-article nil))))))
 
 (deftest get-last-featured-article-test-first-result
   (testing "Get last featured article should take first result from database"
     (let [res [1 2 3 4 5 6]]
-      (with-redefs [sql/query (fn [_ _] res)]
+      (with-redefs [sql/query (spy/stub res)]
         (is (= (first res) (sut/get-last-featured-article nil)))))))
 
 (deftest get-last-featured-articles-test-query
@@ -202,18 +203,18 @@
 
 (deftest get-last-featured-articles-test-no-results
   (testing "Get latest featured article list no results from database"
-    (with-redefs [sql/query (spy/mock (fn [_ _] []))]
+    (with-redefs [sql/query (spy/stub [])]
       (let [res (sut/get-last-featured-articles nil 3)]
         (is (= [] res))))))
 
 (deftest delete-article-test-table-name
   (testing "Delete article database table name"
-    (with-redefs [sql/delete! (fn [_ t _] t)]
+    (with-redefs [sql/delete! (spy/mock (fn [_ t _] t))]
       (is (= :articles (sut/delete-article nil nil))))))
 
 (deftest delete-article-test-article-id-param
   (testing "Delete article article-id param"
-    (with-redefs [sql/delete! (fn [_ _ i] i)]
+    (with-redefs [sql/delete! (spy/mock (fn [_ _ i] i))]
       (let [article-id 42]
         (is (= {:id article-id} (sut/delete-article nil article-id)))))))
 
@@ -231,7 +232,7 @@
           user       (->> role name vector (assoc auth-user-deserialized :roles))
           user-id    (:id user)
           article-id 44]
-      (with-redefs [sql/get-by-id (spy/mock (fn [_ _ _] {:articles/user_id user-id}))]
+      (with-redefs [sql/get-by-id (spy/stub {:articles/user_id user-id})]
         (is (= true (sut/can-update? nil user article-id)))
         (is (spy/called-once-with? sql/get-by-id nil :articles article-id))))))
 
@@ -240,6 +241,6 @@
     (let [role            :guest
           user            (->> role name vector (assoc auth-user-deserialized :roles))
           article-user-id (inc (:id user))]
-      (with-redefs [sql/get-by-id (spy/mock (fn [_ _ _] {:articles/user_id article-user-id}))]
+      (with-redefs [sql/get-by-id (spy/stub {:articles/user_id article-user-id})]
         (is (= false (sut/can-update? nil user nil)))
         (is (spy/called-once-with? sql/get-by-id nil :articles nil))))))

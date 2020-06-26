@@ -1,8 +1,7 @@
 (ns education.database.roles
   (:require [clojure.string :as str]
-            [next.jdbc.sql :as sql]
-            [next.jdbc.result-set :as rs]
-            [honeysql.core :as hsql]))
+            [honeysql.core :as hsql]
+            [next.jdbc.sql :as sql]))
 
 (defn get-all-roles
   "Fetch all roles from database."

@@ -39,9 +39,9 @@
 (defn- enrich-user-with-roles
   "Fetch roles for `user` and assoc `:roles` key with them."
   [conn user]
-  (->> user
-       (roles/get-user-roles conn)
-       (assoc user :users/roles)))
+  (-> user
+      (assoc :users/roles (roles/get-user-roles conn user))
+      (dissoc :users/user_password)))
 
 (defn get-user
   "Fetch user from database by `id`."
@@ -74,7 +74,7 @@
     (jdbc/with-transaction [tx conn]
       (let [{:keys [roles]} user
             new-roles (->> available-roles
-                           (filter #(some #{(:roles/role_name %)} roles))
+                           (filter #(some #{(:roles/role_name %)} (map keyword roles)))
                            (map :roles/id))]
         (sql/delete! tx :user_roles {:user_id id})
         (sql/insert-multi! tx :user_roles

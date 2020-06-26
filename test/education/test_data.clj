@@ -7,16 +7,11 @@
 
 (def test-config
   "Mocked test configuration for using in unit tests."
-  {:app
-   {:tokensign "test_secret"}})
-
-(def auth-user
-  "Valid authorized user."
-  {:id         42
-   :username   "admin"
-   :email      "admin@example.com"
-   :created_on (Instant/now)
-   :updated_on (Instant/now)})
+  {:database
+   {:url "test_database_url"}
+   :app
+   {:tokensign "test_secret"
+    :port      3000}})
 
 (def password
   "Password for test users."
@@ -41,7 +36,7 @@
 
 (def update-user1-request
   "Update test user request."
-  {:roles #{:admin :moderator}})
+  {:roles ["admin" "moderator"]})
 
 (def db-test-user1
   "First mocked testing user."
@@ -80,6 +75,21 @@
   "Roles for second mocked user."
   #{:admin :guest :moderator})
 
+(def db-user-auth-successful
+  "Returned after successful authentication."
+  [true
+   {:user (-> db-test-user1
+              (dissoc :users/user_password)
+              (assoc :users/roles user1-roles))}])
+
+(def auth-user
+  "Valid authorized user."
+  {:id         (:users/id db-test-user1)
+   :username   (:users/user_name db-test-user1)
+   :email      (:users/user_email db-test-user1)
+   :created_on (:users/created_on db-test-user1)
+   :updated_on (:users/updated_on db-test-user1)})
+
 (defn test-auth-token
   "Generate valid authorization token."
   [roles]
@@ -88,6 +98,11 @@
                   (assoc :exp exp)
                   (jwt/sign (config/token-sign-secret test-config) {:alg :hs512}))]
     (str "Token " token)))
+
+(defn parse-token
+  "Parse token with test configuration."
+  [token]
+  (jwt/unsign token (config/token-sign-secret test-config) {:alg :hs512}))
 
 (def auth-user-deserialized
   "Authorized user deserialized from authorization token."

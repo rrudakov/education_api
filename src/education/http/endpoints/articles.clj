@@ -1,14 +1,11 @@
 (ns education.http.endpoints.articles
   (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.database.articles :as articlesdb]
-            [education.http.constants :refer :all]
+            [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
             [education.specs.articles :as specs]
             [education.specs.error :as err]
-            [ring.swagger.schema :refer [describe]]
-            [ring.util.http-response
-             :refer
-             [created internal-server-error no-content not-found ok forbidden]]))
+            [ring.util.http-response :as status]))
 
 ;; Converters
 (defn to-short-article-response
@@ -40,7 +37,7 @@
   (fn [{:keys [identity]}]
     (let [user   (:user identity)
           new-id (str (articlesdb/add-article db user article))]
-      (created (str "/articles/" new-id) {:id new-id}))))
+      (status/created (str "/articles/" new-id) {:id new-id}))))
 
 (defn- update-article-handler
   "Update existing article handler."
@@ -48,10 +45,10 @@
   (fn [{:keys [identity]}]
     (if (articlesdb/can-update? db (:user identity) article-id)
       (case (articlesdb/update-article db article-id article)
-        1 (no-content)
-        0 (not-found {:message not-found-error-message})
-        (internal-server-error {:message server-error-message}))
-      (forbidden {:message no-access-error-message}))))
+        1 (status/no-content)
+        0 (status/not-found {:message const/not-found-error-message})
+        (status/internal-server-error {:message const/server-error-message}))
+      (status/forbidden {:message const/no-access-error-message}))))
 
 (defn- get-all-articles-handler
   "Get all recent articles handler."
@@ -61,7 +58,7 @@
                    (articlesdb/get-user-articles db user-id limit))]
     (->> articles
          (map to-short-article-response)
-         ok)))
+         status/ok)))
 
 (defn- get-latest-full-articles-handler
   "Get latest full articles handler."
@@ -69,30 +66,30 @@
   (let [articles (articlesdb/get-latest-full-sized-articles db number)]
     (->> articles
          (map to-full-article-response)
-         ok)))
+         status/ok)))
 
 (defn- get-article-by-id-handler
   "Get article by `article-id` handler."
   [db article-id]
   (let [article (articlesdb/get-article-by-id db article-id)]
     (if (nil? article)
-      (not-found {:message not-found-error-message})
-      (ok (to-full-article-response article)))))
+      (status/not-found {:message const/not-found-error-message})
+      (status/ok (to-full-article-response article)))))
 
 (defn- get-last-main-featured-article-handler
   "Get last main featured article handler."
   [db]
   (let [mf-article (articlesdb/get-last-featured-article db)]
     (if (nil? mf-article)
-      (not-found {:message not-found-error-message})
-      (ok (to-short-article-response mf-article)))))
+      (status/not-found {:message const/not-found-error-message})
+      (status/ok (to-short-article-response mf-article)))))
 
 (defn- get-last-featured-articles-handler
   "Get last featured articles handler."
   [db limit]
   (->> (articlesdb/get-last-featured-articles db limit)
        (map to-short-article-response)
-       ok))
+       status/ok))
 
 (defn- delete-article-handler
   "Delete article by `article-id` handler."
@@ -100,10 +97,10 @@
   (fn [{:keys [identity]}]
     (if (articlesdb/can-update? db (:user identity) article-id)
       (case (articlesdb/delete-article db article-id)
-        1 (no-content)
-        0 (not-found {:message not-found-error-message})
-        (internal-server-error {:message server-error-message}))
-      (forbidden {:message no-access-error-message}))))
+        1 (status/no-content)
+        0 (status/not-found {:message const/not-found-error-message})
+        (status/internal-server-error {:message const/server-error-message}))
+      (status/forbidden {:message const/no-access-error-message}))))
 
 ;; Define routes
 (defn articles-routes

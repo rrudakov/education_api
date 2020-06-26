@@ -1,41 +1,28 @@
 (ns education.database.roles-test
-  (:require [buddy.hashers :as hs]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer [testing deftest is]]
             [education.database.roles :as sut]
+            [education.test-data :as td]
             [next.jdbc.sql :as sql]
             [spy.core :as spy]))
 
-(def db-roles
-  "Mocked roles from database."
-  [{:roles/id 1, :roles/role_name "admin"}
-   {:roles/id 2, :roles/role_name "moderator"}
-   {:roles/id 3, :roles/role_name "guest"}])
-
-(def password
-  "Password for mocked user."
-  "123456")
-
-(def test-user
-  "First mocked testing user."
-  {:users/id            4,
-   :users/user_name     "rrudakov",
-   :users/user_password (hs/encrypt password),
-   :users/user_email    "rrudakof@pm.me",
-   :users/created_on    #inst "2020-05-07T15:13:36.388217000-00:00",
-   :users/updated_on    #inst "2020-05-07T15:13:36.388217000-00:00"})
-
 (def db-user-roles
-  "Mocked roles for `test-user`."
+  "Result of database query for user roles."
   [{:roles/role_name "guest"}
    {:roles/role_name "admin"}])
 
 (deftest get-all-roles-test
-  (with-redefs [sql/query (spy/mock (fn [_ _] db-roles))]
-    (testing "Test get all roles from database"
-      (is (= (map (fn [role] (update-in role [:roles/role_name] keyword)) db-roles)
-             (sut/get-all-roles nil))))))
+  (testing "Test get all roles from database"
+    (with-redefs [sql/query (spy/stub td/db-all-roles)]
+      (is (= (map (fn [role] (update-in role [:roles/role_name] keyword)) td/db-all-roles)
+             (sut/get-all-roles nil)))
+      (is (spy/called-once-with? sql/query nil ["SELECT * FROM roles"])))))
 
 (deftest get-user-roles-successful-test
-  (with-redefs [sql/query (spy/mock (fn [_ _] db-user-roles))]
-    (testing "Test fetch roles for existing user."
-      (is (= #{:admin :guest} (sut/get-user-roles nil test-user))))))
+  (testing "Test fetch roles for existing user."
+    (with-redefs [sql/query (spy/stub db-user-roles)]
+      (is (= #{:admin :guest} (sut/get-user-roles nil td/db-test-user1)))
+      (is (spy/called-once-with?
+           sql/query
+           nil
+           ["SELECT r.role_name FROM user_roles ur LEFT JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = ?"
+            (:users/id td/db-test-user1)])))))
