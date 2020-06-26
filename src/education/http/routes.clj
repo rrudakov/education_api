@@ -1,18 +1,11 @@
 (ns education.http.routes
   (:require [compojure.api.exception :as ex]
             [compojure.api.sweet :refer [api context]]
-            [education.http.constants
-             :refer
-             [bad-request-error-message
-              conflict-error-message
-              not-found-error-message
-              server-error-message]]
+            [education.http.constants :as const]
             [education.http.endpoints.articles :refer [articles-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.users :refer [users-routes]]
-            [ring.util.http-response
-             :refer
-             [bad-request conflict internal-server-error not-found]])
+            [ring.util.http-response :as status])
   (:import java.sql.SQLException))
 
 (defn sql-exception-handler
@@ -20,25 +13,25 @@
   []
   (fn [^SQLException e _ _]
     (case (.getSQLState e)
-      "23505" (conflict {:message conflict-error-message})
-      "23503" (not-found {:message not-found-error-message})
-      "23502" (bad-request {:message bad-request-error-message})
-      (internal-server-error {:message    (.getServerErrorMessage e)
-                              :error_code (.getSQLState e)}))))
+      "23505" (status/conflict {:message const/conflict-error-message})
+      "23503" (status/not-found {:message const/not-found-error-message})
+      "23502" (status/bad-request {:message const/bad-request-error-message})
+      (status/internal-server-error {:message    (.getServerErrorMessage e)
+                                     :error_code (.getSQLState e)}))))
 
 (defn request-validation-handler
   "Verify request body and raise error."
   []
   (fn [^Exception e _ _]
-    (bad-request {:message bad-request-error-message
-                  :details (.getMessage e)})))
+    (status/bad-request {:message const/bad-request-error-message
+                         :details (.getMessage e)})))
 
 (defn response-validation-handler
   "Return error in case of invalid response."
   []
   (fn [^Exception e _ _]
-    (internal-server-error
-     {:message server-error-message
+    (status/internal-server-error
+     {:message const/server-error-message
       :details (.getMessage e)})))
 
 (defn api-routes

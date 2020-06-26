@@ -1,9 +1,7 @@
 (ns education.http.endpoints.roles-test
   (:require [clojure.test :refer [deftest is testing]]
             [education.database.roles :as rolesdb]
-            [education.http.constants
-             :refer
-             [no-access-error-message not-authorized-error-message]]
+            [education.http.constants :as const]
             [education.http.endpoints.test-app
              :refer
              [parse-body test-api-routes-with-auth]]
@@ -31,7 +29,7 @@
                               (mock/header :authorization (test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
-        (is (= {:message no-access-error-message} body))
+        (is (= {:message const/no-access-error-message} body))
         (is (spy/not-called? rolesdb/get-all-roles)))))
 
   (testing "Test GET /roles without authorization token"
@@ -40,5 +38,5 @@
             response (app (-> (mock/request :get "/api/roles")))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
-        (is (= {:message not-authorized-error-message} body))
+        (is (= {:message const/not-authorized-error-message} body))
         (is (spy/not-called? rolesdb/get-all-roles))))))

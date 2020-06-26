@@ -3,14 +3,7 @@
             [clojure.string :refer [blank?]]
             [clojure.test :refer [deftest is testing]]
             [education.database.users :as usersdb]
-            [education.http.constants
-             :refer
-             [bad-request-error-message
-              conflict-error-message
-              invalid-credentials-error-message
-              no-access-error-message
-              not-authorized-error-message
-              not-found-error-message]]
+            [education.http.constants :as const]
             [education.http.endpoints.test-app
              :refer
              [parse-body test-api-routes-with-auth]]
@@ -55,7 +48,7 @@
             response (app (mock/request :get "/api/users"))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
-        (is (= {:message not-authorized-error-message} body))
+        (is (= {:message const/not-authorized-error-message} body))
         (is (spy/not-called? usersdb/get-all-users)))))
 
   (testing "Test GET /users with guest role"
@@ -65,7 +58,7 @@
                               (mock/header :authorization (td/test-auth-token #{:guest}))))
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
-        (is (= {:message no-access-error-message} body))
+        (is (= {:message const/no-access-error-message} body))
         (is (spy/not-called? usersdb/get-all-users))))))
 
 (deftest get-user-test
@@ -88,7 +81,7 @@
                               (mock/header :authorization (td/test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
         (is (= 404 (:status response)))
-        (is (= {:message not-found-error-message} body))
+        (is (= {:message const/not-found-error-message} body))
         (is (spy/called-once-with? usersdb/get-user nil user-id)))))
 
   (testing "Test GET /users/:id without authorization token"
@@ -97,7 +90,7 @@
             response (app (mock/request :get "/api/users/55"))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
-        (is (= {:message not-authorized-error-message} body))
+        (is (= {:message const/not-authorized-error-message} body))
         (is (spy/not-called? usersdb/get-user)))))
 
   (testing "Test GET /users/:id with guest role"
@@ -107,7 +100,7 @@
                               (mock/header :authorization (td/test-auth-token #{:guest}))))
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
-        (is (= {:message no-access-error-message} body))
+        (is (= {:message const/no-access-error-message} body))
         (is (spy/not-called? usersdb/get-user)))))
 
   (testing "Test GET /users/:id with invalid id"
@@ -118,7 +111,7 @@
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (some #{:details :message} (keys body)))
-        (is (= bad-request-error-message (:message body)))
+        (is (= const/bad-request-error-message (:message body)))
         (is (spy/not-called? usersdb/get-user))))))
 
 (deftest add-user-test
@@ -143,7 +136,7 @@
                               (mock/body (cheshire/generate-string td/add-user1-request))))
             body     (parse-body (:body response))]
         (is (= 409 (:status response)))
-        (is (= {:message conflict-error-message} body))
+        (is (= {:message const/conflict-error-message} body))
         (is (spy/called-once-with? usersdb/add-user nil td/add-user1-request)))))
 
   (testing "Test POST /users without required request fields"
@@ -157,7 +150,7 @@
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (some #{:message :details} (keys body)))
-          (is (= bad-request-error-message (:message body)))
+          (is (= const/bad-request-error-message (:message body)))
           (is (spy/not-called? usersdb/add-user)))))))
 
 (deftest update-user-test
@@ -183,7 +176,7 @@
                               (mock/body (cheshire/generate-string td/update-user1-request))))
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
-        (is (= {:message no-access-error-message} body))
+        (is (= {:message const/no-access-error-message} body))
         (is (spy/not-called? usersdb/update-user)))))
 
   (testing "Test PATCH /users/:id without authorization token"
@@ -194,7 +187,7 @@
                               (mock/body (cheshire/generate-string td/update-user1-request))))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
-        (is (= {:message not-authorized-error-message} body))
+        (is (= {:message const/not-authorized-error-message} body))
         (is (spy/not-called? usersdb/update-user)))))
 
   (testing "Test PATCH /users/:id with invalid user-id"
@@ -207,7 +200,7 @@
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (some #{:message :details} (keys body)))
-        (is (= bad-request-error-message (:message body)))
+        (is (= const/bad-request-error-message (:message body)))
         (is (spy/not-called? usersdb/update-user)))))
 
   (testing "Test PATCH /users/:id with invalid request body"
@@ -222,7 +215,7 @@
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (some #{:message :details} (keys body)))
-          (is (= bad-request-error-message (:message body)))
+          (is (= const/bad-request-error-message (:message body)))
           (is (spy/not-called? usersdb/update-user)))))))
 
 (deftest delete-user-test
@@ -244,7 +237,7 @@
                               (mock/header :authorization (td/test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
-        (is (= {:message no-access-error-message} body))
+        (is (= {:message const/no-access-error-message} body))
         (is (spy/not-called? usersdb/delete-user)))))
 
   (testing "Test DELETE /users/:id without authorization token"
@@ -253,7 +246,7 @@
             response (app (-> (mock/request :delete "/api/users/43")))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
-        (is (= {:message not-authorized-error-message} body))
+        (is (= {:message const/not-authorized-error-message} body))
         (is (spy/not-called? usersdb/delete-user)))))
 
   (testing "Test DELETE /users/:id with invalid user-id"
@@ -264,7 +257,7 @@
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (some #{:message :details} (keys body)))
-        (is (= bad-request-error-message (:message body)))
+        (is (= const/bad-request-error-message (:message body)))
         (is (spy/not-called? usersdb/delete-user))))))
 
 (deftest login-test
@@ -283,12 +276,12 @@
         (is (spy/called-once-with? usersdb/auth-user nil td/auth-user1-request)))))
 
   (testing "Test POST /login bad credentials"
-    (with-redefs [usersdb/auth-user (spy/stub [false {:message invalid-credentials-error-message}])]
+    (with-redefs [usersdb/auth-user (spy/stub [false {:message const/invalid-credentials-error-message}])]
       (let [app      (test-api-routes-with-auth (spy/spy))
             response (app (-> (mock/request :post "/api/login")
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string td/auth-user1-request))))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
-        (is (= {:message invalid-credentials-error-message} body))
+        (is (= {:message const/invalid-credentials-error-message} body))
         (is (spy/called-once-with? usersdb/auth-user nil td/auth-user1-request))))))

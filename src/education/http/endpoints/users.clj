@@ -7,9 +7,7 @@
             [education.http.restructure :refer [require-roles]]
             [education.specs.error :as err]
             [education.specs.users :as specs]
-            [ring.util.http-response
-             :refer
-             [created no-content not-found ok unauthorized]]))
+            [ring.util.http-response :as status]))
 
 ;; Converters
 (defn to-user-response
@@ -41,8 +39,8 @@
   [db config credentials]
   (let [[ok? res] (create-auth-token db config credentials)]
     (if ok?
-      (ok res)
-      (unauthorized res))))
+      (status/ok res)
+      (status/unauthorized res))))
 
 (defn- all-users-handler
   "Return all users list."
@@ -51,32 +49,32 @@
        usersdb/get-all-users
        (map to-user-response)
        vec
-       ok))
+       status/ok))
 
 (defn- get-user-handler
   "Get user by ID handler."
   [db id]
   (let [user (usersdb/get-user db id)]
     (if (nil? user)
-      (not-found {:message not-found-error-message})
-      (ok (to-user-response user)))))
+      (status/not-found {:message not-found-error-message})
+      (status/ok (to-user-response user)))))
 
 (defn- add-user-handler
   "Create new user handler."
   [db user]
-  (created (str (usersdb/add-user db user))))
+  (status/created (str (usersdb/add-user db user))))
 
 (defn- update-user-handler
   "Update existing user by `user-id`."
   [db user-id user]
   (usersdb/update-user db user-id user)
-  (no-content))
+  (status/no-content))
 
 (defn- delete-user-handler
   "Delete existing user handler."
   [db user-id]
   (usersdb/delete-user db user-id)
-  (no-content))
+  (status/no-content))
 
 ;; Define routes
 (defn users-routes
