@@ -1,132 +1,86 @@
 (ns education.database.articles-test
-  (:require [clojure.test :refer [testing is deftest]]
+  (:require [clojure.test :refer [deftest is testing]]
             [education.database.articles :as sut]
-            [education.test-data :refer [auth-user-deserialized]]
+            [education.test-data :as td]
             [next.jdbc.sql :as sql]
             [spy.core :as spy])
   (:import java.time.Instant))
 
-(def test-user
-  "User for article creation."
-  {:id         1
-   :username   "rrudakov"
-   :email      "rrudakov@pm.me"
-   :roles      #{:admin :guest}
-   :created_on (Instant/parse "2020-05-13T19:43:07Z")
-   :updated_on (Instant/parse "2020-05-13T19:43:07Z")})
+(deftest add-article-test
+  (testing "Test add article successfully"
+    (with-redefs [sql/insert! (spy/stub td/db-test-article)]
+      (let [user   (td/auth-user-deserialized-with-role :admin)
+            result (sut/add-article nil user td/add-article-request)]
+        (is (= (:articles/id td/db-test-article) result))
+        (is (spy/called-once-with? sql/insert!
+                                   nil
+                                   :articles
+                                   {:user_id          (:id user)
+                                    :title            (:title td/add-article-request)
+                                    :body             (:body td/add-article-request)
+                                    :featured_image   (:featured_image td/add-article-request)
+                                    :description      "No description..."
+                                    :is_main_featured false})))))
 
-(def test-request-article
-  "Article to create."
-  {:title          "Test title",
-   :body           "Test body",
-   :featured_image "https://featured.image.com/image.png",})
-
-(def test-db-article
-  "Created article."
-  {:articles/id               22
-   :articles/user_id          (:id test-user)
-   :articles/title            (:title test-request-article)
-   :articles/body             (:body test-request-article)
-   :articles/description      "Test description"
-   :articles/is_main_featured false
-   :articles/created_on       (Instant/now)
-   :articles/updated_on       (Instant/now)})
-
-;; TODO: rework this tests
-(deftest add-article-test-article-id
-  (testing "Test return new article ID"
-    (with-redefs [sql/insert! (fn [_ _ _] test-db-article)]
-      (is (= (:articles/id test-db-article)
-             (sut/add-article nil test-user test-request-article))))))
-
-(deftest add-article-test-db-query
-  (testing "Test create article database query"
-    (with-redefs [sql/insert! (spy/stub test-db-article)]
-      (sut/add-article nil test-user test-request-article)
-      (let [[[_ _ query]] (spy/calls sql/insert!)]
-        (is (= {:user_id          (:id test-user)
-                :title            (:title test-request-article)
-                :body             (:body test-request-article)
-                :featured_image   (:featured_image test-request-article)
-                :description      "No description..."
-                :is_main_featured false}
-               query))))))
-
-(deftest add-article-test-table-name
-  (testing "test create article database name"
-    (with-redefs [sql/insert! (spy/stub test-db-article)]
-      (sut/add-article nil nil nil)
-      (let [[[_ table _]] (spy/calls sql/insert!)]
-        (is (= :articles table))))))
-
-(deftest add-article-test-request-with-optional-fields
   (testing "Test create article with provided description and is_main_featured"
-    (let [description      "Some custom description"
-          is-main-featured true]
-      (with-redefs [sql/insert! (spy/stub test-db-article)]
-        (sut/add-article nil
-                         test-user
-                         (-> test-request-article
-                             (assoc :description description)
-                             (assoc :is_main_featured is-main-featured)))
-        (let [[[_ _ query]] (spy/calls sql/insert!)]
-          (is (= {:user_id          (:id test-user)
-                  :title            (:title test-request-article)
-                  :body             (:body test-request-article)
-                  :featured_image   (:featured_image test-request-article)
-                  :description      description
-                  :is_main_featured is-main-featured}
-                 query)))))))
+    (with-redefs [sql/insert! (spy/stub td/db-test-article)]
+      (let [description      "Some custom description"
+            is-main-featured true
+            request          (-> td/add-article-request
+                                 (assoc :description description)
+                                 (assoc :is_main_featured is-main-featured))
+            user             (td/auth-user-deserialized-with-role :admin)
+            _                (sut/add-article nil user request)]
+        (is (spy/called-once-with? sql/insert!
+                                   nil
+                                   :articles
+                                   {:user_id          (:id user)
+                                    :title            (:title td/add-article-request)
+                                    :body             (:body td/add-article-request)
+                                    :featured_image   (:featured_image td/add-article-request)
+                                    :description      description
+                                    :is_main_featured is-main-featured}))))))
 
-(deftest update-article-test-db-query
+(deftest update-article-test
   (testing "Test update article database query"
-    (let [now (Instant/now)]
-      (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
-        (let [result          (sut/update-article nil (:articles/id test-db-article) test-request-article)
-              [[_ _ query _]] (spy/calls sql/update!)]
-          (is (= {:title          (:title test-request-article)
-                  :body           (:body test-request-article)
-                  :featured_image (:featured_image test-request-article)
-                  :updated_on     now}
-                 (assoc query :updated_on now)))
-          (is (= 1 result)))))))
-
-(deftest update-article-test-table-name
-  (testing "Test update article database table name"
     (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
-      (let [_               (sut/update-article nil nil nil)
-            [[_ table _ _]] (spy/calls sql/update!)]
-        (is (= :articles table))))))
+      (let [now                    (Instant/now)
+            result                 (sut/update-article nil (:articles/id td/db-test-article) td/add-article-request)
+            [[_ table query opts]] (spy/calls sql/update!)]
+        (is (= {:title          (:title td/add-article-request)
+                :body           (:body td/add-article-request)
+                :featured_image (:featured_image td/add-article-request)
+                :updated_on     now}
+               (assoc query :updated_on now)))
+        (is (= :articles table))
+        (is (= {:id (:articles/id td/db-test-article)} opts))
+        (is (= 1 result)))))
 
-(deftest update-article-test-empty-body
   (testing "Test update article with empty body"
     (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
-      (let [_               (sut/update-article nil nil {})
-            [[_ _ query _]] (spy/calls sql/update!)]
-        (is (= (list :updated_on) (keys query)))))))
+      (let [article-id             42
+            _                      (sut/update-article nil article-id {})
+            [[_ table query opts]] (spy/calls sql/update!)]
+        (is (= (list :updated_on) (keys query)))
+        (is (= :articles table))
+        (is (= {:id article-id} opts))))))
 
-(deftest update-article-test-article-id
-  (testing "Test update article database article ID"
-    (let [article-id 432]
-      (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
-        (let [_                          (sut/update-article nil article-id nil)
-              [[_ _ _ article-id-param]] (spy/calls sql/update!)]
-          (is (= {:id article-id} article-id-param)))))))
+(def get-all-articles-query
+  "Expected raw SQL query for fetching all articles from database."
+  (str "SELECT id, user_id, title, featured_image, updated_on, description "
+       "FROM articles ORDER BY updated_on DESC LIMIT ?"))
 
-(deftest get-all-articles-test-default-query
+(deftest get-all-articles-test
   (testing "Test get all articles default database query"
-    (with-redefs [sql/query (fn [_ q] q)]
-      (let [[query limit] (sut/get-all-articles nil)]
-        (is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
-                    "FROM articles ORDER BY updated_on DESC LIMIT ?") query))
-        (is (= 100 limit))))))
+    (with-redefs [sql/query (spy/spy)]
+      (sut/get-all-articles nil)
+      (is (spy/called-once-with? sql/query nil [get-all-articles-query 100]))))
 
-(deftest get-all-articles-test-query-with-limit
   (testing "Test get all articles with custom limit param"
-    (with-redefs [sql/query (fn [_ q] q)]
+    (with-redefs [sql/query (spy/spy)]
       (let [limit-param 32
-            [_ limit]   (sut/get-all-articles nil limit-param)]
-        (is (= limit-param limit))))))
+            _           (sut/get-all-articles nil limit-param)]
+        (is (spy/called-once-with? sql/query nil [get-all-articles-query limit-param]))))))
 
 (deftest get-latest-full-sized-articles-query
   (testing "Test get latest full sized articles database query"
@@ -222,14 +176,14 @@
   (doseq [role [:moderator :admin]]
     (testing "Test can-update? returns true for moderator and admin roles"
       (with-redefs [sql/get-by-id (spy/spy)]
-        (let [user (->> role name vector (assoc auth-user-deserialized :roles))]
+        (let [user (->> role name vector (assoc td/auth-user-deserialized :roles))]
           (is (= true (sut/can-update? nil user nil)))
           (is (spy/not-called? sql/get-by-id)))))))
 
 (deftest can-update-test-article-owner
   (testing "Test can-update? returns true for article owner"
     (let [role       :guest
-          user       (->> role name vector (assoc auth-user-deserialized :roles))
+          user       (->> role name vector (assoc td/auth-user-deserialized :roles))
           user-id    (:id user)
           article-id 44]
       (with-redefs [sql/get-by-id (spy/stub {:articles/user_id user-id})]
@@ -239,7 +193,7 @@
 (deftest can-update-test-guest-not-owner
   (testing "Test can-update? returns false for guest and not article owner"
     (let [role            :guest
-          user            (->> role name vector (assoc auth-user-deserialized :roles))
+          user            (->> role name vector (assoc td/auth-user-deserialized :roles))
           article-user-id (inc (:id user))]
       (with-redefs [sql/get-by-id (spy/stub {:articles/user_id article-user-id})]
         (is (= false (sut/can-update? nil user nil)))

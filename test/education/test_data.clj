@@ -112,3 +112,20 @@
   "Return authorized user with given `role`."
   [role]
   (assoc auth-user-deserialized :roles (vector (name role))))
+
+(def add-article-request
+  "Article to create."
+  {:title          "Test title",
+   :body           "Test body",
+   :featured_image "https://featured.image.com/image.png",})
+
+(def db-test-article
+  "Created article."
+  {:articles/id               22
+   :articles/user_id          (:id auth-user-deserialized)
+   :articles/title            (:title add-article-request)
+   :articles/body             (:body add-article-request)
+   :articles/description      "Test description"
+   :articles/is_main_featured false
+   :articles/created_on       (Instant/now)
+   :articles/updated_on       (Instant/now)})
