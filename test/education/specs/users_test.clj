@@ -58,15 +58,24 @@
 
 (deftest roles-test
   (doseq [roles [[:admin :moderator :guest]
+                 [:moderator :admin]
+                 [:guest :moderator]
                  #{:admin :guest}
                  '(:admin)
-                 []]]
+                 []
+                 #{}
+                 '()]]
     (testing (str "::roles valid " roles)
       (is (s/valid? ::sut/roles roles))))
 
   (doseq [roles [[:admin :moderator :god]
                  [:admin :admin :guest]
-                 ["admin" :guest]
+                 #{"admin" :guest}
+                 '("admin" "guest" "moderator")
+                 [true false]
+                 9999999
+                 "string"
+                 #{:admin :moderator :guest :someone-else}
                  [1 2 3 4]]]
     (testing (str "::roles invalid " roles)
       (is (not (s/valid? ::sut/roles roles))))))
@@ -89,9 +98,13 @@
 
   (doseq [roles [["admin" "moderator" "god"]
                  ["admin" "guest" "guest"]
-                 ["admin" :guest]
+                 #{"admin" :guest}
+                 '(true)
+                 99999999
                  [1 2 3 4 5]
-                 []]]
+                 []
+                 #{}
+                 '()]]
     (testing (str "::roles-request invalid " roles)
       (is (not (s/valid? ::sut/roles-request roles))))))
 
@@ -115,9 +128,12 @@
   (testing "::token valid"
     (is (s/valid? ::sut/token "s")))
 
-  (doseq [token [12345 true {}]]
+  (doseq [token [12345 true {} [:list :of :keywords]]]
     (testing (str "::token invalid " token)
-      (is (not (s/valid? ::sut/token token))))))
+      (is (not (s/valid? ::sut/token token)))))
+
+  (testing "::token exercise"
+    (is (= 10 (count (s/exercise ::sut/token))))))
 
 (deftest user-create-request-test
   (doseq [req [{:username "valid" :password "123456" :email "email@example.org"}
@@ -128,7 +144,12 @@
   (doseq [req [{:username "valid" :password "123456"}
                {:username "valid" :email "email@example.org"}
                {:password "123456" :email "email@example.org"}
-               {:username "s" :password "12345" :email "email@example"}]]
+               {:username "s" :password "12345" :email "email@example"}
+               [1 2 3 4 5]
+               {:some "value" :another true}
+               "string"
+               false
+               888888888]]
     (testing (str "::user-create-request invalid " req)
       (is (not (s/valid? ::sut/user-create-request req))))))
 
@@ -141,9 +162,18 @@
   (doseq [req [{:roles ["admin" "admin"]}
                {:role ["admin"]}
                {:roles ["god"]}
-               {:roles "admin"}]]
+               {:roles "admin"}
+               ["list " "of " "values"]
+               "just string"
+               :keyword
+               983745345
+               #{true false}
+               false]]
     (testing (str "::user-update-request invalid " req)
-      (is (not (s/valid? ::sut/user-update-request req))))))
+      (is (not (s/valid? ::sut/user-update-request req)))))
+
+  (testing "::user-update exercise"
+    (is (= 10 (count (s/exercise ::sut/user-update-request))))))
 
 (deftest user-response-test
   (doseq [resp [{:id         23
@@ -197,7 +227,12 @@
                  :email      "email.org"
                  :roles      [:god]
                  :created_on "time"
-                 :updated_on "time"}]]
+                 :updated_on "time"}
+                {:some "invalid" :map true}
+                true
+                99938434
+                ["vector" "of" "strings"]
+                "whatever"]]
     (testing (str "::user-response invalid " resp)
       (is (not (s/valid? ::sut/user-response resp))))))
 
@@ -215,7 +250,8 @@
                     :email      "rr2@example.org"
                     :roles      [:moderator]
                     :updated_on (Instant/now)
-                    :created_on (Instant/now)}])))
+                    :created_on (Instant/now)
+                    :extra      :field}])))
 
   (let [now (Instant/now)]
     (doseq [resp [[{:id         1
@@ -229,7 +265,12 @@
                     :email      "rr@example.org"
                     :roles      [:guest]
                     :updated_on now
-                    :created_on now}]]]
+                    :created_on now}]
+                  [{:some "invalid"}]
+                  {:not "vector"}
+                  [1 2 3 4 5 6]
+                  [true false]
+                  88888888]]
       (testing (str "::users-response invalid " resp)
         (is (not (s/valid? ::sut/users-response resp)))))))
 
@@ -241,16 +282,31 @@
 
   (doseq [req [{:username "rrudakov"}
                {:password "123456"}
-               {:username "r" :password "12"}]]
+               {:username "r" :password "12"}
+               {:username true :password "123456"}
+               {:username 123456 :password "123456"}
+               [:list :of :some :values]
+               true
+               9876354]]
     (testing (str "::login-request invalid " req)
-      (is (not (s/valid? ::sut/login-request req))))))
+      (is (not (s/valid? ::sut/login-request req)))))
+
+  (testing "::login-request exercise"
+    (is (= 10 (count (s/exercise ::sut/login-request))))))
 
 (deftest token-response-test
-  (testing "::token response valid"
+  (testing "::token-response valid"
     (is (s/valid? ::sut/token-response {:token "any string here"})))
 
   (doseq [resp [{:t "valid string"}
                 {:token {:value "invalid structure"}}
-                {:token 123456}]]
-    (testing "::token response invalid"
-      (is (not (s/valid? ::sut/token-response resp))))))
+                {:token 123456}
+                ["list" "of" "string"]
+                true
+                838383838383
+                #{:set :of :values}]]
+    (testing "::token-response invalid"
+      (is (not (s/valid? ::sut/token-response resp)))))
+
+  (testing "::token-response exercise"
+    (is (= 10 (count (s/exercise ::sut/token-response))))))

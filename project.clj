@@ -3,7 +3,7 @@
   :url "http://educationapp-api.herokuapp.com/swagger"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :dependencies [[org.clojure/clojure "1.10.0"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
                  ;; Configuration file parsing
                  [aero "1.1.6"]
                  ;; Ring and compojure
@@ -17,25 +17,26 @@
                  ;; Database stuff
                  [ragtime "0.8.0"]
                  [seancorfield/next.jdbc "1.0.445"]
-                 [org.postgresql/postgresql "42.2.10"]
-                 [com.mchange/c3p0 "0.9.5.2"]
+                 [org.postgresql/postgresql "42.2.14"]
+                 [com.mchange/c3p0 "0.9.5.5"]
                  [honeysql "0.9.10"]
                  ;; Component framework
-                 [com.stuartsierra/dependency "0.2.0"]
-                 [com.stuartsierra/component "0.4.0"]
+                 [com.stuartsierra/dependency "1.0.0"]
+                 [com.stuartsierra/component "1.0.0"]
                  ;; Security
                  [buddy/buddy-hashers "1.4.0"]
                  [buddy/buddy-sign "3.1.0"]
                  [buddy/buddy-auth "2.2.0"]
                  ;; JSON parsing
-                 [com.fasterxml.jackson.core/jackson-core "2.10.3"]]
+                 [com.fasterxml.jackson.core/jackson-core "2.11.1"]]
   :repl-options {:init-ns education.core}
   :aliases {"migrate"  ["run" "-m" "education.database.component/migrate" "--"]
             "rollback" ["run" "-m" "education.database.component/rollback" "--"]}
   :uberjar-name "education-api-standalone.jar"
   :min-lein-version "2.0.0"
   :profiles {:dev {:dependencies [[tortue/spy "2.0.0"]
-                                  [ring/ring-mock "0.4.0"]]}
+                                  [ring/ring-mock "0.4.0"]
+                                  [org.clojure/test.check "1.0.0"]]}
              :uberjar {:aot :all}}
   :plugins [[lein-cloverage "1.1.2"]]
   :main education.core)
