@@ -119,7 +119,7 @@
 (defn delete-article
   "Delete article from database by `article-id`."
   [conn article-id]
-  (sql/delete! conn :articles {:id article-id}))
+  (:next.jdbc/update-count (sql/delete! conn :articles {:id article-id})))
 
 (defn can-update?
   "Check whether `user` allowed to update article by `arcicle-id`."

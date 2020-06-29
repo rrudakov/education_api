@@ -43,27 +43,30 @@
 
 (deftest update-article-test
   (testing "Test update article database query"
-    (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
-      (let [now                    (Instant/now)
-            result                 (sut/update-article nil (:articles/id td/db-test-article) td/add-article-request)
-            [[_ table query opts]] (spy/calls sql/update!)]
-        (is (= {:title          (:title td/add-article-request)
-                :body           (:body td/add-article-request)
-                :featured_image (:featured_image td/add-article-request)
-                :updated_on     now}
-               (assoc query :updated_on now)))
-        (is (= :articles table))
-        (is (= {:id (:articles/id td/db-test-article)} opts))
-        (is (= 1 result)))))
+    (let [updated-rows 3]
+      (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count updated-rows})]
+        (let [now                    (Instant/now)
+              result                 (sut/update-article nil (:articles/id td/db-test-article) td/add-article-request)
+              [[_ table query opts]] (spy/calls sql/update!)]
+          (is (= {:title          (:title td/add-article-request)
+                  :body           (:body td/add-article-request)
+                  :featured_image (:featured_image td/add-article-request)
+                  :updated_on     now}
+                (assoc query :updated_on now)))
+         (is (= :articles table))
+         (is (= {:id (:articles/id td/db-test-article)} opts))
+         (is (= updated-rows result))))))
 
   (testing "Test update article with empty body"
-    (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count 1})]
-      (let [article-id             42
-            _                      (sut/update-article nil article-id {})
-            [[_ table query opts]] (spy/calls sql/update!)]
-        (is (= (list :updated_on) (keys query)))
-        (is (= :articles table))
-        (is (= {:id article-id} opts))))))
+    (let [updated-rows 2]
+      (with-redefs [sql/update! (spy/stub {:next.jdbc/update-count updated-rows})]
+        (let [article-id             42
+              result                 (sut/update-article nil article-id {})
+              [[_ table query opts]] (spy/calls sql/update!)]
+         (is (= (list :updated_on) (keys query)))
+         (is (= :articles table))
+         (is (= {:id article-id} opts))
+         (is (= updated-rows result)))))))
 
 (def get-all-articles-query
   "Expected raw SQL query for fetching all articles from database."
@@ -72,115 +75,111 @@
 
 (deftest get-all-articles-test
   (testing "Test get all articles default database query"
-    (with-redefs [sql/query (spy/spy)]
-      (sut/get-all-articles nil)
+    (with-redefs [sql/query (spy/stub [td/db-test-article])]
+      (is (= [td/db-test-article] (sut/get-all-articles nil)))
       (is (spy/called-once-with? sql/query nil [get-all-articles-query 100]))))
 
   (testing "Test get all articles with custom limit param"
-    (with-redefs [sql/query (spy/spy)]
-      (let [limit-param 32
-            _           (sut/get-all-articles nil limit-param)]
+    (with-redefs [sql/query (spy/stub [td/db-test-article])]
+      (let [limit-param 32]
+        (is (= [td/db-test-article] (sut/get-all-articles nil limit-param)))
         (is (spy/called-once-with? sql/query nil [get-all-articles-query limit-param]))))))
 
-(deftest get-latest-full-sized-articles-query
+(def get-latest-articles-query
+  "Expected raw SQL query for fetching latest full sized articles from database."
+  (str "SELECT id, user_id, title, body, featured_image, created_on, updated_on, description "
+       "FROM articles ORDER BY updated_on DESC LIMIT ?"))
+
+(deftest get-latest-full-sized-articles-test
   (testing "Test get latest full sized articles database query"
-    (with-redefs [sql/query (spy/mock (fn [_ q] q))]
-      (let [number-param   30
-            [query number] (sut/get-latest-full-sized-articles nil number-param)]
-        (is (= (str "SELECT id, user_id, title, body, featured_image, created_on, updated_on, description "
-                    "FROM articles ORDER BY updated_on DESC LIMIT ?") query))
-        (is (= number-param number ))))))
+    (with-redefs [sql/query (spy/stub [td/db-test-article])]
+      (let [number-param 30]
+        (is (= [td/db-test-article] (sut/get-latest-full-sized-articles nil number-param)))
+        (is (spy/called-once-with? sql/query nil [get-latest-articles-query number-param]))))))
 
-(deftest get-user-articles-test-default-query
+(def get-user-articles-query
+  "Expected raw SQL query for fetching user articles from database."
+  (str "SELECT id, user_id, title, featured_image, updated_on, description "
+       "FROM articles "
+       "WHERE user_id = ? ORDER BY updated_on DESC LIMIT ?"))
+
+(deftest get-user-articles-test
   (testing "Test get user articles default database query"
-    (with-redefs [sql/query (spy/mock (fn [_ q] q))]
-      (let [user-id-param         42
-            [query user-id limit] (sut/get-user-articles nil user-id-param)]
-        (is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
-                    "FROM articles "
-                    "WHERE user_id = ? ORDER BY updated_on DESC LIMIT ?") query))
-        (is (= limit 100))
-        (is (= user-id user-id-param))))))
+    (with-redefs [sql/query (spy/stub [td/db-test-article])]
+      (let [user-id-param 42]
+        (is (= [td/db-test-article] (sut/get-user-articles nil user-id-param)))
+        (is (spy/called-once-with? sql/query nil [get-user-articles-query user-id-param 100])))))
 
-(deftest get-user-articles-test-query-with-limit
-  (testing "Test get user articles with custom limit param"
-    (with-redefs [sql/query (spy/mock (fn [_ q] q))]
-      (let [limit-param 32
-            [_ _ limit] (sut/get-user-articles nil 1 limit-param)]
-        (is (= limit-param limit))))))
+  (testing "Test get user articles with custom limit parameter"
+    (with-redefs [sql/query (spy/stub [td/db-test-article])]
+      (let [user-id-param 1
+            limit-param   32]
+        (is (= [td/db-test-article] (sut/get-user-articles nil user-id-param limit-param)))
+        (is (spy/called-once-with? sql/query nil [get-user-articles-query user-id-param limit-param]))))))
 
-(deftest get-article-by-id-test-table-name
+(deftest get-article-by-id-test
   (testing "Test get article by ID database table name"
-    (with-redefs [sql/get-by-id (spy/mock (fn [_ t _] t))]
-      (is (= :articles (sut/get-article-by-id nil nil))))))
+    (with-redefs [sql/get-by-id (spy/stub td/db-test-article)]
+      (let [article-id 43]
+        (is (= td/db-test-article (sut/get-article-by-id nil article-id)))
+        (is (spy/called-once-with? sql/get-by-id nil :articles article-id))))))
 
-(deftest get-article-by-id-test-article-id-param
-  (testing "Test get article by ID article-id param"
-    (with-redefs [sql/get-by-id (spy/mock (fn [_ _ i] i))]
-      (let [article-id-param 42]
-        (is (= article-id-param (sut/get-article-by-id nil article-id-param)))))))
+(def get-last-featured-article-query
+  "Expected raw SQL query for fetching last featured article from database."
+  (str "SELECT id, user_id, title, featured_image, updated_on, description "
+       "FROM articles "
+       "WHERE is_main_featured = TRUE "
+       "ORDER BY updated_on DESC LIMIT ?"))
 
-(deftest get-last-featured-article-test-query
+(deftest get-last-featured-article-test
   (testing "Get last featured article database query"
-    (with-redefs [sql/query (spy/spy)]
-      (sut/get-last-featured-article nil)
-      (let [[[_ [query limit]]] (spy/calls sql/query)]
-        (is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
-                    "FROM articles "
-                    "WHERE is_main_featured = TRUE "
-                    "ORDER BY updated_on DESC LIMIT ?") query))
-        (is (= 1 limit))))))
+    (with-redefs [sql/query (spy/stub [td/db-test-article])]
+      (is (= td/db-test-article (sut/get-last-featured-article nil)))
+      (is (spy/called-once-with? sql/query nil [get-last-featured-article-query 1]))))
 
-(deftest get-last-featured-article-test-no-results
   (testing "Get last featured article no results from database"
     (with-redefs [sql/query (spy/stub [])]
-      (is (= nil (sut/get-last-featured-article nil))))))
+      (is (= nil (sut/get-last-featured-article nil)))))
 
-(deftest get-last-featured-article-test-first-result
   (testing "Get last featured article should take first result from database"
     (let [res [1 2 3 4 5 6]]
       (with-redefs [sql/query (spy/stub res)]
         (is (= (first res) (sut/get-last-featured-article nil)))))))
 
-(deftest get-last-featured-articles-test-query
-  (testing "Get latest featured article list database query"
-    (with-redefs [sql/query (spy/spy)]
-      (let [limit-param                3
-            _                          (sut/get-last-featured-articles nil limit-param)
-            [[_ [query limit offset]]] (spy/calls sql/query)]
-        (is (= limit-param limit))
-        (is (= 1 offset))
-        (is (= (str "SELECT id, user_id, title, featured_image, updated_on, description "
-                    "FROM articles "
-                    "WHERE is_main_featured = TRUE "
-                    "ORDER BY updated_on DESC LIMIT ? OFFSET ?") query))))))
+(def get-last-featured-articles-query
+  "Expected raw SQL query for fetching last featured articles from database."
+  (str "SELECT id, user_id, title, featured_image, updated_on, description "
+       "FROM articles "
+       "WHERE is_main_featured = TRUE "
+       "ORDER BY updated_on DESC LIMIT ? OFFSET ?"))
 
-(deftest get-last-featured-articles-test-no-results
+(deftest get-last-featured-articles-test
+  (testing "Get latest featured article list database query"
+    (with-redefs [sql/query (spy/stub [td/db-test-article])]
+      (let [limit-param                3]
+        (is (= [td/db-test-article] (sut/get-last-featured-articles nil limit-param)))
+        (is (spy/called-once-with? sql/query nil [get-last-featured-articles-query limit-param 1])))))
+
   (testing "Get latest featured article list no results from database"
     (with-redefs [sql/query (spy/stub [])]
-      (let [res (sut/get-last-featured-articles nil 3)]
-        (is (= [] res))))))
+      (is (= [] (sut/get-last-featured-articles nil 3))))))
 
-(deftest delete-article-test-table-name
+(deftest delete-article-test
   (testing "Delete article database table name"
-    (with-redefs [sql/delete! (spy/mock (fn [_ t _] t))]
-      (is (= :articles (sut/delete-article nil nil))))))
+    (let [deleted-rows 3]
+      (with-redefs [sql/delete! (spy/stub {:next.jdbc/update-count deleted-rows})]
+        (let [article-id 455]
+          (is (= deleted-rows (sut/delete-article nil article-id)))
+          (is (spy/called-once-with? sql/delete! nil :articles {:id article-id})))))))
 
-(deftest delete-article-test-article-id-param
-  (testing "Delete article article-id param"
-    (with-redefs [sql/delete! (spy/mock (fn [_ _ i] i))]
-      (let [article-id 42]
-        (is (= {:id article-id} (sut/delete-article nil article-id)))))))
-
-(deftest can-update-test-success-role
+(deftest can-update-test
   (doseq [role [:moderator :admin]]
     (testing "Test can-update? returns true for moderator and admin roles"
       (with-redefs [sql/get-by-id (spy/spy)]
         (let [user (->> role name vector (assoc td/auth-user-deserialized :roles))]
           (is (= true (sut/can-update? nil user nil)))
-          (is (spy/not-called? sql/get-by-id)))))))
+          (is (spy/not-called? sql/get-by-id))))))
 
-(deftest can-update-test-article-owner
   (testing "Test can-update? returns true for article owner"
     (let [role       :guest
           user       (->> role name vector (assoc td/auth-user-deserialized :roles))
@@ -188,9 +187,8 @@
           article-id 44]
       (with-redefs [sql/get-by-id (spy/stub {:articles/user_id user-id})]
         (is (= true (sut/can-update? nil user article-id)))
-        (is (spy/called-once-with? sql/get-by-id nil :articles article-id))))))
+        (is (spy/called-once-with? sql/get-by-id nil :articles article-id)))))
 
-(deftest can-update-test-guest-not-owner
   (testing "Test can-update? returns false for guest and not article owner"
     (let [role            :guest
           user            (->> role name vector (assoc td/auth-user-deserialized :roles))
