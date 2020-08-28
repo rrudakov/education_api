@@ -57,7 +57,7 @@
                    (articlesdb/get-all-articles db limit)
                    (articlesdb/get-user-articles db user-id limit))]
     (->> articles
-         (map to-short-article-response)
+         (mapv to-short-article-response)
          status/ok)))
 
 (defn- get-latest-full-articles-handler
@@ -65,7 +65,7 @@
   [db number]
   (let [articles (articlesdb/get-latest-full-sized-articles db number)]
     (->> articles
-         (map to-full-article-response)
+         (mapv to-full-article-response)
          status/ok)))
 
 (defn- get-article-by-id-handler
@@ -88,7 +88,7 @@
   "Get last featured articles handler."
   [db limit]
   (->> (articlesdb/get-last-featured-articles db limit)
-       (map to-short-article-response)
+       (mapv to-short-article-response)
        status/ok))
 
 (defn- delete-article-handler

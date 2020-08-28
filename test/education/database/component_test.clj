@@ -22,7 +22,8 @@
           (is (spy/called-once-with? jdbc/sql-database
                                      {:connection-uri (:url (config/db-config test-config))}))
           (is (spy/called-once-with? jdbc/load-resources "migrations"))
-          (is (= [:datastore :migrations] (keys db-conf))))))))
+          (is (contains? db-conf :datastore))
+          (is (contains? db-conf :migrations)))))))
 
 (deftest migrate-test
   (testing "Test migrate"
