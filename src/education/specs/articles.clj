@@ -34,12 +34,12 @@
   (s/keys :req-un [::id ::user_id ::title ::featured_image ::updated_on] :opt-un [::description]))
 
 (s/def ::articles-short
-  (s/coll-of ::article-short :kind set? :into #{}))
+  (s/coll-of ::article-short :kind vector? :distinct true :into []))
 
 (s/def ::article-full
   (s/keys :req-un [::id ::user_id ::title ::body ::featured_image ::created_on ::updated_on ::description]))
 
 (s/def ::articles-full
-  (s/coll-of ::article-full :kind set? :into #{}))
+  (s/coll-of ::article-full :kind vector? :distinct true :into []))
 
 (s/def ::limit int?)
