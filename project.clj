@@ -16,7 +16,7 @@
                  ;; [metosin/ring-swagger-ui "3.25.0"]
                  ;; Database stuff
                  [ragtime "0.8.0"]
-                 [seancorfield/next.jdbc "1.0.445"]
+                 [seancorfield/next.jdbc "1.1.588"]
                  [org.postgresql/postgresql "42.2.14"]
                  [com.mchange/c3p0 "0.9.5.5"]
                  [honeysql "0.9.10"]
