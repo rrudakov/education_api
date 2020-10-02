@@ -1,8 +1,6 @@
 #+TITLE: Education API
 #+AUTHOR: Roman Rudakov
 #+EMAIL: rrudakov@protonmail.com
-#+HTML: <a href="https://github.com/rrudakov/ring_leart/workflows/Clojure%20CI/badge.svg?branch=master"></a>
-#+HTML: <a href="https://codecov.io/gh/rrudakov/education_api"><img src="https://codecov.io/gh/rrudakov/education_api/branch/master/graph/badge.svg"></a>
 
 [[https://github.com/rrudakov/ring_leart/workflows/Clojure%20CI/badge.svg?branch=master]]
 [[https://codecov.io/gh/rrudakov/education_api][https://codecov.io/gh/rrudakov/education_api/branch/master/graph/badge.svg]]
@@ -10,7 +8,8 @@
 Implementation of REST API for education website.
 
 * Usage
-The master branch runs on heroku after each push. Swagger can be found [[http://educationapp-api.herokuapp.com/swagger/index.html][here]].
+The master branch runs on heroku after each push. Swagger can be found
+[[http://educationapp-api.herokuapp.com/swagger/index.html][here]]. For more details see documentation.
 
 * License
 This program and the accompanying materials are made available under the
