@@ -53,13 +53,13 @@
 
 (defn get-all-lessons
   "Get all lessons from database."
-  [conn & {:keys [limit offset] :or {limit 20 offset 0}}]
+  [conn & {:keys [limit offset]}]
   (->> offset
        (hsql/build :select :*
                    :from :lessons
                    :order-by [[:updated_on :desc]]
-                   :limit limit
-                   :offset offset)
+                   :limit (or limit 20)
+                   :offset (or offset 0))
        (hsql/format)
        (sql/query conn)))
 

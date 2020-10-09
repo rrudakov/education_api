@@ -7,14 +7,11 @@
 
 (s/def ::user-id-param int?)
 
-(s/def ::title
-  (s/and string? #(<= (count %) 100) #(>= (count %) 1)))
+(s/def ::title (s/and string? not-empty #(<= (count %) 100)))
 
-(s/def ::body
-  (s/and string? #(>= (count %) 1)))
+(s/def ::body (s/and string? not-empty))
 
-(s/def ::featured_image
-  (s/and string? #(<= (count %) 500)))
+(s/def ::featured_image (s/and string? #(<= (count %) 500)))
 
 (s/def ::is_main_featured boolean?)
 

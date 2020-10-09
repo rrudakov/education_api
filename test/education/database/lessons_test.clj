@@ -8,8 +8,8 @@
 (def ^:private create-lesson-request
   "Test create lesson API request."
   {:title           "Video lesson"
+   :subtitle        "Video subtitle"
    :description     "Long video lesson description"
-   :demo_video_link "http://youtube.com"
    :screenshots     ["http://first.screenshot.com" "http://second.screenshot.com"]
    :price           "22.50"})
 
@@ -17,6 +17,7 @@
   "Stub data for create article call."
   {:lessons/id              19
    :lessons/title           "Video lesson"
+   :lessons/subtitle        "Video subtitle"
    :lessons/description     "Long video lesson description"
    :lessons/demo_video_link "http://youtube.com"
    :lessons/screenshots     ["http://first.screenshot.com" "http://second.screenshot.com"]
@@ -26,8 +27,8 @@
 
 (def ^:private expected-create-body
   {:title           (:title create-lesson-request)
+   :subtitle        (:subtitle create-lesson-request)
    :description     (:description create-lesson-request)
-   :demo_video_link (:demo_video_link create-lesson-request)
    :price           (bigdec (:price create-lesson-request))})
 
 (deftest add-lesson-test

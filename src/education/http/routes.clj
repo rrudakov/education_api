@@ -3,6 +3,7 @@
             [compojure.api.sweet :refer [api context]]
             [education.http.constants :as const]
             [education.http.endpoints.articles :refer [articles-routes]]
+            [education.http.endpoints.lessons :refer [lessons-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.users :refer [users-routes]]
             [ring.util.http-response :as status])
@@ -70,4 +71,5 @@
      :coercion :spec
      (users-routes datasource config)
      (articles-routes datasource)
-     (roles-routes datasource))))
+     (roles-routes datasource)
+     (lessons-routes datasource))))
