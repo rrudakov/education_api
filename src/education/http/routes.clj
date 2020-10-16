@@ -55,7 +55,8 @@
         :email "rrudakov@pm.me"}}
       :tags [{:name "users" :description "Users management"}
              {:name "roles" :description "Roles management"}
-             {:name "articles" :description "Articles management"}]
+             {:name "articles" :description "Articles management"}
+             {:name "lessons" :description "Video lessons"}]
       :securityDefinitions
       {:api_key
        {:type "apiKey"

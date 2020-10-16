@@ -9,7 +9,7 @@
   "Regex to check price."
   #"\d+(\.\d+)?")
 
-(s/def ::id int?)
+(s/def ::id pos-int?)
 
 (s/def ::title (s/and string? not-empty #(<= (count %) 500)))
 
@@ -38,6 +38,6 @@
 
 (s/def ::lessons-response (s/coll-of ::lesson-response :kind vector? :distinct true :into []))
 
-(s/def ::limit (s/or :default nil? :specified int?))
+(s/def ::limit (s/or :default nil? :specified pos-int?))
 
-(s/def ::offset (s/or :default nil? :specified int?))
+(s/def ::offset (s/or :default nil? :specified pos-int?))
