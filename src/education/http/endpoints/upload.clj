@@ -1,11 +1,14 @@
 (ns education.http.endpoints.upload
   (:require [clojure.java.io :refer [file input-stream output-stream]]
+            [clojure.string :as str]
             [compojure.api.sweet :refer [POST]]
-            [education.specs.upload :as specs]
-            [ring.middleware.multipart-params :as mw]
-            [ring.util.http-response :refer [ok]]
             [education.config :as config]
-            [clojure.string :as str]))
+            [education.specs.upload :as specs]
+            [education.utils.path :as path]
+            [ring.middleware.multipart-params :as mw]
+            [ring.util.http-response :refer [ok]]))
+
+(def ^:private img-prefix "img")
 
 (defn uuid []
   (str (java.util.UUID/randomUUID)))
@@ -24,10 +27,10 @@
 
 (defn upload-file-handler
   [{:keys [filename content-type tempfile]} config]
-  (let [name (str/join "_" (vector (uuid) filename))
-        path (str (config/storage-path config) name)]
+  (let [name (str/join "_" [(uuid) filename])
+        path (path/join (config/storage-path config) img-prefix name)]
     (write-file tempfile path)
-    (ok {:name (str/join "/" (vector (config/base-url config) name))})))
+    (ok {:url (path/join (config/base-url config) img-prefix name)})))
 
 (defn upload-routes
   "Define routes for file upload."
