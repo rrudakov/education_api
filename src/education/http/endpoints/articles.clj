@@ -106,9 +106,9 @@
 (defn articles-routes
   "Define routes for articles endpoint."
   [db]
-  (context "" []
+  (context "/articles" []
     :tags ["articles"]
-    (POST "/articles" []
+    (POST "/" []
       :middleware [[require-roles #{:guest}]]
       :body [article ::specs/article-create-request]
       :return ::specs/id
@@ -118,7 +118,7 @@
                   403 {:description "Access denied!"
                        :schema      ::err/error-response}}
       (create-article-handler db article))
-    (PATCH "/articles/:id" []
+    (PATCH "/:id" []
       :middleware [[require-roles #{:guest}]]
       :body [article ::specs/article-update-request]
       :path-params [id :- ::specs/id]
@@ -126,32 +126,32 @@
       :responses {401 {:description "Access denied!"
                        :schema      ::err/error-response}}
       (update-article-handler db id article))
-    (GET "/articles" []
+    (GET "/" []
       :return ::specs/articles-short
       :query-params [{limit :- ::specs/limit 100}
                      {user_id :- ::specs/user_id nil}]
       :summary "Get list of latest articles"
       (get-all-articles-handler {:db db :limit limit :user-id user_id}))
-    (GET "/articles/latest" []
+    (GET "/latest" []
       :return ::specs/articles-full
       :query-params [limit :- ::specs/limit]
       :summary "Get latest full articles"
       (get-latest-full-articles-handler db limit))
-    (GET "/articles/:id" []
+    (GET "/:id" []
       :return ::specs/article-full
       :path-params [id :- ::specs/id]
       :summary "Get full article by article ID"
       (get-article-by-id-handler db id))
-    (GET "/articles/featured/main" []
+    (GET "/featured/main" []
       :return ::specs/article-short
       :summary "Get main featured article"
       (get-last-main-featured-article-handler db))
-    (GET "/articles/featured/latest" []
+    (GET "/featured/latest" []
       :return ::specs/articles-short
       :query-params [limit :- ::specs/limit]
       :summary "Get latest featured articles list"
       (get-last-featured-articles-handler db limit))
-    (DELETE "/articles/:id" []
+    (DELETE "/:id" []
       :middleware [[require-roles #{:guest}]]
       :path-params [id :- ::specs/id]
       :return {}

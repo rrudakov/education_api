@@ -5,6 +5,7 @@
             [education.http.endpoints.articles :refer [articles-routes]]
             [education.http.endpoints.lessons :refer [lessons-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
+            [education.http.endpoints.upload :refer [upload-routes]]
             [education.http.endpoints.users :refer [users-routes]]
             [ring.util.http-response :as status])
   (:import java.sql.SQLException))
@@ -73,4 +74,5 @@
      (users-routes datasource config)
      (articles-routes datasource)
      (roles-routes datasource)
-     (lessons-routes datasource))))
+     (lessons-routes datasource)
+     (upload-routes config))))

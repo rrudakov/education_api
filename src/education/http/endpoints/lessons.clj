@@ -52,9 +52,9 @@
 (defn lessons-routes
   "Define routes for lessons endpoint."
   [db]
-  (context "" []
+  (context "/lessons" []
     :tags ["lessons"]
-    (POST "/lessons" []
+    (POST "/" []
       :middleware [[require-roles #{:admin}]]
       :body [lesson ::specs/lesson-create-request]
       :return ::specs/id
@@ -66,7 +66,7 @@
                   400 {:description const/bad-request-error-message
                        :schema      ::err/error-response}}
       (create-lesson-handler db lesson))
-    (PATCH "/lessons/:lesson-id" []
+    (PATCH "/:lesson-id" []
       :middleware [[require-roles #{:admin}]]
       :body [lesson ::specs/lesson-update-request]
       :path-params [lesson-id :- ::specs/id]
@@ -80,7 +80,7 @@
                   400 {:description const/bad-request-error-message
                        :schema      ::err/error-response}}
       (update-lesson-handler db lesson-id lesson))
-    (GET "/lessons/:lesson-id" []
+    (GET "/:lesson-id" []
       :path-params [lesson-id :- ::specs/id]
       :summary "Get lesson by `lesson-id`"
       :responses {404 {:description const/not-found-error-message
@@ -88,7 +88,7 @@
                   400 {:description const/bad-request-error-message
                        :schema      ::err/error-response}}
       (get-lesson-by-id-handler db lesson-id))
-    (GET "/lessons" []
+    (GET "/" []
       :return ::specs/lessons-response
       :query-params [{limit :- ::specs/limit nil}
                      {offset :- ::specs/offset nil}]
@@ -96,7 +96,7 @@
       :responses {400 {:description const/bad-request-error-message
                        :schema      ::err/error-response}}
       (get-all-lessons-handler db limit offset))
-    (DELETE "/lessons/:lesson-id" []
+    (DELETE "/:lesson-id" []
       :middleware [[require-roles #{:admin}]]
       :path-params [lesson-id :- ::specs/id]
       :summary "Delete lesson by `lesson-id`"

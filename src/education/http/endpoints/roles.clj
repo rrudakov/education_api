@@ -9,7 +9,7 @@
 (defn- to-roles-response
   "Convert database roles to roles response."
   [{:roles/keys [id role_name]}]
-  {:id id
+  {:id   id
    :name (keyword role_name)})
 
 (defn roles-handler
@@ -24,12 +24,11 @@
 (defn roles-routes
   "Define routes for roles endpoint."
   [db]
-  (context "" []
+  (GET "/roles" []
     :tags ["roles"]
-    (GET "/roles" []
-      :middleware [[require-roles #{:admin}]]
-      :return ::specs/roles-response
-      :summary "Return list of all available roles"
-      :responses {401 {:description "Access denied!"
-                       :schema ::err/error-response}}
-      (roles-handler db))))
+    :middleware [[require-roles #{:admin}]]
+    :return ::specs/roles-response
+    :summary "Return list of all available roles"
+    :responses {401 {:description "Access denied!"
+                     :schema      ::err/error-response}}
+    (roles-handler db)))
