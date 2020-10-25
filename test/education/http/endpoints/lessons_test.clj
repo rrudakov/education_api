@@ -150,4 +150,47 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? lessons-db/update-lesson))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))))))
+        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+
+  (testing "Test PATCH /lessons/:lesson-id with non-existing `lesson-id`"
+    (with-redefs [lessons-db/update-lesson (spy/stub 0)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string update-lesson-request))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id update-lesson-request))
+        (is (= {:message const/not-found-error-message} body)))))
+
+  (testing "Test PATCH /lessons/:lesson-id unexpected response from database"
+    (with-redefs [lessons-db/update-lesson (spy/stub 2)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string update-lesson-request))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 500 (:status response)))
+        (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id update-lesson-request))
+        (is (= {:message const/server-error-message} body)))))
+
+  (doseq [request-body [(assoc create-lesson-request :title (repeat 501 "a"))
+                        (assoc create-lesson-request :title 123)
+                        (assoc create-lesson-request :subtitle (repeat 501 "a"))
+                        (assoc create-lesson-request :subtitle 123)
+                        (assoc create-lesson-request :screenshots "non-list string")
+                        (assoc create-lesson-request :price "7 euro")
+                        (assoc create-lesson-request :price "-234.23")]]
+    (testing "Test PATCH /lessons/:lesson-id with invalid request body"
+      (with-redefs [lessons-db/update-lesson (spy/spy)]
+        (let [app      (test-app/api-routes-with-auth (spy/spy))
+              response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
+                                (mock/content-type "application/json")
+                                (mock/header :authorization (td/test-auth-token #{:admin}))
+                                (mock/body (cheshire/generate-string request-body))))
+              body     (test-app/parse-body (:body response))]
+          (is (= 400 (:status response)))
+          (is (spy/not-called? lessons-db/update-lesson))
+          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
