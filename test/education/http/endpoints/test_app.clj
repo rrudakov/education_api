@@ -5,7 +5,7 @@
             [education.test-data :refer [test-config]]
             [cheshire.core :as cheshire]))
 
-(defn test-api-routes-with-auth
+(defn api-routes-with-auth
   "Return configured application with authorization middleware."
   [db]
   (let [auth-backend (config/auth-backend test-config)]

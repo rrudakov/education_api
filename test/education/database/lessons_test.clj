@@ -21,7 +21,7 @@
    :lessons/description     "Long video lesson description"
    :lessons/demo_video_link "http://youtube.com"
    :lessons/screenshots     ["http://first.screenshot.com" "http://second.screenshot.com"]
-   :lessons/price           (bigdec "22.50")
+   :lessons/price           (bigdec "22.50000")
    :lessons/created_on      (Instant/now)
    :lessons/updated_on      (Instant/now)})
 
@@ -86,7 +86,7 @@
 
 (def ^:private get-all-lessons-query
   "Expected SQL query for getting all lessons."
-  "SELECT * FROM lessons ORDER BY updated_on DESC LIMIT ? OFFSET ?")
+  "SELECT * FROM lessons ORDER BY updated_on ASC LIMIT ? OFFSET ?")
 
 (deftest get-all-lessons-test
   (testing "Test get all lessons without optional parameters"

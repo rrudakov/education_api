@@ -69,11 +69,11 @@
 
 (def user1-roles
   "Roles for first mocked user."
-  #{:admin :guest})
+  ["admin" "guest"])
 
 (def user2-roles
   "Roles for second mocked user."
-  #{:admin :guest :moderator})
+  ["admin" "guest" "moderator"])
 
 (def db-user-auth-successful
   "Returned after successful authentication."

@@ -16,9 +16,9 @@
 
 (s/def ::email (s/and string? #(re-matches email-regex %)))
 
-(s/def ::role #{:admin :moderator :guest})
+(s/def ::role #{"admin" "moderator" "guest"})
 
-(s/def ::roles (s/coll-of ::role :distinct true))
+(s/def ::roles (s/coll-of ::role :kind vector? :into []))
 
 (s/def ::role-request #{"admin" "moderator" "guest"})
 

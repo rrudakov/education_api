@@ -12,7 +12,7 @@
 (defn- db->response
   "Convert database query result to response."
   [db-lesson]
-  (update (unqualify-map db-lesson) :price str))
+  (update (unqualify-map db-lesson) :price (partial format "%.2f")))
 
 ;; Handlers
 (defn- create-lesson-handler

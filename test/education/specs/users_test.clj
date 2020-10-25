@@ -48,35 +48,35 @@
       (is (not (s/valid? ::sut/email email))))))
 
 (deftest role-test
-  (doseq [role [:admin :moderator :guest]]
+  (doseq [role ["admin" "moderator" "guest"]]
     (testing (str "::role valid " role)
       (is (s/valid? ::sut/role role))))
 
-  (doseq [role [:god "admin" true]]
+  (doseq [role [:god :admin true]]
     (testing (str "::role invalid " role)
       (is (not (s/valid? ::sut/role role))))))
 
 (deftest roles-test
-  (doseq [roles [[:admin :moderator :guest]
-                 [:moderator :admin]
-                 [:guest :moderator]
-                 #{:admin :guest}
-                 '(:admin)
-                 []
-                 #{}
-                 '()]]
+  (doseq [roles [["admin" "moderator" "guest"]
+                 ["moderator" "admin"]
+                 ["guest" "moderator"]
+                 []]]
     (testing (str "::roles valid " roles)
       (is (s/valid? ::sut/roles roles))))
 
   (doseq [roles [[:admin :moderator :god]
                  [:admin :admin :guest]
+                 #{"admin" "guest"}
+                 '("admin")
                  #{"admin" :guest}
                  '("admin" "guest" "moderator")
                  [true false]
                  9999999
                  "string"
                  #{:admin :moderator :guest :someone-else}
-                 [1 2 3 4]]]
+                 [1 2 3 4]
+                 #{}
+                 '()]]
     (testing (str "::roles invalid " roles)
       (is (not (s/valid? ::sut/roles roles))))))
 
@@ -179,13 +179,13 @@
   (doseq [resp [{:id         23
                  :username   "rrudakov"
                  :email      "email@example.org"
-                 :roles      [:admin :guest]
+                 :roles      ["admin" "guest"]
                  :created_on (Instant/now)
                  :updated_on (Instant/now)}
                 {:id          23
                  :username    "rrudakov"
                  :email       "email@example.org"
-                 :roles       [:admin :guest]
+                 :roles       ["admin" "guest"]
                  :created_on  (Instant/now)
                  :updated_on  (Instant/now)
                  :extra-field "ignored"}]]
@@ -242,13 +242,13 @@
                   [{:id         1
                     :username   "rr"
                     :email      "rr@example.org"
-                    :roles      [:guest]
+                    :roles      ["guest"]
                     :updated_on (Instant/now)
                     :created_on (Instant/now)}
                    {:id         2
                     :username   "rr2"
                     :email      "rr2@example.org"
-                    :roles      [:moderator]
+                    :roles      ["moderator"]
                     :updated_on (Instant/now)
                     :created_on (Instant/now)
                     :extra      :field}])))

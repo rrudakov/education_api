@@ -1,19 +1,7 @@
 (ns education.database.lessons
   (:require [honeysql.core :as hsql]
-            [next.jdbc.result-set :as rs]
             [next.jdbc.sql :as sql])
-  (:import java.sql.Array
-           java.time.Instant))
-
-(extend-protocol rs/ReadableColumn
-  Array
-  (read-column-by-label
-    [^Array v _]
-    (vec (.getArray v)))
-
-  (read-column-by-index
-    [^Array v _ _]
-    (vec (.getArray v))))
+  (:import java.time.Instant))
 
 (defn- update-if-exist
   [m k f]
@@ -57,7 +45,7 @@
   (->> offset
        (hsql/build :select :*
                    :from :lessons
-                   :order-by [[:updated_on :desc]]
+                   :order-by [[:updated_on :asc]]
                    :limit (or limit 20)
                    :offset (or offset 0))
        (hsql/format)
