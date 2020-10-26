@@ -13,3 +13,7 @@
 (def server-error-message "Something went wrong! Please, be patient, we're working on fix!")
 
 (def invalid-credentials-error-message "Invalid username or password")
+
+(def valid-url-regex
+  "Regex to check video and image URLs."
+  #"((http|https)://)(www.)*[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\b([-a-zA-Z0-9@:%._\+~#?&//=]*)")

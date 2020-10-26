@@ -42,11 +42,14 @@
       (is (not (s/valid? ::sut/description description))))))
 
 (deftest screenshot-test
-  (doseq [screenshot ["http://insecure.com" "https://secure.net/some.img.jpg" "https://some.url/"]]
+  (doseq [screenshot ["http://insecure.com"
+                      "https://secure.net/some.img.jpg"
+                      "https://some.url/"
+                      "http://127.0.0.1:3000/some_image.jpg"]]
     (testing (str "::screenshot is valid " screenshot)
       (is (s/valid? ::sut/screenshot screenshot))))
 
-  (doseq [screenshot ["juststring" "www.screenshot.com/image.jpg" "https://missingdomain"]]
+  (doseq [screenshot ["juststring" "www.screenshot.com/image.jpg"]]
     (testing (str "::screenshot is invalid " screenshot)
       (is (not (s/valid? ::sut/screenshot screenshot))))))
 

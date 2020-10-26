@@ -6,7 +6,8 @@
             [education.http.endpoints.test-app :as test-app]
             [education.test-data :as td]
             [ring.mock.request :as mock]
-            [spy.core :as spy]))
+            [spy.core :as spy])
+  (:import java.time.Instant))
 
 (def ^:private test-lesson-id
   "Test API `lesson-id`."
@@ -194,3 +195,167 @@
           (is (= 400 (:status response)))
           (is (spy/not-called? lessons-db/update-lesson))
           (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+
+(def ^:private lesson-from-db
+  "Test lesson database query result."
+  {:lessons/id          19
+   :lessons/title       "Video lesson"
+   :lessons/subtitle    "Video subtitle"
+   :lessons/description "Long video lesson description"
+   :lessons/screenshots ["http://first.screenshot.com" "http://second.screenshot.com"]
+   :lessons/price       (bigdec "22.50000")
+   :lessons/created_on  (Instant/parse "2020-05-27T18:28:12Z")
+   :lessons/updated_on  (Instant/parse "2020-05-27T18:28:12Z")})
+
+(def ^:private lesson-response-expected
+  "Expected API lesson response."
+  {:id          (:lessons/id lesson-from-db)
+   :title       (:lessons/title lesson-from-db)
+   :subtitle    (:lessons/subtitle lesson-from-db)
+   :description (:lessons/description lesson-from-db)
+   :screenshots (:lessons/screenshots lesson-from-db)
+   :price       (format "%.2f" (:lessons/price lesson-from-db))
+   :created_on  (str (:lessons/created_on lesson-from-db))
+   :updated_on  (str (:lessons/updated_on lesson-from-db))})
+
+(deftest get-lesson-by-id-test
+  (testing "Test GET /lessons/:lesson-id with valid `lesson-id`"
+    (with-redefs [lessons-db/get-lesson-by-id (spy/stub lesson-from-db)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get (str "/api/lessons/" test-lesson-id)))
+            body     (test-app/parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= lesson-response-expected body))
+        (is (spy/called-once-with? lessons-db/get-lesson-by-id nil test-lesson-id)))))
+
+  (testing "Test GET /lessons/:lesson-id with non-existing `lesson-id`"
+    (with-redefs [lessons-db/get-lesson-by-id (spy/stub nil)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get (str "/api/lessons/" test-lesson-id)))
+            body     (test-app/parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (= {:message const/not-found-error-message} body))
+        (is (spy/called-once-with? lessons-db/get-lesson-by-id nil test-lesson-id)))))
+
+  (testing "Test GET /lessons/:lesson-id with invalid `lesson-id`"
+    (with-redefs [lessons-db/get-lesson-by-id (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get "/api/lessons/invalid"))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (spy/not-called? lessons-db/get-lesson-by-id))))))
+
+(def ^:private lesson-from-db-extra
+  "One more test lesson database query result."
+  {:lessons/id          20
+   :lessons/title       "Video lesson 2"
+   :lessons/subtitle    "Video subtitle"
+   :lessons/description "Long video lesson description"
+   :lessons/screenshots ["http://first.screenshot.com" "http://second.screenshot.com"]
+   :lessons/price       (bigdec "7.0000")
+   :lessons/created_on  (Instant/parse "2020-05-28T18:28:12Z")
+   :lessons/updated_on  (Instant/parse "2020-05-28T18:28:12Z")})
+
+(def ^:private lesson-response-expected-extra
+  "One more expected API lesson response."
+  {:id          (:lessons/id lesson-from-db-extra)
+   :title       (:lessons/title lesson-from-db-extra)
+   :subtitle    (:lessons/subtitle lesson-from-db-extra)
+   :description (:lessons/description lesson-from-db-extra)
+   :screenshots (:lessons/screenshots lesson-from-db-extra)
+   :price       (format "%.2f" (:lessons/price lesson-from-db-extra))
+   :created_on  (str (:lessons/created_on lesson-from-db-extra))
+   :updated_on  (str (:lessons/updated_on lesson-from-db-extra))})
+
+(deftest get-all-lessons-test
+  (testing "Test GET /lessons/ without any query parameters"
+    (with-redefs [lessons-db/get-all-lessons (spy/stub [lesson-from-db lesson-from-db-extra])]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get "/api/lessons"))
+            body     (test-app/parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= [lesson-response-expected lesson-response-expected-extra] body))
+        (is (spy/called-once-with? lessons-db/get-all-lessons nil :limit nil :offset nil)))))
+
+  (testing "Test GET /lessons/ with optional `limit` and `offset` parameters"
+    (with-redefs [lessons-db/get-all-lessons (spy/stub [lesson-from-db lesson-from-db-extra])]
+      (let [app          (test-app/api-routes-with-auth (spy/spy))
+            limit-param  99
+            offset-param 20
+            response     (app (mock/request :get (str "/api/lessons?limit=" limit-param "&offset=" offset-param)))
+            body         (test-app/parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= [lesson-response-expected lesson-response-expected-extra] body))
+        (is (spy/called-once-with? lessons-db/get-all-lessons nil :limit limit-param :offset offset-param)))))
+
+  (doseq [url ["/api/lessons?limit=invalid"
+               "/api/lessons?offset=invalid"]]
+    (testing "Test GET /lessons/ with invalid query parameters"
+      (with-redefs [lessons-db/get-all-lessons (spy/spy)]
+        (let [app      (test-app/api-routes-with-auth (spy/spy))
+              response (app (mock/request :get url))
+              body     (test-app/parse-body (:body response))]
+          (is (= 400 (:status response)))
+          (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+          (is (spy/not-called? lessons-db/get-all-lessons)))))))
+
+(deftest delete-lesson-by-id-test
+  (testing "Test DELETE /lessons/:lesson-id authorized with :admin role and valid `lesson-id`"
+    (with-redefs [lessons-db/delete-lesson (spy/stub 1)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))]
+        (is (= 204 (:status response)))
+        (is (empty? (:body response)))
+        (is (spy/called-once-with? lessons-db/delete-lesson nil test-lesson-id)))))
+
+  (doseq [role [:moderator :guest]]
+    (testing (str "Test DELETE /lessons/:lesson-id authorized with " role " role and valid `lesson-id`")
+      (with-redefs [lessons-db/delete-lesson (spy/spy)]
+        (let [app      (test-app/api-routes-with-auth (spy/spy))
+              response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
+                                (mock/header :authorization (td/test-auth-token #{role}))))
+              body     (test-app/parse-body (:body response))]
+          (is (= 403 (:status response)))
+          (is (= {:message const/no-access-error-message} body))
+          (is (spy/not-called? lessons-db/delete-lesson))))))
+
+  (testing "Test DELETE /lessons/:lesson-id without authorization header"
+    (with-redefs [lessons-db/delete-lesson (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :delete (str "/api/lessons/" test-lesson-id)))
+            body     (test-app/parse-body (:body response))]
+        (is (= 401 (:status response)))
+        (is (= {:message const/not-authorized-error-message} body))
+        (is (spy/not-called? lessons-db/delete-lesson)))))
+
+  (testing "Test DELETE /lessons/:lesson-id for non-existing `lesson-id`"
+    (with-redefs [lessons-db/delete-lesson (spy/stub 0)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (= {:message const/not-found-error-message} body))
+        (is (spy/called-once-with? lessons-db/delete-lesson nil test-lesson-id)))))
+
+  (testing "Test DELETE /lessons/:lesson-id with invalid `lesson-id`"
+    (with-redefs [lessons-db/delete-lesson (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/lessons/invalid")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (spy/not-called? lessons-db/delete-lesson)))))
+
+  (testing "Test DELETE /lessons/:lesson-id unexpected result from database"
+    (with-redefs [lessons-db/delete-lesson (spy/stub 2)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 500 (:status response)))
+        (is (= {:message const/server-error-message} body))
+        (is (spy/called-once-with? lessons-db/delete-lesson nil test-lesson-id))))))

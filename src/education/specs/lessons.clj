@@ -1,9 +1,6 @@
 (ns education.specs.lessons
-  (:require [clojure.spec.alpha :as s]))
-
-(def ^:private valid-url
-  "Regex to check video and image URLs."
-  #"((http|https)://)(www.)*[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%._\+~#?&//=]*)")
+  (:require [clojure.spec.alpha :as s]
+            [education.http.constants :as const]))
 
 (def ^:private valid-decimal
   "Regex to check price."
@@ -17,7 +14,7 @@
 
 (s/def ::description (s/and string? not-empty))
 
-(s/def ::screenshot (s/and string? not-empty (partial re-matches valid-url)))
+(s/def ::screenshot (s/and string? not-empty (partial re-matches const/valid-url-regex)))
 
 (s/def ::screenshots (s/coll-of ::screenshot :kind vector? :distinct true :into []))
 
@@ -32,6 +29,9 @@
 
 (s/def ::lesson-update-request
   (s/keys :opt-un [::title ::subtitle ::description ::screenshots ::price]))
+
+(s/def ::lesson-created-response
+  (s/keys :req-un [::id]))
 
 (s/def ::lesson-response
   (s/keys :req-un [::id ::title ::subtitle ::description ::screenshots ::price ::created_on ::updated_on]))

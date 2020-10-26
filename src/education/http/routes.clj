@@ -57,7 +57,8 @@
       :tags [{:name "users" :description "Users management"}
              {:name "roles" :description "Roles management"}
              {:name "articles" :description "Articles management"}
-             {:name "lessons" :description "Video lessons"}]
+             {:name "lessons" :description "Video lessons"}
+             {:name "upload" :description "Upload media files"}]
       :securityDefinitions
       {:api_key
        {:type "apiKey"

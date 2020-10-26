@@ -103,7 +103,7 @@
                                      (mock/body (cheshire/generate-string test-article-request-valid))))
               body          (parse-body (:body response))]
           (is (= 201 (:status response)))
-          (is (= {:id (str new-article-id)} body))
+          (is (= {:id new-article-id} body))
           (is (spy/called-once-with? articlesdb/add-article nil user-expected test-article-request-valid))))))
 
   (testing "Test POST /articles without authorization header"
@@ -220,11 +220,8 @@
 
 (deftest get-articles-test
   (testing "Test GET /articles endpoint response body and default limit parameter"
-    (with-redefs [articlesdb/get-all-articles
-                  (spy/mock
-                   (fn [_ _]
-                     [test-db-full-article-1
-                      test-db-full-article-2]))]
+    (with-redefs [articlesdb/get-all-articles (spy/stub [test-db-full-article-1
+                                                         test-db-full-article-2])]
       (let [app         (api-routes-with-auth (spy/spy))
             response    (app (mock/request :get "/api/articles"))
             body        (parse-body (:body response))

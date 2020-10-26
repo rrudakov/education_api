@@ -27,6 +27,9 @@
 (s/def ::article-update-request
   (s/keys :opt-un [::title ::body ::featured_image ::is_main_featured ::description]))
 
+(s/def ::article-create-response
+  (s/keys :req-un [::id]))
+
 (s/def ::article-short
   (s/keys :req-un [::id ::user_id ::title ::featured_image ::updated_on] :opt-un [::description]))
 

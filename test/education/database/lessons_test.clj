@@ -19,7 +19,6 @@
    :lessons/title           "Video lesson"
    :lessons/subtitle        "Video subtitle"
    :lessons/description     "Long video lesson description"
-   :lessons/demo_video_link "http://youtube.com"
    :lessons/screenshots     ["http://first.screenshot.com" "http://second.screenshot.com"]
    :lessons/price           (bigdec "22.50000")
    :lessons/created_on      (Instant/now)

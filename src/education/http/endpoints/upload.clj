@@ -36,7 +36,10 @@
   "Define routes for file upload."
   [config]
   (POST "/upload" []
+    :tags ["upload"]
     :multipart-params [file :- ::specs/file]
     :middleware [mw/wrap-multipart-params]
     :summary "Upload any file and get link to it"
+    :responses {200 {:description "Successful"
+                     :schema ::specs/upload-response}}
     (upload-file-handler file config)))
