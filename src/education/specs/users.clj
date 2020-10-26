@@ -30,14 +30,23 @@
 
 (s/def ::token string?)
 
-(s/def ::user-create-request (s/keys :req-un [::username ::password ::email]))
+(s/def ::user-create-request
+  (s/keys :req-un [::username ::password ::email]))
 
-(s/def ::user-update-request (s/map-of #{:roles} ::roles-request))
+(s/def ::user-update-request
+  (s/map-of #{:roles} ::roles-request))
 
-(s/def ::user-response (s/keys :req-un [::id ::username ::email ::roles ::created_on ::updated_on]))
+(s/def ::user-create-response
+  (s/keys :req-un [::id]))
 
-(s/def ::users-response (s/coll-of ::user-response :kind vector? :distinct true :into []))
+(s/def ::user-response
+  (s/keys :req-un [::id ::username ::email ::roles ::created_on ::updated_on]))
 
-(s/def ::login-request (s/keys :req-un [::username ::password]))
+(s/def ::users-response
+  (s/coll-of ::user-response :kind vector? :distinct true :into []))
 
-(s/def ::token-response (s/keys :req-un [::token]))
+(s/def ::login-request
+  (s/keys :req-un [::username ::password]))
+
+(s/def ::token-response
+  (s/keys :req-un [::token]))
