@@ -6,7 +6,9 @@
             [education.specs.upload :as specs]
             [education.utils.path :as path]
             [ring.middleware.multipart-params :as mw]
-            [ring.util.http-response :refer [ok]]))
+            [ring.util.http-response :refer [ok]]
+            [education.http.constants :as const]
+            [education.specs.error :as err]))
 
 (def ^:private img-prefix "img")
 
@@ -26,7 +28,7 @@
     (.write out (file->byte-array f))))
 
 (defn upload-file-handler
-  [{:keys [filename content-type tempfile]} config]
+  [{:keys [filename _content-type tempfile]} config]
   (let [name (str/join "_" [(uuid) filename])
         path (path/join (config/storage-path config) img-prefix name)]
     (write-file tempfile path)
@@ -41,5 +43,7 @@
     :middleware [mw/wrap-multipart-params]
     :summary "Upload any file and get link to it"
     :responses {200 {:description "Successful"
-                     :schema ::specs/upload-response}}
+                     :schema      ::specs/upload-response}
+                400 {:description const/bad-request-error-message
+                     :schema      ::err/error-response}}
     (upload-file-handler file config)))

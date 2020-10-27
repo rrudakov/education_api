@@ -34,8 +34,10 @@
             "rollback" ["run" "-m" "education.database.component/rollback" "--"]}
   :uberjar-name "education-api-standalone.jar"
   :min-lein-version "2.0.0"
-  :profiles {:dev {:dependencies [[tortue/spy "2.0.0"]
+  :profiles {:dev {:resource-paths ["test-resources"]
+                   :dependencies [[tortue/spy "2.0.0"]
                                   [ring/ring-mock "0.4.0"]
+                                  [peridot "0.5.3"]
                                   [org.clojure/test.check "1.0.0"]]}
              :uberjar {:aot :all}}
   :plugins [[lein-cloverage "1.1.2"]]

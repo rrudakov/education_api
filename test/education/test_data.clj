@@ -11,7 +11,9 @@
    {:url "test_database_url"}
    :app
    {:tokensign "test_secret"
-    :port      3000}})
+    :port      3000
+    :base_url "http://127.0.0.1:3000"
+    :storage "/tmp/"}})
 
 (def password
   "Password for test users."
