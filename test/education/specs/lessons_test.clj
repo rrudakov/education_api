@@ -76,7 +76,7 @@
     (is (s/valid? ::sut/created_on (Instant/now))))
 
   (doseq [created-on ["2020-06-23T18:05:22.905106Z" "any_value" 1234567888 false]]
-    (testing (str "::created_on is ivalid " created-on)
+    (testing (str "::created_on is invalid " created-on)
       (is (not (s/valid? ::sut/created_on created-on))))))
 
 (deftest updated-on-test
@@ -86,6 +86,31 @@
   (doseq [updated-on ["2020-06-23T18:05:22.905106Z" "any_value" 1234567888 false]]
     (testing (str "::updated_on is ivalid " updated-on)
       (is (not (s/valid? ::sut/updated_on updated-on))))))
+
+(deftest lesson-create-request-test
+  (testing "::lesson-create-request is valid"
+    (is (s/valid? ::sut/lesson-create-request {:title "Some title"
+                                               :subtitle "Some subtitle"
+                                               :description "Video lesson description"
+                                               :screenshots []
+                                               :price "7.22"}))))
+
+(deftest lesson-update-request-test
+  (doseq [request [{}
+                   {:title "New title"}
+                   {:subtitle "New subtitle"}
+                   {:description "New description"}
+                   {:screenshots ["https://alenkinaskazka.net/img/some_screenshot.jpg"]}
+                   {:price "22.8383"}]]
+    (testing "::lesson-update-request is valid"
+      (is (s/valid? ::sut/lesson-update-request request)))))
+
+(deftest lesson-created-response-test
+  (testing "::lesson-created-response is valid"
+    (is (s/valid? ::sut/lesson-created-response {:id 123})))
+
+  (testing "::lesson-created-response is invalid"
+    (is (not (s/valid? ::sut/lesson-created-response {:id "123"})))))
 
 (deftest limit-test
   (doseq [limit [nil 999999999]]

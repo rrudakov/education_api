@@ -175,6 +175,13 @@
   (testing "::user-update exercise"
     (is (= 10 (count (s/exercise ::sut/user-update-request))))))
 
+(deftest user-create-response-test
+  (testing "::user-create-response is valid"
+    (is (s/valid? ::sut/user-create-response {:id 222})))
+
+  (testing "::user-create-request is invalid"
+    (is (not (s/valid? ::sut/user-create-response {:id "23243"})))))
+
 (deftest user-response-test
   (doseq [resp [{:id         23
                  :username   "rrudakov"
