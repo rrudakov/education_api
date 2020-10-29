@@ -1,11 +1,11 @@
 (ns education.specs.articles
   (:require [clojure.spec.alpha :as s]))
 
-(s/def ::id int?)
+(s/def ::id pos-int?)
 
-(s/def ::user_id int?)
+(s/def ::user_id pos-int?)
 
-(s/def ::user-id-param int?)
+(s/def ::user-id-param pos-int?)
 
 (s/def ::title (s/and string? not-empty #(<= (count %) 100)))
 
@@ -42,4 +42,4 @@
 (s/def ::articles-full
   (s/coll-of ::article-full :kind vector? :distinct true :into []))
 
-(s/def ::limit int?)
+(s/def ::limit pos-int?)

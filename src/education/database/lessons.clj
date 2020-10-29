@@ -45,7 +45,7 @@
   (->> offset
        (hsql/build :select :*
                    :from :lessons
-                   :order-by [[:updated_on :asc]]
+                   :order-by [[:created_on :asc]]
                    :limit (or limit 20)
                    :offset (or offset 0))
        (hsql/format)

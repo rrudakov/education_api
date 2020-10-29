@@ -85,7 +85,7 @@
 
 (def ^:private get-all-lessons-query
   "Expected SQL query for getting all lessons."
-  "SELECT * FROM lessons ORDER BY updated_on ASC LIMIT ? OFFSET ?")
+  "SELECT * FROM lessons ORDER BY created_on ASC LIMIT ? OFFSET ?")
 
 (deftest get-all-lessons-test
   (testing "Test get all lessons without optional parameters"
