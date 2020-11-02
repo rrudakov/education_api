@@ -1,0 +1,51 @@
+#+TITLE: Users API documentation
+#+AUTHOR: Roman Rudakov
+#+EMAIL: rrudakov@protonmail.com
+
+* About the API
+
+Manage users and roles. Login to the system and obtaining authorization token.
+
+* Endpoints
+
+The API provides the following endpoints:
+
+** Register new user
+
+To create new user you should send =POST= request to =/api/users= endpoint with
+the following request body:
+
+#+begin_src json
+{
+    "username": "string",
+    "password": "string",
+    "email": "string"
+}
+#+end_src
+
+Server will return successful response with 201 status and the following
+response body:
+
+#+begin_src json
+{
+    "id": 1
+}
+#+end_src
+
+=username= should be unique, in case =username= was already taken server will
+respond with 409 error and the following body:
+
+#+begin_src json
+{
+    "message": "Resource already exist"
+}
+#+end_src
+
+In case of incorrect request body you'll get the following error:
+
+#+begin_src json
+{
+    "message": "Please check request data",
+    "details": "Some debug information for developer"
+}
+#+end_src
