@@ -1,11 +1,8 @@
 (ns education.database.lessons
-  (:require [honeysql.core :as hsql]
+  (:require [education.utils.maps :refer [update-if-exist]]
+            [honeysql.core :as hsql]
             [next.jdbc.sql :as sql])
   (:import java.time.Instant))
-
-(defn- update-if-exist
-  [m k f]
-  (if (contains? m k) (update m k f) m))
 
 (defn- request->db-create-statement
   [lesson]
@@ -32,7 +29,7 @@
   "Update existing `lesson` by `lesson-id` with given `conn`."
   [conn lesson-id lesson]
   (->> (sql/update! conn :lessons (request->db-update-statement lesson) {:id lesson-id})
-       :next.jdbc/update-count))
+       (:next.jdbc/update-count)))
 
 (defn get-lesson-by-id
   "Get existing lesson from database by `lesson-id` with given `conn`."

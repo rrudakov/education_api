@@ -2,10 +2,6 @@
   (:require [clojure.spec.alpha :as s]
             [education.http.constants :as const]))
 
-(def ^:private valid-decimal
-  "Regex to check price."
-  #"\d+(\.\d+)?")
-
 (s/def ::id pos-int?)
 
 (s/def ::title (s/and string? not-empty #(<= (count %) 500)))
@@ -14,11 +10,15 @@
 
 (s/def ::description (s/and string? not-empty))
 
-(s/def ::screenshot (s/and string? not-empty (partial re-matches const/valid-url-regex)))
+(s/def ::screenshot (s/and string?
+                           not-empty
+                           (partial re-matches const/valid-url-regex)
+                           ;; TODO: Add unit test
+                           #(<= (count %) 1000)))
 
 (s/def ::screenshots (s/coll-of ::screenshot :kind vector? :distinct true :into []))
 
-(s/def ::price (s/and string? not-empty (partial re-matches valid-decimal)))
+(s/def ::price (s/and string? not-empty (partial re-matches const/valid-decimal)))
 
 (s/def ::created_on inst?)
 
