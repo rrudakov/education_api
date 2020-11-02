@@ -36,7 +36,7 @@
   [db article]
   (fn [{:keys [identity]}]
     (let [user   (:user identity)
-          new-id (str (articlesdb/add-article db user article))]
+          new-id (articlesdb/add-article db user article)]
       (status/created (str "/articles/" new-id) {:id new-id}))))
 
 (defn- update-article-handler
@@ -106,56 +106,77 @@
 (defn articles-routes
   "Define routes for articles endpoint."
   [db]
-  (context "" []
+  (context "/articles" []
     :tags ["articles"]
-    (POST "/articles" []
+    (POST "/" []
       :middleware [[require-roles #{:guest}]]
       :body [article ::specs/article-create-request]
-      :return ::specs/id
       :summary "Create new article"
-      :responses {401 {:description "Not authorized!"
+      :description "Save article to database. Available for `guest` role."
+      :responses {201 {:description "Article created successfully"
+                       :schema      ::specs/article-create-response}
+                  401 {:description const/not-authorized-error-message
                        :schema      ::err/error-response}
-                  403 {:description "Access denied!"
+                  403 {:description const/no-access-error-message
                        :schema      ::err/error-response}}
       (create-article-handler db article))
-    (PATCH "/articles/:id" []
+    (PATCH "/:id" []
       :middleware [[require-roles #{:guest}]]
       :body [article ::specs/article-update-request]
       :path-params [id :- ::specs/id]
-      :summary "Update existing article by article ID"
-      :responses {401 {:description "Access denied!"
+      :summary "Update article"
+      :description "Update existing article by given `article-id`"
+      :responses {401 {:description const/not-authorized-error-message
                        :schema      ::err/error-response}}
       (update-article-handler db id article))
-    (GET "/articles" []
-      :return ::specs/articles-short
+    (GET "/" []
       :query-params [{limit :- ::specs/limit 100}
                      {user_id :- ::specs/user_id nil}]
       :summary "Get list of latest articles"
+      :responses {200 {:description "Successful"
+                       :schema      ::specs/articles-short}
+                  400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}}
       (get-all-articles-handler {:db db :limit limit :user-id user_id}))
-    (GET "/articles/latest" []
-      :return ::specs/articles-full
+    (GET "/latest" []
       :query-params [limit :- ::specs/limit]
       :summary "Get latest full articles"
+      :responses {200 {:description "Successful"
+                       :schema      ::specs/articles-full}
+                  400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}}
       (get-latest-full-articles-handler db limit))
-    (GET "/articles/:id" []
-      :return ::specs/article-full
+    (GET "/:id" []
       :path-params [id :- ::specs/id]
-      :summary "Get full article by article ID"
+      :summary "Get article"
+      :description "Get full article by given `article-id`"
+      :responses {200 {:description "Successful"
+                       :schema      ::specs/article-full}
+                  404 {:description const/not-found-error-message
+                       :schema      ::err/error-response}}
       (get-article-by-id-handler db id))
-    (GET "/articles/featured/main" []
-      :return ::specs/article-short
-      :summary "Get main featured article"
+    (GET "/featured/main" []
+      :summary "Get the latest main featured article"
+      :responses {200 {:description "Successful"
+                       :schema      ::specs/article-short}}
       (get-last-main-featured-article-handler db))
-    (GET "/articles/featured/latest" []
-      :return ::specs/articles-short
+    (GET "/featured/latest" []
       :query-params [limit :- ::specs/limit]
       :summary "Get latest featured articles list"
+      :responses {200 {:description "Successful"
+                       :schema      ::specs/articles-short}
+                  400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}}
       (get-last-featured-articles-handler db limit))
-    (DELETE "/articles/:id" []
+    (DELETE "/:id" []
       :middleware [[require-roles #{:guest}]]
       :path-params [id :- ::specs/id]
-      :return {}
-      :summary "Delete article by ID"
-      :responses {401 {:description "Access denied!"
+      :summary "Delete article"
+      :description "Delete article by given `article-id`"
+      :responses {400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}
+                  401 {:description const/no-access-error-message
+                       :schema      ::err/error-response}
+                  404 {:description const/not-found-error-message
                        :schema      ::err/error-response}}
       (delete-article-handler db id))))

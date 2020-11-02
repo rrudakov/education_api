@@ -11,3 +11,4 @@ pom.xml.asc
 .hgignore
 .hg/
 doc/database.org
+/.clj-kondo/.cache/

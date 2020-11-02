@@ -1,5 +1,5 @@
 (ns education.core-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [com.stuartsierra.component :as component]
             [education.core :as sut]
             [education.system :refer [api-system]]

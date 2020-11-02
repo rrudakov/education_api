@@ -18,4 +18,6 @@ jobs:
     - name: Run tests and generate coverage report
       run: lein cloverage --codecov
     - name: Upload coverage report to Codecov
-      uses: codecov/codecov-action@v1.0.7
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true

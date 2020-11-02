@@ -5,20 +5,7 @@
             [education.http.constants :refer [invalid-credentials-error-message]]
             [honeysql.core :as hsql]
             [next.jdbc :as jdbc]
-            next.jdbc.date-time
-            [next.jdbc.result-set :as rs]
-            [next.jdbc.sql :as sql])
-  (:import java.sql.Array))
-
-(extend-protocol rs/ReadableColumn
-  Array
-  (read-column-by-label
-    [^Array v _]
-    (set (map keyword (.getArray v))))
-
-  (read-column-by-index
-    [^Array v _ _]
-    (set (map keyword (.getArray v)))))
+            [next.jdbc.sql :as sql]))
 
 (defn add-user
   "Create new `user` in database."

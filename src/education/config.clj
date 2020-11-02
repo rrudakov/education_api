@@ -38,3 +38,13 @@
         (assoc :maxIdleTime (* 3 60 60))
         (assoc :maxIdleTimeExcessConnections (* 3 60 60))
         (assoc :maxPoolSize 30))))
+
+(defn base-url
+  "Return BASE_URL for current application."
+  [config]
+  (get-in config [:app :base_url]))
+
+(defn storage-path
+  "Return path to the file storage."
+  [config]
+  (get-in config [:app :storage]))

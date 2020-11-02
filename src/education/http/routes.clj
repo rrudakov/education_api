@@ -3,7 +3,9 @@
             [compojure.api.sweet :refer [api context]]
             [education.http.constants :as const]
             [education.http.endpoints.articles :refer [articles-routes]]
+            [education.http.endpoints.lessons :refer [lessons-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
+            [education.http.endpoints.upload :refer [upload-routes]]
             [education.http.endpoints.users :refer [users-routes]]
             [ring.util.http-response :as status])
   (:import java.sql.SQLException))
@@ -54,7 +56,9 @@
         :email "rrudakov@pm.me"}}
       :tags [{:name "users" :description "Users management"}
              {:name "roles" :description "Roles management"}
-             {:name "articles" :description "Articles management"}]
+             {:name "articles" :description "Articles management"}
+             {:name "lessons" :description "Video lessons"}
+             {:name "upload" :description "Upload media files"}]
       :securityDefinitions
       {:api_key
        {:type "apiKey"
@@ -70,4 +74,6 @@
      :coercion :spec
      (users-routes datasource config)
      (articles-routes datasource)
-     (roles-routes datasource))))
+     (roles-routes datasource)
+     (lessons-routes datasource)
+     (upload-routes config))))

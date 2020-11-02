@@ -4,12 +4,13 @@
             [education.http.restructure :refer [require-roles]]
             [education.specs.roles :as specs]
             [ring.util.http-response :refer [ok]]
-            [education.specs.error :as err]))
+            [education.specs.error :as err]
+            [education.http.constants :as const]))
 
 (defn- to-roles-response
   "Convert database roles to roles response."
   [{:roles/keys [id role_name]}]
-  {:id id
+  {:id   id
    :name (keyword role_name)})
 
 (defn roles-handler
@@ -24,12 +25,15 @@
 (defn roles-routes
   "Define routes for roles endpoint."
   [db]
-  (context "" []
-    :tags ["roles"]
-    (GET "/roles" []
+  (context "/roles" []
+    (GET "/" []
+      :tags ["roles"]
       :middleware [[require-roles #{:admin}]]
-      :return ::specs/roles-response
       :summary "Return list of all available roles"
-      :responses {401 {:description "Access denied!"
-                       :schema ::err/error-response}}
+      :responses {200 {:description "Successful"
+                       :schema      ::specs/roles-response}
+                  401 {:description const/no-access-error-message
+                       :schema      ::err/error-response}
+                  403 {:description const/not-authorized-error-message
+                       :schema      ::err/error-response}}
       (roles-handler db))))
