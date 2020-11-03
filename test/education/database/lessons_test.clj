@@ -31,7 +31,7 @@
    :price           (bigdec (:price create-lesson-request))})
 
 (deftest add-lesson-test
-  (testing "Test add article with correct fields"
+  (testing "Test add lesson with correct fields"
     (with-redefs [sql/insert! (spy/stub create-lesson-result)]
       (let [result                 (sut/add-lesson nil create-lesson-request)
             [[_ table query opts]] (spy/calls sql/insert!)]
@@ -62,7 +62,7 @@
    :price       (bigdec (:price update-lesson-request))})
 
 (deftest update-lesson-test
-  (testing "Test update article with correct fields"
+  (testing "Test update lesson with correct fields"
     (with-redefs [sql/update! (spy/stub update-lesson-result)]
       (let [result                 (sut/update-lesson nil update-lesson-id update-lesson-request)
             [[_ table query opts]] (spy/calls sql/update!)]
