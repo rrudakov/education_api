@@ -13,7 +13,6 @@
 (s/def ::screenshot (s/and string?
                            not-empty
                            (partial re-matches const/valid-url-regex)
-                           ;; TODO: Add unit test
                            #(<= (count %) 1000)))
 
 (s/def ::screenshots (s/coll-of ::screenshot :kind vector? :distinct true :into []))

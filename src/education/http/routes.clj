@@ -3,6 +3,7 @@
             [compojure.api.sweet :refer [api context]]
             [education.http.constants :as const]
             [education.http.endpoints.articles :refer [articles-routes]]
+            [education.http.endpoints.dresses :refer [dresses-routes]]
             [education.http.endpoints.lessons :refer [lessons-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
@@ -58,6 +59,7 @@
              {:name "roles" :description "Roles management"}
              {:name "articles" :description "Articles management"}
              {:name "lessons" :description "Video lessons"}
+             {:name "dresses" :description "Dresses rent"}
              {:name "upload" :description "Upload media files"}]
       :securityDefinitions
       {:api_key
@@ -76,4 +78,5 @@
      (articles-routes datasource)
      (roles-routes datasource)
      (lessons-routes datasource)
+     (dresses-routes datasource)
      (upload-routes config))))
