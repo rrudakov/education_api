@@ -1,12 +1,12 @@
 (ns education.http.endpoints.dresses
-  (:require [compojure.api.sweet :refer [context POST]]
+  (:require [compojure.api.sweet :refer [context PATCH POST GET DELETE]]
             [education.database.dresses :as dresses-db]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
             [education.specs.dresses :as specs]
+            [education.specs.error :as err]
             [education.utils.maps :refer [unqualify-map]]
-            [ring.util.http-response :as status]
-            [education.specs.error :as err]))
+            [ring.util.http-response :as status]))
 
 ;; Helper functions
 (defn- db->response
@@ -67,4 +67,54 @@
                        :schema      ::err/error-response}
                   403 {:description const/no-access-error-message
                        :schema      ::err/error-response}}
-      (create-dress-handler db dress))))
+      (create-dress-handler db dress))
+    (PATCH "/:dress-id" []
+      :middleware [[require-roles #{:admin}]]
+      :body [dress ::specs/dress-update-request]
+      :path-params [dress-id :- ::specs/id]
+      :summary "Update dress entry"
+      :description "Update existing dress by `dress-id`"
+      :responses {400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}
+                  401 {:description const/not-authorized-error-message
+                       :schema      ::err/error-response}
+                  403 {:description const/no-access-error-message
+                       :schema      ::err/error-response}
+                  404 {:description const/not-found-error-message
+                       :schema      ::err/error-response}}
+      (update-dress-handler db dress-id dress))
+    (GET "/:dress-id" []
+      :path-params [dress-id :- ::specs/id]
+      :summary "Get dress entry"
+      :description "Get dress by `dress-id`"
+      :responses {200 {:description "Dress was successfully found in the database"
+                       :schema      ::specs/dress-response}
+                  400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}
+                  404 {:description const/not-found-error-message
+                       :schema      ::err/error-response}}
+      (get-dress-by-id-handler db dress-id))
+    (GET "/" []
+      :query-params [{limit :- ::specs/limit nil}
+                     {offset :- ::specs/offset nil}]
+      :summary "Get all dresses"
+      :description "Get list of dresses with given optional `limit` and `offset`"
+      :responses {200 {:description "Successful response"
+                       :schema      ::specs/dresses-response}
+                  400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}}
+      (get-all-dresses-handler db limit offset))
+    (DELETE "/:dress-id" []
+      :middleware [[require-roles #{:admin}]]
+      :path-params [dress-id :- ::specs/id]
+      :summary "Delete dress entry"
+      :description "Delete dress entry by `dress-id`"
+      :responses {400 {:description const/bad-request-error-message
+                       :schema      ::err/error-response}
+                  401 {:description const/not-authorized-error-message
+                       :schema      ::err/error-response}
+                  403 {:description const/no-access-error-message
+                       :schema      ::err/error-response}
+                  404 {:description const/not-found-error-message
+                       :schema      ::err/error-response}}
+      (delete-dress-by-id-handler db dress-id))))
