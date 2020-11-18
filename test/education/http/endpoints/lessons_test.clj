@@ -6,7 +6,8 @@
             [education.http.endpoints.test-app :as test-app]
             [education.test-data :as td]
             [ring.mock.request :as mock]
-            [spy.core :as spy])
+            [spy.core :as spy]
+            [clojure.string :as str])
   (:import java.time.Instant))
 
 (def ^:private test-lesson-id
@@ -40,7 +41,7 @@
           (is (= {:id test-lesson-id} body))
           (is (spy/called-once-with? lessons-db/add-lesson nil request-body))))))
 
-  (doseq [role [:quest :moderator]]
+  (doseq [role [:guest :moderator]]
     (testing (str "Test POST /lessons authorized with " role " role and valid request body")
       (with-redefs [lessons-db/add-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth (spy/spy))
@@ -69,9 +70,9 @@
                         (dissoc create-lesson-request :screenshots)
                         (dissoc create-lesson-request :description)
                         (dissoc create-lesson-request :price)
-                        (assoc create-lesson-request :title (repeat 501 "a"))
+                        (assoc create-lesson-request :title (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :title 123)
-                        (assoc create-lesson-request :subtitle (repeat 501 "a"))
+                        (assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :subtitle 123)
                         (assoc create-lesson-request :screenshots "non-list string")
                         (assoc create-lesson-request :price "7 euro")
@@ -177,9 +178,9 @@
         (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id update-lesson-request))
         (is (= {:message const/server-error-message} body)))))
 
-  (doseq [request-body [(assoc create-lesson-request :title (repeat 501 "a"))
+  (doseq [request-body [(assoc create-lesson-request :title (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :title 123)
-                        (assoc create-lesson-request :subtitle (repeat 501 "a"))
+                        (assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :subtitle 123)
                         (assoc create-lesson-request :screenshots "non-list string")
                         (assoc create-lesson-request :price "7 euro")
