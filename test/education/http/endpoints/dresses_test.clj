@@ -7,7 +7,8 @@
             [education.http.endpoints.test-app :as test-app]
             [education.test-data :as td]
             [ring.mock.request :as mock]
-            [spy.core :as spy]))
+            [spy.core :as spy])
+  (:import java.time.Instant))
 
 (def ^:private test-dress-id
   "Test API `dress-id`."
@@ -200,3 +201,35 @@
           (is (= 400 (:status response)))
           (is (spy/not-called? dresses-db/update-dress))
           (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+
+(def ^:private dress-from-db
+  "Test dress database query result."
+  {:dresses/id          888
+   :dresses/title       "Dress title"
+   :dresses/description "Dress description"
+   :dresses/size        32
+   :dresses/pictures    ["http://first.picture.com" "http://second.picture.com"]
+   :dresses/price       (bigdec "8989.999999")
+   :dresses/created_on  (Instant/parse "2020-12-12T18:22:12Z")
+   :dresses/updated_on  (Instant/parse "2020-12-18T18:22:12Z")})
+
+(def ^:private dress-response-expected
+  "Expected API dress response."
+  {:id          (:dresses/id dress-from-db)
+   :title       (:dresses/title dress-from-db)
+   :description (:dresses/description dress-from-db)
+   :size        (:dresses/size dress-from-db)
+   :pictures    (:dresses/pictures dress-from-db)
+   :price       (format "%.2f" (:dresses/price dress-from-db))
+   :created_on  (str (:dresses/created_on dress-from-db))
+   :updated_on  (str (:dresses/updated_on dress-from-db))})
+
+(deftest get-dress-by-id-test
+  (testing "Test GET /dresses/:dress-id with valid `dress-id`"
+    (with-redefs [dresses-db/get-dress-by-id (spy/stub dress-from-db)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get (str "/api/dresses/" test-dress-id)))
+            body     (test-app/parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= dress-response-expected body))
+        (is (spy/called-once-with? dresses-db/get-dress-by-id nil test-dress-id))))))
