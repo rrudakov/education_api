@@ -232,4 +232,136 @@
             body     (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= dress-response-expected body))
-        (is (spy/called-once-with? dresses-db/get-dress-by-id nil test-dress-id))))))
+        (is (spy/called-once-with? dresses-db/get-dress-by-id nil test-dress-id)))))
+
+  (testing "Test GET /dresses/:dress-id with non-existing `dress-id`"
+    (with-redefs [dresses-db/get-dress-by-id (spy/stub nil)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get (str "/api/dresses/" test-dress-id)))
+            body     (test-app/parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (= {:message const/not-found-error-message} body))
+        (is (spy/called-once-with? dresses-db/get-dress-by-id nil test-dress-id)))))
+
+  (testing "Test get /dresses/:dress-id with invalid `dress-id`"
+    (with-redefs [dresses-db/get-dress-by-id (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get "/api/dresses/invalid"))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (spy/not-called? dresses-db/get-dress-by-id))))))
+
+(def ^:private dress-from-db-extra
+  "One more test dress database query result."
+  {:dresses/id          22
+   :dresses/title       "Dress title 2"
+   :dresses/description "Dress description 2"
+   :dresses/size        88
+   :dresses/pictures    ["http://extra.picture.com" "https://extra.more.picture"]
+   :dresses/price       (bigdec "2222")
+   :dresses/created_on  (Instant/parse "2020-03-13T12:22:33Z")
+   :dresses/updated_on  (Instant/parse "2020-04-13T12:22:33Z")})
+
+(def ^:private dress-response-expected-extra
+  "One more expected API dress response."
+  {:id          (:dresses/id dress-from-db-extra)
+   :title       (:dresses/title dress-from-db-extra)
+   :description (:dresses/description dress-from-db-extra)
+   :size        (:dresses/size dress-from-db-extra)
+   :pictures    (:dresses/pictures dress-from-db-extra)
+   :price       (format "%.2f" (:dresses/price dress-from-db-extra))
+   :created_on  (str (:dresses/created_on dress-from-db-extra))
+   :updated_on  (str (:dresses/updated_on dress-from-db-extra))})
+
+(deftest get-all-dresses-test
+  (testing "Test GET /dresses/ without any query parameters"
+    (with-redefs [dresses-db/get-all-dresses (spy/stub [dress-from-db dress-from-db-extra])]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :get "/api/dresses"))
+            body     (test-app/parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= [dress-response-expected dress-response-expected-extra] body))
+        (is (spy/called-once-with? dresses-db/get-all-dresses nil :limit nil :offset nil)))))
+
+  (testing "Test GET /dresses/ with optional `limit` and `offset` parameters"
+    (with-redefs [dresses-db/get-all-dresses (spy/stub [dress-from-db dress-from-db-extra])]
+      (let [app          (test-app/api-routes-with-auth (spy/spy))
+            limit-param  99
+            offset-param 20
+            response     (app (mock/request :get (str "/api/dresses?limit=" limit-param "&offset=" offset-param)))
+            body         (test-app/parse-body (:body response))]
+        (is (= 200 (:status response)))
+        (is (= [dress-response-expected dress-response-expected-extra] body))
+        (is (spy/called-once-with? dresses-db/get-all-dresses nil :limit limit-param :offset offset-param)))))
+
+  (doseq [url ["/api/dresses?limit=invalid"
+               "/api/dresses?offset=invalid"]]
+    (testing "Test GET /dresses/ with invalid query parameters"
+      (with-redefs [dresses-db/get-all-dresses (spy/spy)]
+        (let [app      (test-app/api-routes-with-auth (spy/spy))
+              response (app (mock/request :get url))
+              body     (test-app/parse-body (:body response))]
+          (is (= 400 (:status response)))
+          (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+          (is (spy/not-called? dresses-db/get-all-dresses)))))))
+
+(deftest delete-dress-by-id-test
+  (testing "Test DELETE /dresses/:dress-id authorized with :admin role and valid `dress-id`"
+    (with-redefs [dresses-db/delete-dress (spy/stub 1)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))]
+        (is (= 204 (:status response)))
+        (is (empty? (:body response)))
+        (is (spy/called-once-with? dresses-db/delete-dress nil test-dress-id)))))
+
+  (doseq [role [:moderator :guest]]
+    (testing (str "Test DELETE /dresses/:dress-id authorized with " role " role and valid `dress-id`")
+      (with-redefs [dresses-db/delete-dress (spy/spy)]
+        (let [app      (test-app/api-routes-with-auth (spy/spy))
+              response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
+                                (mock/header :authorization (td/test-auth-token #{role}))))
+              body     (test-app/parse-body (:body response))]
+          (is (= 403 (:status response)))
+          (is (= {:message const/no-access-error-message} body))
+          (is (spy/not-called? dresses-db/delete-dress))))))
+
+  (testing "Test DELETE /dresses/:dress-id without authorization header"
+    (with-redefs [dresses-db/delete-dress (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (mock/request :delete (str "/api/dresses/" test-dress-id)))
+            body     (test-app/parse-body (:body response))]
+        (is (= 401 (:status response)))
+        (is (= {:message const/not-authorized-error-message} body))
+        (is (spy/not-called? dresses-db/delete-dress)))))
+
+  (testing "Test DELETE /dresses/:dress-id for non-existing `dress-id`"
+    (with-redefs [dresses-db/delete-dress (spy/stub 0)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (= {:message const/not-found-error-message} body))
+        (is (spy/called-once-with? dresses-db/delete-dress nil test-dress-id)))))
+
+  (testing "Test DELETE /dresses/:dress-id with invalid `dress-id`"
+    (with-redefs [dresses-db/delete-dress (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete "/api/dresses/invalid")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (spy/not-called? dresses-db/delete-dress)))))
+
+  (testing "Test DELETE /dresses/:dress-id unexpected result from database"
+    (with-redefs [dresses-db/delete-dress (spy/stub 2)]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
+                              (mock/header :authorization (td/test-auth-token #{:admin}))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 500 (:status response)))
+        (is (= {:message const/server-error-message} body))
+        (is (spy/called-once-with? dresses-db/delete-dress nil test-dress-id))))))
