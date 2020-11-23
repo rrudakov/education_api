@@ -92,11 +92,12 @@
 
 (deftest lesson-create-request-test
   (testing "::lesson-create-request is valid"
-    (is (s/valid? ::sut/lesson-create-request {:title "Some title"
-                                               :subtitle "Some subtitle"
-                                               :description "Video lesson description"
-                                               :screenshots []
-                                               :price "7.22"}))))
+    (is (s/valid? ::sut/lesson-create-request
+                  {:title       "Some title"
+                   :subtitle    "Some subtitle"
+                   :description "Video lesson description"
+                   :screenshots []
+                   :price       "7.22"}))))
 
 (deftest lesson-update-request-test
   (doseq [request [{}
