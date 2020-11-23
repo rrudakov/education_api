@@ -1,13 +1,17 @@
 (ns education.http.endpoints.lessons-test
   (:require [cheshire.core :as cheshire]
+            [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [education.database.lessons :as lessons-db]
             [education.http.constants :as const]
+            [education.http.endpoints.lessons :as sut]
             [education.http.endpoints.test-app :as test-app]
             [education.test-data :as td]
             [ring.mock.request :as mock]
-            [spy.core :as spy])
-  (:import java.time.Instant))
+            [spy.core :as spy]
+            [ring.util.http-response :as status])
+  (:import java.sql.SQLException
+           java.time.Instant))
 
 (def ^:private test-lesson-id
   "Test API `lesson-id`."
@@ -40,7 +44,7 @@
           (is (= {:id test-lesson-id} body))
           (is (spy/called-once-with? lessons-db/add-lesson nil request-body))))))
 
-  (doseq [role [:quest :moderator]]
+  (doseq [role [:guest :moderator]]
     (testing (str "Test POST /lessons authorized with " role " role and valid request body")
       (with-redefs [lessons-db/add-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth (spy/spy))
@@ -69,9 +73,9 @@
                         (dissoc create-lesson-request :screenshots)
                         (dissoc create-lesson-request :description)
                         (dissoc create-lesson-request :price)
-                        (assoc create-lesson-request :title (repeat 501 "a"))
+                        (assoc create-lesson-request :title (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :title 123)
-                        (assoc create-lesson-request :subtitle (repeat 501 "a"))
+                        (assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :subtitle 123)
                         (assoc create-lesson-request :screenshots "non-list string")
                         (assoc create-lesson-request :price "7 euro")
@@ -86,7 +90,66 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? lessons-db/add-lesson))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message} (dissoc body :details)))))))
+
+  (testing "Test POST /lessons authorized with valid body, database conflict error"
+    (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Conflict" "23505"))))]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :post "/api/lessons")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string create-lesson-request))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 409 (:status response)))
+        (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
+        (is (= {:message const/conflict-error-message} body)))))
+
+  (testing "Test POST /lessons authorized with valid body, database not found error"
+    (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Not found" "23503"))))]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :post "/api/lessons")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string create-lesson-request))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 404 (:status response)))
+        (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
+        (is (= {:message const/not-found-error-message} body)))))
+
+  (testing "Test POST /lessons authorized with valid body, database bad query error"
+    (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Bad query" "23502"))))]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :post "/api/lessons")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string create-lesson-request))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
+        (is (= {:message const/bad-request-error-message} body)))))
+
+  (testing "Test POST /lessons authorized with valid body, database unexpected error"
+    (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Shit happens" "987987987"))))]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :post "/api/lessons")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string create-lesson-request))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 500 (:status response)))
+        (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
+        (is (= {:message "java.sql.SQLException: Shit happens" :error_code "987987987"} body)))))
+
+  (testing "Test POST /lessons authorized with valid body, verify response validation"
+    (with-redefs [sut/create-lesson-handler (spy/stub (status/created "/lessons/invalid" {:lessonId "invalid"}))]
+      (let [app      (test-app/api-routes-with-auth (spy/spy))
+            response (app (-> (mock/request :post "/api/lessons")
+                              (mock/content-type "application/json")
+                              (mock/header :authorization (td/test-auth-token #{:admin}))
+                              (mock/body (cheshire/generate-string create-lesson-request))))
+            body     (test-app/parse-body (:body response))]
+        (is (= 500 (:status response)))
+        (is (= {:message const/server-error-message} (dissoc body :details)))))))
 
 (def ^:private update-lesson-request
   "Test API request to update lesson."
@@ -177,9 +240,9 @@
         (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id update-lesson-request))
         (is (= {:message const/server-error-message} body)))))
 
-  (doseq [request-body [(assoc create-lesson-request :title (repeat 501 "a"))
+  (doseq [request-body [(assoc create-lesson-request :title (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :title 123)
-                        (assoc create-lesson-request :subtitle (repeat 501 "a"))
+                        (assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
                         (assoc create-lesson-request :subtitle 123)
                         (assoc create-lesson-request :screenshots "non-list string")
                         (assoc create-lesson-request :price "7 euro")

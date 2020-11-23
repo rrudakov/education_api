@@ -45,11 +45,14 @@
   (doseq [screenshot ["http://insecure.com"
                       "https://secure.net/some.img.jpg"
                       "https://some.url/"
-                      "http://127.0.0.1:3000/some_image.jpg"]]
+                      "http://127.0.0.1:3000/some_image.jpg"
+                      (str "https://some.url/" (str/join (repeat 979 "a")) ".jpg")]]
     (testing (str "::screenshot is valid " screenshot)
       (is (s/valid? ::sut/screenshot screenshot))))
 
-  (doseq [screenshot ["juststring" "www.screenshot.com/image.jpg"]]
+  (doseq [screenshot ["juststring"
+                      "www.screenshot.com/image.jpg"
+                      (str "https://some.url/" (str/join (repeat 980 "a")) ".jpg")]]
     (testing (str "::screenshot is invalid " screenshot)
       (is (not (s/valid? ::sut/screenshot screenshot))))))
 
@@ -89,11 +92,12 @@
 
 (deftest lesson-create-request-test
   (testing "::lesson-create-request is valid"
-    (is (s/valid? ::sut/lesson-create-request {:title "Some title"
-                                               :subtitle "Some subtitle"
-                                               :description "Video lesson description"
-                                               :screenshots []
-                                               :price "7.22"}))))
+    (is (s/valid? ::sut/lesson-create-request
+                  {:title       "Some title"
+                   :subtitle    "Some subtitle"
+                   :description "Video lesson description"
+                   :screenshots []
+                   :price       "7.22"}))))
 
 (deftest lesson-update-request-test
   (doseq [request [{}

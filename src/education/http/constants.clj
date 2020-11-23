@@ -17,3 +17,7 @@
 (def valid-url-regex
   "Regex to check video and image URLs."
   #"((http|https)://)(www.)*[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\b([-a-zA-Z0-9@:%._\+~#?&//=]*)")
+
+(def valid-decimal
+  "Regex to check price."
+  #"\d+(\.\d+)?")

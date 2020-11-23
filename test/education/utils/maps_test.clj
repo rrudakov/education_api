@@ -25,3 +25,12 @@
            (sut/unqualify-map {:id       1
                                :title    "Some title"
                                :subtitle "Some subtitle"})))))
+
+(deftest update-if-exist-test
+  (testing "Test update existing key"
+    (is (= {:id 2 :title "Some title"}
+           (sut/update-if-exist {:id 1 :title "Some title"} :id inc))))
+
+  (testing "Test update non-existing key"
+    (is (= {:id 1 :title "Some title"}
+           (sut/update-if-exist {:id 1 :title "Some title"} :extra inc)))))
