@@ -19,7 +19,7 @@
       "23505" (status/conflict {:message const/conflict-error-message})
       "23503" (status/not-found {:message const/not-found-error-message})
       "23502" (status/bad-request {:message const/bad-request-error-message})
-      (status/internal-server-error {:message    (.getServerErrorMessage e)
+      (status/internal-server-error {:message    (str e)
                                      :error_code (.getSQLState e)}))))
 
 (defn request-validation-handler

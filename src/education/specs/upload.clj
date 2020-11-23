@@ -19,5 +19,4 @@
 
 (s/def ::url (s/and string? not-empty (partial re-matches const/valid-url-regex)))
 
-(s/def ::upload-response
-  (s/keys :req-un [::url]))
+(s/def ::upload-response (s/keys :req-un [::url]))

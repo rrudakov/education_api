@@ -2,7 +2,8 @@
   (:require [education.specs.upload :as sut]
             [clojure.test :refer [deftest testing is]]
             [clojure.spec.alpha :as s]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [spec-tools.core :as st]))
 
 (deftest filename-test
   (testing "::filename is valid"
@@ -51,9 +52,16 @@
                    {:content-type "application/json"
                     :size         88}
                    {:filename "File name"
-                    :size     99}]]
+                    :size     99}
+                   {:filename     "Some file name"
+                    :content-type "application/json"
+                    :size         1
+                    :tempfile     "Something but the file"}]]
     (testing "::file is invalid"
-      (is (not (s/valid? ::sut/file request))))))
+      (is (not (s/valid? ::sut/file request)))))
+
+  (testing "::file json-schema metadata"
+    (is (= "file" (:json-schema/type (st/get-spec ::sut/file))))))
 
 (deftest url-test
   (testing "::url is valid"
@@ -63,5 +71,14 @@
     (is (not (s/valid? ::sut/url url)))))
 
 (deftest upload-response-test
-  (testing "::upload-response is valid"
-    (is (s/valid? ::sut/upload-response {:url "https://alenkinaskazka.net/img/some_picture.png"}))))
+  (doseq [response [{:url "https://alenkinaskazka.net/img/some_picture.png"}
+                    {:url "https://alenkinaskazka.net/img/some_picture.png" :some "extra keys"}]]
+    (testing "::upload-response is valid"
+      (is (s/valid? ::sut/upload-response response))))
+
+  (doseq [response [{:url ""}
+                    {:url "invalid"}
+                    {:invalid "key"}
+                    {}]]
+    (testing "::upload-response is invalid"
+      (is (not (s/valid? ::sut/upload-response response))))))
