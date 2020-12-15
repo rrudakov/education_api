@@ -4,6 +4,7 @@
             [education.http.constants :as const]
             [education.http.endpoints.articles :refer [articles-routes]]
             [education.http.endpoints.dresses :refer [dresses-routes]]
+            [education.http.endpoints.gymnastics :refer [gymnastics-routes]]
             [education.http.endpoints.lessons :refer [lessons-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
@@ -79,4 +80,5 @@
      (roles-routes datasource)
      (lessons-routes datasource)
      (dresses-routes datasource)
+     (gymnastics-routes datasource)
      (upload-routes config))))

@@ -34,3 +34,33 @@
   (testing "Test update non-existing key"
     (is (= {:id 1 :title "Some title"}
            (sut/update-if-exist {:id 1 :title "Some title"} :extra inc)))))
+
+(deftest ->camel-key-test
+  (testing "Test ->camel-key with namespace"
+    (is (= [:createdOn 123] (sut/->camel-key [:dresses/created-on 123])))
+    (is (= [:createdOn 123] (sut/->camel-key [:dresses/created_on 123]))))
+
+  (testing "Test ->camel-key without namespace"
+    (is (= [:updatedOn 222] (sut/->camel-key [:gymnastics/updated-on 222])))
+    (is (= [:updatedOn 222] (sut/->camel-key [:gymnastics/updated_on 222])))))
+
+(deftest ->camel-case-test
+  (testing "Test ->camel-case with namespaces"
+    (is (= {:id        1
+            :someTitle "Some title"
+            :subTitle  "Subtitle"
+            :newField  33}
+           (sut/->camel-case {:dresses/id         1
+                              :dresses/some_title "Some title"
+                              :dresses/sub-title  "Subtitle"
+                              :dresses/newField   33}))))
+
+  (testing "Test ->camel-case without namespaces"
+    (is (= {:id        1
+            :someTitle "Some title"
+            :subTitle  "Subtitle"
+            :newField  33}
+           (sut/->camel-case {:id         1
+                              :some_title "Some title"
+                              :sub-title  "Subtitle"
+                              :newField   33})))))

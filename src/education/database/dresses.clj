@@ -42,8 +42,7 @@
 
   Accept optional parameters `limit` and `offset` to support pagination."
   [conn & {:keys [limit offset]}]
-  (->> offset
-       (hsql/build :select :*
+  (->> (hsql/build :select :*
                    :from :dresses
                    :order-by [[:updated_on :desc]]
                    :limit (or limit 20)
