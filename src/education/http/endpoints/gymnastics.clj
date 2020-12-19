@@ -28,8 +28,8 @@
     (status/not-found {:message const/not-found-error-message})))
 
 (defn- get-all-gymnastics-handler
-  [db limit offset]
-  (->> (gymnastics-db/get-all-gymnastics db :limit limit :offset offset)
+  [db subtype-id limit offset]
+  (->> (gymnastics-db/get-all-gymnastics db subtype-id :limit limit :offset offset)
        (mapv unqualify-map)
        (status/ok)))
 
@@ -86,7 +86,8 @@
                        :schema      ::err/error-response}}
       (get-gymnastic-by-id-handler db gymnastic-id))
     (GET "/" []
-      :query-params [{limit :- ::specs/limit nil}
+      :query-params [subtype-id :- ::specs/subtype_id
+                     {limit :- ::specs/limit nil}
                      {offset :- ::specs/offset nil}]
       :summary "Get all gymnastics"
       :description "Get list of gymnastics with given optional `limit` and `offset`"
@@ -94,7 +95,7 @@
                        :schema      ::specs/gymnastics-response}
                   400 {:description const/bad-request-error-message
                        :schema      ::err/error-response}}
-      (get-all-gymnastics-handler db limit offset))
+      (get-all-gymnastics-handler db subtype-id limit offset))
     (DELETE "/:gymnastic-id" []
       :middleware [[require-roles #{:admin}]]
       :path-params [gymnastic-id :- ::specs/id]

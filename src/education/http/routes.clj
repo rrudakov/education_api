@@ -61,6 +61,7 @@
              {:name "articles" :description "Articles management"}
              {:name "lessons" :description "Video lessons"}
              {:name "dresses" :description "Dresses rent"}
+             {:name "gymnastics" :description "Different gymnastics for children"}
              {:name "upload" :description "Upload media files"}]
       :securityDefinitions
       {:api_key

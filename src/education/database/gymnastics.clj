@@ -25,9 +25,10 @@
   "Get all gymnastics from database with given `conn`.
 
   Accept optional parameters `limit` and `offset` to support pagination."
-  [conn & {:keys [limit offset]}]
+  [conn subtype-id & {:keys [limit offset]}]
   (->> (hsql/build :select :*
                    :from :gymnastics
+                   :where [:= :subtype_id subtype-id]
                    :order-by [[:updated_on :desc]]
                    :limit (or limit 20)
                    :offset (or offset 0))
