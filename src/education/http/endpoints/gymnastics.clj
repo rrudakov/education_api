@@ -19,7 +19,7 @@
   (case (gymnastics-db/update-gymnastic db gymnastic-id gymnastic)
     1 (status/no-content)
     0 (status/not-found {:message const/not-found-error-message})
-    (status/internal-server-error {:message const/not-found-error-message})))
+    (status/internal-server-error {:message const/server-error-message})))
 
 (defn- get-gymnastic-by-id-handler
   [db gymnastic-id]
@@ -86,7 +86,7 @@
                        :schema      ::err/error-response}}
       (get-gymnastic-by-id-handler db gymnastic-id))
     (GET "/" []
-      :query-params [subtype-id :- ::specs/subtype_id
+      :query-params [subtype_id :- ::specs/subtype_id
                      {limit :- ::specs/limit nil}
                      {offset :- ::specs/offset nil}]
       :summary "Get all gymnastics"
@@ -95,7 +95,7 @@
                        :schema      ::specs/gymnastics-response}
                   400 {:description const/bad-request-error-message
                        :schema      ::err/error-response}}
-      (get-all-gymnastics-handler db subtype-id limit offset))
+      (get-all-gymnastics-handler db subtype_id limit offset))
     (DELETE "/:gymnastic-id" []
       :middleware [[require-roles #{:admin}]]
       :path-params [gymnastic-id :- ::specs/id]

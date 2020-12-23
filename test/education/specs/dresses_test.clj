@@ -52,7 +52,8 @@
 
   (doseq [picture ["juststring"
                    "www.picture.com/image.jpg"
-                   (str "https://some.url/" (str/join (repeat 980 "a")) ".jpg")]]
+                   (str "https://some.url/" (str/join (repeat 980 "a")) ".jpg")
+                   nil]]
     (testing (str "::picture is invalid " picture)
       (is (not (s/valid? ::sut/picture picture))))))
 
@@ -97,7 +98,30 @@
                    :description "Dress description"
                    :size        34
                    :pictures    []
-                   :price       "33.2"}))))
+                   :price       "33.2"})))
+
+  (doseq [request [{:description "Dress description"
+                    :size        34
+                    :pictures    []
+                    :price       "33.2"}
+                   {:title    "Dress title"
+                    :size     34
+                    :pictures []
+                    :price    "33.2"}
+                   {:title       "Dress title"
+                    :description "Dress description"
+                    :pictures    []
+                    :price       "33.2"}
+                   {:title       "Dress title"
+                    :description "Dress description"
+                    :size        34
+                    :price       "33.2"}
+                   {:title       "Dress title"
+                    :description "Dress description"
+                    :size        34
+                    :pictures    []}]]
+    (testing "::dress-create-request is invalid"
+      (is (not (s/valid? ::sut/dress-create-request request))))))
 
 (deftest dress-update-request-test
   (doseq [request [{}
@@ -133,3 +157,122 @@
   (doseq [offset [-1 0 nil "string" [] #{} false true]]
     (testing (str "::offset is invalid " offset)
       (is (not (s/valid? ::sut/offset offset))))))
+
+(deftest dress-response-test
+  (doseq [response [{:id          1
+                     :title       "Dress title"
+                     :description "Dress description"
+                     :size        22
+                     :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :price       "32.3"
+                     :created_on  (Instant/now)
+                     :updated_on  (Instant/now)}
+                    {:id          1
+                     :title       "Dress title"
+                     :description "Dress description"
+                     :size        22
+                     :pictures    []
+                     :price       "32.3"
+                     :created_on  (Instant/now)
+                     :updated_on  (Instant/now)}]]
+    (testing "::dress-response is valid"
+      (is (s/valid? ::sut/dress-response response))))
+
+  (doseq [response [{:title       "Dress title"
+                     :description "Dress description"
+                     :size        22
+                     :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :price       "32.3"
+                     :created_on  (Instant/now)
+                     :updated_on  (Instant/now)}
+                    {:id          1
+                     :description "Dress description"
+                     :size        22
+                     :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :price       "32.3"
+                     :created_on  (Instant/now)
+                     :updated_on  (Instant/now)}
+                    {:id         1
+                     :title      "Dress title"
+                     :size       22
+                     :pictures   ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :price      "32.3"
+                     :created_on (Instant/now)
+                     :updated_on (Instant/now)}
+                    {:id          1
+                     :title       "Dress title"
+                     :description "Dress description"
+                     :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :price       "32.3"
+                     :created_on  (Instant/now)
+                     :updated_on  (Instant/now)}
+                    {:id          1
+                     :title       "Dress title"
+                     :description "Dress description"
+                     :size        22
+                     :price       "32.3"
+                     :created_on  (Instant/now)
+                     :updated_on  (Instant/now)}
+                    {:id          1
+                     :title       "Dress title"
+                     :description "Dress description"
+                     :size        22
+                     :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :created_on  (Instant/now)
+                     :updated_on  (Instant/now)}
+                    {:id          1
+                     :title       "Dress title"
+                     :description "Dress description"
+                     :size        22
+                     :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :price       "32.3"
+                     :updated_on  (Instant/now)}
+                    {:id          1
+                     :title       "Dress title"
+                     :description "Dress description"
+                     :size        22
+                     :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                     :price       "32.3"
+                     :created_on  (Instant/now)}]]
+    (testing "::dress-response is invalid"
+      (is (not (s/valid? ::sut/dress-response response))))))
+
+(deftest dresses-response-test
+  (testing "::dresses-response is valid"
+    (is (s/valid? ::sut/dresses-response
+                  [{:id          1
+                    :title       "Dress title"
+                    :description "Dress description"
+                    :size        22
+                    :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                    :price       "32.3"
+                    :created_on  (Instant/now)
+                    :updated_on  (Instant/now)}
+                   {:id          2
+                    :title       "Dress title 2"
+                    :description "Dress description 2"
+                    :size        22
+                    :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                    :price       "32.3"
+                    :created_on  (Instant/now)
+                    :updated_on  (Instant/now)}])))
+
+  (testing "::dresses-response is invalid"
+    (let [now (Instant/now)]
+      (is (not (s/valid? ::sut/dresses-response
+                         [{:id          1
+                           :title       "Dress title"
+                           :description "Dress description"
+                           :size        22
+                           :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                           :price       "32.3"
+                           :created_on  now
+                           :updated_on  now}
+                          {:id          1
+                           :title       "Dress title"
+                           :description "Dress description"
+                           :size        22
+                           :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
+                           :price       "32.3"
+                           :created_on  now
+                           :updated_on  now}]))))))

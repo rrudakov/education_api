@@ -131,3 +131,7 @@
    :articles/is_main_featured false
    :articles/created_on       (Instant/now)
    :articles/updated_on       (Instant/now)})
+
+(def application-json
+  "Content-Type header value for mock requests."
+  "application/json")
