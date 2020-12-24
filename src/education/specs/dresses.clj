@@ -37,7 +37,14 @@
   (s/keys :req-un [::id]))
 
 (s/def ::dress-response
-  (s/keys :req-un [::id ::title ::description ::size ::price ::created_on ::updated_on]))
+  (s/keys :req-un [::id
+                   ::title
+                   ::description
+                   ::size
+                   ::pictures
+                   ::price
+                   ::created_on
+                   ::updated_on]))
 
 (s/def ::dresses-response
   (s/coll-of ::dress-response :kind vector? :distinct true :into []))
