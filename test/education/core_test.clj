@@ -1,14 +1,12 @@
 (ns education.core-test
   (:require [clojure.test :refer [deftest is testing]]
-            [com.stuartsierra.component :as component]
             [education.core :as sut]
-            [education.system :refer [api-system]]
+            [education.system :refer [system-config]]
+            [integrant.core :as ig]
             [spy.core :as spy]))
 
 (deftest main-test
   (testing "Test application start system with prod profile"
-    (with-redefs [component/start (spy/stub)
-                  api-system (spy/stub)]
+    (with-redefs [ig/init (spy/spy)]
       (sut/-main)
-      (is (spy/called-once? component/start))
-      (is (spy/called-once-with? api-system :prod)))))
+      (is (spy/called-once-with? ig/init (system-config :prod))))))

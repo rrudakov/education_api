@@ -12,7 +12,7 @@
 (deftest roles-test
   (testing "Test GET /roles with admin role"
     (with-redefs [rolesdb/get-all-roles (spy/stub db-all-roles)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :get "/api/roles")
                               (mock/header :authorization (test-auth-token #{:admin}))))
             body     (parse-body (:body response))]
@@ -24,7 +24,7 @@
 
   (testing "Test GET /roles with moderator role"
     (with-redefs [rolesdb/get-all-roles (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :get "/api/roles")
                               (mock/header :authorization (test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
@@ -34,7 +34,7 @@
 
   (testing "Test GET /roles without authorization token"
     (with-redefs [rolesdb/get-all-roles (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :get "/api/roles")))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))

@@ -13,12 +13,12 @@
 (def ^:private test-img-name
   "Image name to be uploaded.
 
-Must be real image name from `test-resources` folder."
+  Must be real image name from `test-resources` folder."
   "1.png")
 
 (deftest uuid-test
   (testing "Test `uuid` function returns unique string every time"
-    (let [first-uuid (sut/uuid)
+    (let [first-uuid  (sut/uuid)
           second-uuid (sut/uuid)]
       (is (not= first-uuid second-uuid)))))
 
@@ -37,7 +37,7 @@ Must be real image name from `test-resources` folder."
   (testing "Test POST /upload successfully"
     (with-redefs [sut/write-file (spy/spy)
                   sut/uuid       (spy/stub test-uuid)]
-      (let [app        (test-app/api-routes-with-auth (spy/spy))
+      (let [app        (test-app/api-routes-with-auth)
             response   (app (-> (mock/request :post "/api/upload")
                                 (merge (mp/build {:file (io/file (io/resource test-img-name))}))))
             body       (test-app/parse-body (:body response))
@@ -48,7 +48,7 @@ Must be real image name from `test-resources` folder."
 
   (testing "Test POST /upload with invalid request"
     (with-redefs [sut/write-file (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (-> (mock/request :post "/api/upload")
                          (merge (mp/build {:wrong (io/file (io/resource test-img-name))}))
                          (app))

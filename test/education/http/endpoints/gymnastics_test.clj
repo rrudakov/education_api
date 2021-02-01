@@ -1,14 +1,13 @@
 (ns education.http.endpoints.gymnastics-test
-  (:require [education.http.endpoints.gymnastics :as sut]
-            [clojure.test :refer [testing deftest is]]
+  (:require [cheshire.core :as cheshire]
+            [clojure.string :as str]
+            [clojure.test :refer [deftest is testing]]
             [education.database.gymnastics :as gymnastics-db]
-            [spy.core :as spy]
-            [education.http.endpoints.test-app :as test-app]
-            [ring.mock.request :as mock]
-            [education.test-data :as td]
-            [cheshire.core :as cheshire]
             [education.http.constants :as const]
-            [clojure.string :as str])
+            [education.http.endpoints.test-app :as test-app]
+            [education.test-data :as td]
+            [ring.mock.request :as mock]
+            [spy.core :as spy])
   (:import java.time.Instant))
 
 (def ^:private test-gymnastic-id
@@ -29,7 +28,7 @@
     (testing "Test POST /gymnastics authorized with admin role and valid request body"
       (with-redefs [gymnastics-db/add-gymnastic (spy/stub test-gymnastic-id)]
         (let [role     :admin
-              app      (test-app/api-routes-with-auth (spy/spy))
+              app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/gymnastics")
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -42,7 +41,7 @@
   (doseq [role [:guest :moderator]]
     (testing (str "Test POST /gymnastics authorized with " role " role and valid request body")
       (with-redefs [gymnastics-db/add-gymnastic (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/gymnastics")
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -54,7 +53,7 @@
 
   (testing "Test POST /gymnastics without authorization token"
     (with-redefs [gymnastics-db/add-gymnastic (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/gymnastics")
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string create-gymnastic-request))))
@@ -75,7 +74,7 @@
                         (assoc create-gymnastic-request :picture "invalidUrl")]]
     (testing "Test POST /gymnastics authorized with invalid request body"
       (with-redefs [gymnastics-db/add-gymnastic (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/gymnastics")
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -100,7 +99,7 @@
     (testing "Test PATCH /gymnastics/:gymnastic-id authorized with admin role and valid request body"
       (with-redefs [gymnastics-db/update-gymnastic (spy/stub 1)]
         (let [role     :admin
-              app      (test-app/api-routes-with-auth (spy/spy))
+              app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
                                 (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -112,7 +111,7 @@
   (doseq [role [:guest :moderator]]
     (testing (str "Test PATCH /gymnastics/:gymnastic-id authorized with " role " role and valie request body")
       (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
                                 (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -124,7 +123,7 @@
 
   (testing "Test PATCH /gymnastics/gymnastic-id without authorization token"
     (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
                               (mock/content-type td/application-json)
                               (mock/body (cheshire/generate-string update-gymnastic-request))))
@@ -135,7 +134,7 @@
 
   (testing "Test PATCH /gymnastics/:gymnastic-id with invalid `gymnastic-id`"
     (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/gymnastics/invalid")
                               (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -147,7 +146,7 @@
 
   (testing "Test PATCH /gymnastics/:gymnastic-id with non-existing `gymnastic-id`"
     (with-redefs [gymnastics-db/update-gymnastic (spy/stub 0)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
                               (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -159,7 +158,7 @@
 
   (testing "Test PATCH /gymnastics/:gymnastic-id unexpected response from database"
     (with-redefs [gymnastics-db/update-gymnastic (spy/stub 2)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
                               (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -181,7 +180,7 @@
                         (assoc update-gymnastic-request :picture 123)]]
     (testing "Test PATCH /gymnastics/:gymnastic-id with invalid request body"
       (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
                                 (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -222,7 +221,7 @@
 (deftest get-gymnastic-by-id-test
   (testing "Test GET /gymnastics/:gymnastic-id with valid `gymnastic-id`"
     (with-redefs [gymnastics-db/get-gymnastic-by-id (spy/stub gymnastic-from-db)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get (str "/api/gymnastics/" test-gymnastic-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
@@ -231,7 +230,7 @@
 
   (testing "Test GET /gymnastics/:gymnastic-id with non-existing `gymnastic-id`"
     (with-redefs [gymnastics-db/get-gymnastic-by-id (spy/stub nil)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get (str "/api/gymnastics/" test-gymnastic-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
@@ -240,7 +239,7 @@
 
   (testing "Test GET /gymnastics/:gymnastic-id with invalid `gymnastic-id`"
     (with-redefs [gymnastics-db/get-gymnastic-by-id (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/gymnastics/invalid"))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
@@ -271,7 +270,7 @@
   (testing "Test GET /gymnastics/ with valid `subtype_id` parameter"
     (with-redefs [gymnastics-db/get-all-gymnastics (spy/stub [gymnastic-from-db gymnastic-from-db-extra])]
       (let [subtype-id 4
-            app        (test-app/api-routes-with-auth (spy/spy))
+            app        (test-app/api-routes-with-auth)
             response   (app (mock/request :get (str "/api/gymnastics?subtype_id=" subtype-id)))
             body       (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
@@ -283,7 +282,7 @@
       (let [subtype-id   3
             offset-param 20
             limit-param  20
-            app          (test-app/api-routes-with-auth (spy/spy))
+            app          (test-app/api-routes-with-auth)
             response     (app (mock/request :get (str "/api/gymnastics?subtype_id=" subtype-id
                                                       "&limit=" limit-param
                                                       "&offset=" offset-param)))
@@ -298,7 +297,7 @@
 
   (testing "Test GET /gymnastics/ without `subtype_id`"
     (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/gymnastics"))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
@@ -307,7 +306,7 @@
 
   (testing "Test GET /gymnastics with invalid `subtype_id`"
     (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/gymnastics?subtype_id=invalid"))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
@@ -318,7 +317,7 @@
                "/api/gymnastics?subtype_id=3&offset=invalid"]]
     (testing "Test GET /gymnastics with invalid `offset` and `limit` parameters"
       (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (mock/request :get url))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
@@ -328,7 +327,7 @@
 (deftest delete-gymnastic-by-id-test
   (testing "Test DELETE /gymnastics/:gymnastic-id authorized with :admin role and valid `gymnastic-id`"
     (with-redefs [gymnastics-db/delete-gymnastic (spy/stub 1)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/gymnastics/" test-gymnastic-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))]
         (is (= 204 (:status response)))
@@ -338,7 +337,7 @@
   (doseq [role [:moderator :guest]]
     (testing (str "Test DELETE /gymnastics/:gymnastic-id with " role " role and valid `gymnastic-id`")
       (with-redefs [gymnastics-db/delete-gymnastic (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :delete (str "/api/gymnastics/" test-gymnastic-id))
                                 (mock/header :authorization (td/test-auth-token #{role}))))
               body     (test-app/parse-body (:body response))]
@@ -348,7 +347,7 @@
 
   (testing "Test DELETE /gymnastics/:gymnastic-id without authorization header"
     (with-redefs [gymnastics-db/delete-gymnastic (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :delete (str "/api/gymnastics/" test-gymnastic-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -357,7 +356,7 @@
 
   (testing "Test DELETE /gymnastics/:gymnastic-id with non-existing `gymnastic-id`"
     (with-redefs [gymnastics-db/delete-gymnastic (spy/stub 0)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/gymnastics/" test-gymnastic-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
@@ -367,7 +366,7 @@
 
   (testing "Test DELETE /gymnastics/:gymnastic-id with invalid `gymnastic-id`"
     (with-redefs [gymnastics-db/delete-gymnastic (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete "/api/gymnastics/invalid")
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
@@ -377,7 +376,7 @@
 
   (testing "Test DELETE /gymnastics/:gymnastic-id unexpected result from database"
     (with-redefs [gymnastics-db/delete-gymnastic (spy/stub 2)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/gymnastics/" test-gymnastic-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]

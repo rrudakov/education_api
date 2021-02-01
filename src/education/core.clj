@@ -1,7 +1,7 @@
 (ns education.core
   (:gen-class)
-  (:require [com.stuartsierra.component :as component]
-            [education.system :refer [api-system]]
+  (:require [education.system :refer [system-config]]
+            [integrant.core :as ig]
             [next.jdbc.result-set :as rs])
   (:import java.sql.Array))
 
@@ -19,4 +19,4 @@
 (defn -main
   "Run HTTP server."
   [& args]
-  (component/start (api-system :prod)))
+  (ig/init (system-config :prod)))

@@ -40,7 +40,7 @@
 
 (defn api-routes
   "Define top-level API routes."
-  [{:keys [datasource]} config]
+  [datasource config]
   (api
    {:swagger
     {:ui   "/swagger"

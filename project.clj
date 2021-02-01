@@ -1,4 +1,4 @@
-(defproject education-api "0.1.0-SNAPSHOT"
+(defproject education-api "1.0.1-SNAPSHOT"
   :description "Back end for education web application"
   :url "http://educationapp-api.herokuapp.com/swagger"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -20,9 +20,8 @@
                  [org.postgresql/postgresql "42.2.14"]
                  [com.mchange/c3p0 "0.9.5.5"]
                  [honeysql "0.9.10"]
-                 ;; Component framework
-                 [com.stuartsierra/dependency "1.0.0"]
-                 [com.stuartsierra/component "1.0.0"]
+                 ;; Integrant framework
+                 [integrant "0.8.0"]
                  ;; Security
                  [buddy/buddy-hashers "1.4.0"]
                  [buddy/buddy-sign "3.1.0"]
@@ -30,8 +29,8 @@
                  ;; JSON parsing
                  [com.fasterxml.jackson.core/jackson-core "2.11.1"]]
   :repl-options {:init-ns education.core}
-  :aliases {"migrate"  ["run" "-m" "education.database.component/migrate" "--"]
-            "rollback" ["run" "-m" "education.database.component/rollback" "--"]}
+  :aliases {"migrate"  ["run" "-m" "education.database.migrations/migrate" "--"]
+            "rollback" ["run" "-m" "education.database.migrations/rollback" "--"]}
   :uberjar-name "education-api-standalone.jar"
   :min-lein-version "2.0.0"
   :profiles {:dev {:resource-paths ["test-resources"]
