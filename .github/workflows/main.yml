@@ -33,5 +33,5 @@ jobs:
             git checkout master
             git reset --hard HEAD
             git pull
-            lein migrate prod
-            lein uberjar
+            /home/site/.local/bin/lein migrate prod
+            /home/site/.local/bin/lein uberjar
