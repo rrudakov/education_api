@@ -30,6 +30,7 @@ jobs:
           key: ${{ secrets.KEY }}
           script: |
             cd tmpclj/education_api/
+            git checkout master
             git reset --hard HEAD
             git pull
             lein migrate prod
