@@ -29,5 +29,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            whoami
-            ls -al
+            cd tmpclj/
+            git reset --hard HEAD
+            git pull
+            lein migrate prod
+            lein uberjar
