@@ -1,64 +1,55 @@
-(ns education.http.endpoints.lessons
+(ns education.http.endpoints.presentations
   (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
-            [education.database.lessons :as lessons-db]
+            [education.database.presentations :as presentations-db]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
             [education.specs.common :as spec]
             [education.utils.maps :refer [unqualify-map]]
             [ring.util.http-response :as status]))
 
-;; Helper functions
-(defn- db->response
-  "Convert database query result to response."
-  [db-lesson]
-  (update (unqualify-map db-lesson) :price (partial format "%.2f")))
-
 ;; Handlers
-(defn- create-lesson-handler
-  "Create new lesson handler."
-  [db lesson]
-  (let [lesson-id (lessons-db/add-lesson db lesson)]
-    (status/created (str "/lessons/" lesson-id) {:id lesson-id})))
+(defn- create-presentation-handler
+  [db presentation]
+  (let [presentation-id (presentations-db/add-presentation db presentation)]
+    (status/created (str "/presentations/" presentation-id) {:id presentation-id})))
 
-(defn- update-lesson-handler
-  "Update existing lesson handler."
-  [db lesson-id lesson]
-  (case (lessons-db/update-lesson db lesson-id lesson)
+(defn- update-presesntation-handler
+  [db presentation-id presentation]
+  (case (presentations-db/update-presentation db presentation-id presentation)
     1 (status/no-content)
     0 (status/not-found {:message const/not-found-error-message})
     (status/internal-server-error {:message const/server-error-message})))
 
-(defn- get-lesson-by-id-handler
-  "Get lesson by `lesson-id` handler."
-  [db lesson-id]
-  (if-let [lesson (lessons-db/get-lesson-by-id db lesson-id)]
-    (status/ok (db->response lesson))
+(defn- get-presentation-by-id-handler
+  [db presentation-id]
+  (if-let [presentation (presentations-db/get-presentation-by-id db presentation-id)]
+    (status/ok (unqualify-map presentation))
     (status/not-found {:message const/not-found-error-message})))
 
-(defn- get-all-lessons-handler
-  "Get list of lessons with optional `offset` and `limit` handler."
+(defn- get-all-presentations-handler
   [db limit offset]
-  (status/ok (mapv db->response (lessons-db/get-all-lessons db :limit limit :offset offset))))
+  (->> (presentations-db/get-all-presentations db :limit limit :offset offset)
+       (mapv unqualify-map)
+       (status/ok)))
 
-(defn- delete-lesson-by-id-handler
-  "Delete lesson by `lesson-id` handler."
-  [db lesson-id]
-  (case (lessons-db/delete-lesson db lesson-id)
+(defn- delete-presentation-by-id-handler
+  [db presentation-id]
+  (case (presentations-db/delete-presentation db presentation-id)
     1 (status/no-content)
     0 (status/not-found {:message const/not-found-error-message})
     (status/internal-server-error {:message const/server-error-message})))
 
 ;; Define routes
-(defn lessons-routes
-  "Define routes for lessons endpoint."
+(defn presentations-routes
+  "Define routes for presentations API."
   [db]
-  (context "/lessons" []
-    :tags ["lessons"]
+  (context "/presentations" []
+    :tags ["presentations"]
     (POST "/" []
       :middleware [[require-roles #{:admin}]]
-      :body [lesson ::spec/lesson-create-request]
-      :summary "Create new lesson"
-      :responses {201 {:description "Lesson created successfully"
+      :body [presentation ::spec/presentation-create-request]
+      :summary "Create new presentation"
+      :responses {201 {:description "Presentation created successfully"
                        :schema      ::spec/create-response}
                   400 {:description const/bad-request-error-message
                        :schema      ::spec/error-response}
@@ -66,13 +57,13 @@
                        :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
                        :schema      ::spec/error-response}}
-      (create-lesson-handler db lesson))
-    (PATCH "/:lesson-id" []
+      (create-presentation-handler db presentation))
+    (PATCH "/:presentation-id" []
       :middleware [[require-roles #{:admin}]]
-      :body [lesson ::spec/lesson-update-request]
-      :path-params [lesson-id :- ::spec/id]
-      :summary "Update lesson"
-      :description "Update existing lesson by `lesson-id`"
+      :body [presentation ::spec/presentation-update-request]
+      :path-params [presentation-id :- ::spec/id]
+      :summary "Update presentation entry"
+      :description "Update existing presentations by `presentation-id`"
       :responses {400 {:description const/bad-request-error-message
                        :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
@@ -81,33 +72,33 @@
                        :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
                        :schema      ::spec/error-response}}
-      (update-lesson-handler db lesson-id lesson))
-    (GET "/:lesson-id" []
-      :path-params [lesson-id :- ::spec/id]
-      :summary "Get lesson"
-      :description "Get lesson by `lesson-id`"
-      :responses {200 {:description "User was found in database"
-                       :schema      ::spec/lesson-response}
+      (update-presesntation-handler db presentation-id presentation))
+    (GET "/:presentation-id" []
+      :path-params [presentation-id :- ::spec/id]
+      :summary "Get presentation entry"
+      :description "Get presentations by `presentation-id`"
+      :responses {200 {:description "Presentations was successfully found in the database"
+                       :schema      ::spec/presentation-response}
                   400 {:description const/bad-request-error-message
                        :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
                        :schema      ::spec/error-response}}
-      (get-lesson-by-id-handler db lesson-id))
+      (get-presentation-by-id-handler db presentation-id))
     (GET "/" []
       :query-params [{limit :- ::spec/limit nil}
                      {offset :- ::spec/offset nil}]
-      :summary "Get all lessons"
-      :description "Get list of lessons with given `limit` and `offset`."
-      :responses {200 {:description "Successful"
-                       :schema      ::spec/lessons-response}
+      :summary "Get all presentations"
+      :description "Get list of presentations with given optionsl `limit` and `offset`"
+      :responses {200 {:description "Successful response"
+                       :schema      ::spec/presentations-response}
                   400 {:description const/bad-request-error-message
                        :schema      ::spec/error-response}}
-      (get-all-lessons-handler db limit offset))
-    (DELETE "/:lesson-id" []
+      (get-all-presentations-handler db limit offset))
+    (DELETE "/:presentation-id" []
       :middleware [[require-roles #{:admin}]]
-      :path-params [lesson-id :- ::spec/id]
-      :summary "Delete lesson"
-      :description "Delete lesson by `lesson-id`"
+      :path-params [presentation-id :- ::spec/id]
+      :summary "Delete presentation entry"
+      :description "Delete presentation by `presentation-id`"
       :responses {400 {:description const/bad-request-error-message
                        :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
@@ -116,4 +107,4 @@
                        :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
                        :schema      ::spec/error-response}}
-      (delete-lesson-by-id-handler db lesson-id))))
+      (delete-presentation-by-id-handler db presentation-id))))
