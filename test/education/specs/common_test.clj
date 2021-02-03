@@ -428,3 +428,5 @@
   (testing "::lessons-response is invalid"
     (is (not (s/valid? ::sut/lessons-response
                        [lesson-response lesson-response])))))
+
+;; TODO: Add tests for presentations

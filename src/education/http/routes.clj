@@ -9,13 +9,15 @@
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
             [education.http.endpoints.users :refer [users-routes]]
-            [ring.util.http-response :as status])
+            [ring.util.http-response :as status]
+            [taoensso.timbre :refer [error]])
   (:import java.sql.SQLException))
 
 (defn sql-exception-handler
   "Database exception mapper."
   []
   (fn [^SQLException e _ _]
+    (error e "Database exception occurred")
     (case (.getSQLState e)
       "23505" (status/conflict {:message const/conflict-error-message})
       "23503" (status/not-found {:message const/not-found-error-message})
@@ -27,6 +29,7 @@
   "Verify request body and raise error."
   []
   (fn [^Exception e _ _]
+    (error e "Invalid request")
     (status/bad-request {:message const/bad-request-error-message
                          :details (.getMessage e)})))
 
@@ -34,6 +37,7 @@
   "Return error in case of invalid response."
   []
   (fn [^Exception e _ _]
+    (error e "Invalid response")
     (status/internal-server-error
      {:message const/server-error-message
       :details (.getMessage e)})))
@@ -50,7 +54,7 @@
       :spec {}}
      :data
      {:info
-      {:version     "0.1-alpha"
+      {:version     "1.0.0"
        :title       "Education API"
        :description "REST API for education application"
        :contact

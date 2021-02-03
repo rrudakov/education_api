@@ -5,7 +5,8 @@
             [education.http.restructure :refer [require-roles]]
             [education.specs.common :as spec]
             [education.utils.maps :refer [unqualify-map]]
-            [ring.util.http-response :as status]))
+            [ring.util.http-response :as status]
+            [taoensso.timbre :refer [info]]))
 
 ;; Helper functions
 (defn- db->response
@@ -18,6 +19,7 @@
   "Create new dress handler."
   [db dress]
   (let [dress-id (dresses-db/add-dress db dress)]
+    (info "Dress with ID " dress-id " was successfully created")
     (status/created (str "/dresses/" dress-id) {:id dress-id})))
 
 (defn- update-dress-handler
@@ -38,7 +40,9 @@
 (defn- get-all-dresses-handler
   "Get list of dresses with optional `offset` and `limit` handler."
   [db limit offset]
-  (status/ok (mapv db->response (dresses-db/get-all-dresses db :limit limit :offset offset))))
+  (->> (dresses-db/get-all-dresses db :limit limit :offset offset)
+       (mapv db->response)
+       (status/ok)))
 
 (defn- delete-dress-by-id-handler
   "Delete dress by `dress-id` handler."

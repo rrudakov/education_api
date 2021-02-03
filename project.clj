@@ -26,6 +26,8 @@
                  [buddy/buddy-hashers "1.4.0"]
                  [buddy/buddy-sign "3.1.0"]
                  [buddy/buddy-auth "2.2.0"]
+                 ;; Logging
+                 [com.taoensso/timbre "5.1.1"]
                  ;; JSON parsing
                  [com.fasterxml.jackson.core/jackson-core "2.11.1"]]
   :repl-options {:init-ns education.core}
