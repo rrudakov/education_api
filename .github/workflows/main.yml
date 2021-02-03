@@ -24,10 +24,13 @@ jobs:
     steps:
       - name: SSH Remote Commands
         uses: appleboy/ssh-action@v0.1.4
+        env:
+          JDBC_DATABASE_URL: ${{ secrets.JDBC_DATABASE_URL }}
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
+          envs: JDBC_DATABASE_URL
           script: |
             cd tmpclj/education_api/
             git checkout master
