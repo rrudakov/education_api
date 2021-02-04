@@ -5,7 +5,7 @@
             [education.database.users :as usersdb]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
-            [education.specs.error :as err]
+            [education.specs.common :as spec]
             [education.specs.users :as specs]
             [ring.util.http-response :as status]))
 
@@ -88,9 +88,9 @@
      :responses {200 {:description "Success!"
                       :schema      ::specs/token-response}
                  400 {:description const/bad-request-error-message
-                      :schema      ::err/error-response}
+                      :schema      ::spec/error-response}
                  401 {:description "Invalid username or password!"
-                      :schema      ::err/error-response}}
+                      :schema      ::spec/error-response}}
      (login-handler db config credentials))
    (context "/users" []
      :tags ["users"]
@@ -101,9 +101,9 @@
        :responses {200 {:description "Successful"
                         :schema      ::specs/users-response}
                    401 {:description const/no-access-error-message
-                        :schema      ::err/error-response}
+                        :schema      ::spec/error-response}
                    403 {:description const/not-authorized-error-message
-                        :schema      ::err/error-response}}
+                        :schema      ::spec/error-response}}
        (all-users-handler db))
      (GET "/:id" []
        :middleware [[require-roles #{:moderator}]]
@@ -112,9 +112,9 @@
        :responses {200 {:description "Successful"
                         :schema      ::specs/user-response}
                    401 {:description "Access denied!"
-                        :schema      ::err/error-response}
+                        :schema      ::spec/error-response}
                    404 {:description "User not found!"
-                        :schema      ::err/error-response}}
+                        :schema      ::spec/error-response}}
        (get-user-handler db id))
      (POST "/" []
        :body [user ::specs/user-create-request]
@@ -122,9 +122,9 @@
        :responses {200 {:description "Successful"
                         :schema      ::specs/user-create-response}
                    400 {:description const/bad-request-error-message
-                        :schema      ::err/error-response}
+                        :schema      ::spec/error-response}
                    409 {:description const/conflict-error-message
-                        :schema      ::err/error-response}}
+                        :schema      ::spec/error-response}}
        (add-user-handler db user))
      (PATCH "/:id" []
        :middleware [[require-roles #{:admin}]]
@@ -133,12 +133,12 @@
        :summary "Update user"
        :description "Update user (only roles updating is supported now)"
        :responses {401 {:description const/no-access-error-message
-                        :schema      ::err/error-response}}
+                        :schema      ::spec/error-response}}
        (update-user-handler db id user))
      (DELETE "/:id" []
        :middleware [[require-roles #{:admin}]]
        :path-params [id :- ::specs/id]
        :summary "Delete user by ID"
        :responses {401 {:description const/no-access-error-message
-                        :schema      ::err/error-response}}
+                        :schema      ::spec/error-response}}
        (delete-user-handler db id)))))

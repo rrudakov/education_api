@@ -4,7 +4,7 @@
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
             [education.specs.articles :as specs]
-            [education.specs.error :as err]
+            [education.specs.common :as spec]
             [ring.util.http-response :as status]))
 
 ;; Converters
@@ -116,9 +116,9 @@
       :responses {201 {:description "Article created successfully"
                        :schema      ::specs/article-create-response}
                   401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (create-article-handler db article))
     (PATCH "/:id" []
       :middleware [[require-roles #{:guest}]]
@@ -127,7 +127,7 @@
       :summary "Update article"
       :description "Update existing article by given `article-id`"
       :responses {401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (update-article-handler db id article))
     (GET "/" []
       :query-params [{limit :- ::specs/limit 100}
@@ -136,7 +136,7 @@
       :responses {200 {:description "Successful"
                        :schema      ::specs/articles-short}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-all-articles-handler {:db db :limit limit :user-id user_id}))
     (GET "/latest" []
       :query-params [limit :- ::specs/limit]
@@ -144,7 +144,7 @@
       :responses {200 {:description "Successful"
                        :schema      ::specs/articles-full}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-latest-full-articles-handler db limit))
     (GET "/:id" []
       :path-params [id :- ::specs/id]
@@ -153,7 +153,7 @@
       :responses {200 {:description "Successful"
                        :schema      ::specs/article-full}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-article-by-id-handler db id))
     (GET "/featured/main" []
       :summary "Get the latest main featured article"
@@ -166,7 +166,7 @@
       :responses {200 {:description "Successful"
                        :schema      ::specs/articles-short}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-last-featured-articles-handler db limit))
     (DELETE "/:id" []
       :middleware [[require-roles #{:guest}]]
@@ -174,9 +174,9 @@
       :summary "Delete article"
       :description "Delete article by given `article-id`"
       :responses {400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   401 {:description const/no-access-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (delete-article-handler db id))))
