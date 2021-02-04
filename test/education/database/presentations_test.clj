@@ -53,3 +53,54 @@
         (let [result (sut/update-presentation nil update-presentation-id request)]
           (is (= (:next.jdbc/update-count update-presentation-result) result))
           (is (spy/called-once-with? sql/update! nil :presentations request {:id update-presentation-id})))))))
+
+(def ^:private get-presentation-id
+  "Test API presentation-id."
+  838)
+
+(deftest get-presentation-by-id-test
+  (testing "Test get presentation by ID with valid `presentation-id`"
+    (with-redefs [sql/get-by-id (spy/stub create-presentation-result)]
+      (let [result (sut/get-presentation-by-id nil get-presentation-id)]
+        (is (= create-presentation-result result))
+        (is (spy/called-once-with? sql/get-by-id nil :presentations get-presentation-id))))))
+
+(def ^:private get-all-presentations-query
+  "Expected SQL query to get all presentations."
+  "SELECT * FROM presentations ORDER BY updated_on DESC LIMIT ? OFFSET ?")
+
+(deftest get-all-presentations-test
+  (testing "Test get all presentations without optional parameters"
+    (with-redefs [sql/query (spy/stub [create-presentation-result])]
+      (let [result (sut/get-all-presentations nil)]
+        (is (= [create-presentation-result] result))
+        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 0])))))
+
+  (testing "Test get all presentations with limit specified"
+    (with-redefs [sql/query (spy/stub [create-presentation-result])]
+      (let [limit  1
+            result (sut/get-all-presentations nil :limit limit)]
+        (is (= [create-presentation-result] result))
+        (is (spy/called-once-with? sql/query nil [get-all-presentations-query limit 0])))))
+
+  (testing "Test get all presentations with offset specified"
+    (with-redefs [sql/query (spy/stub [create-presentation-result])]
+      (let [offset 20
+            result (sut/get-all-presentations nil :offset offset)]
+        (is (= [create-presentation-result] result))
+        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 offset]))))))
+
+(def ^:private delete-presentation-result
+  "Stub data for delete presentation call."
+  {:next.jdbc/update-count 1})
+
+(def ^:private delete-presentation-id
+  "Test API presentation-id."
+  33)
+
+(deftest delete-presentation-test
+  (testing "Test delete presentation with valid `presentation-id`"
+    (with-redefs [sql/delete! (spy/stub delete-presentation-result)]
+      (let [result (sut/delete-presentation nil delete-presentation-id)]
+        (is (= (:next.jdbc/update-count delete-presentation-result) result))
+        (is (spy/called-once-with? sql/delete! nil :presentations {:id delete-presentation-id}))))))

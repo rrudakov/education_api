@@ -429,4 +429,63 @@
     (is (not (s/valid? ::sut/lessons-response
                        [lesson-response lesson-response])))))
 
-;; TODO: Add tests for presentations
+(def ^:private presentation-create-request
+  {:title       "My awesome presentation"
+   :url         "https://google.com/api/presentations/bla-bla-bla"
+   :description "This presentations is about bla-bla-bla"})
+
+(deftest presentation-create-request-test
+  (testing "::presentations-create-request is valid"
+    (is (s/valid? ::sut/presentation-create-request presentation-create-request)))
+
+  (doseq [request [(dissoc presentation-create-request :title)
+                   (dissoc presentation-create-request :url)
+                   (dissoc presentation-create-request :description)]]
+    (testing "::presentation-create-request is invalid"
+      (is (not (s/valid? ::sut/presentation-create-request request))))))
+
+(deftest presentations-update-request-test
+  (doseq [request [{}
+                   {:title "New title"}
+                   {:url "https://google.com/new-url"}
+                   {:description "Updated description"}]]
+    (testing "::presentation-update-request is valid"
+      (is (s/valid? ::sut/presentation-update-request request)))))
+
+(def ^:private presentation-response
+  {:id          1
+   :title       "First title"
+   :url         "https://google.com/first/presentation"
+   :description "First presentation description"
+   :created_on  (Instant/now)
+   :updated_on  (Instant/now)})
+
+(def ^:private presentation-response2
+  {:id          2
+   :title       "Second title"
+   :url         "https://google.com/second/presentation"
+   :description "Second presentation description"
+   :created_on  (Instant/now)
+   :updated_on  (Instant/now)})
+
+(deftest presentation-response-test
+  (testing "::presentation-response is valid"
+    (is (s/valid? ::sut/presentation-response presentation-response)))
+
+  (doseq [response [(dissoc presentation-response :id)
+                    (dissoc presentation-response :title)
+                    (dissoc presentation-response :url)
+                    (dissoc presentation-response :description)
+                    (dissoc presentation-response :created_on)
+                    (dissoc presentation-response :updated_on)]]
+    (is (not (s/valid? ::sut/presentation-response response)))))
+
+(deftest presentations-response-test
+  (testing "::presentations-response is valid"
+    (is (s/valid? ::sut/presentations-response
+                  [presentation-response presentation-response2])))
+
+  (doseq [response [[presentation-response presentation-response]
+                    #{presentation-response presentation-response2}]]
+    (testing "::presentations-response is invalid"
+      (is (not (s/valid? ::sut/presentations-response response))))))
