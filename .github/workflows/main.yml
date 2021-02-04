@@ -7,8 +7,6 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -38,3 +36,5 @@ jobs:
             git pull
             bash --login -c 'lein migrate prod'
             bash --login -c 'lein uberjar'
+            cp target/education-api-standalone.jar /home/site/API/education-api-standalone.jar
+            bash --login -c 'pm2 restart education-api'
