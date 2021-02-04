@@ -6,11 +6,12 @@
             [education.http.endpoints.dresses :refer [dresses-routes]]
             [education.http.endpoints.gymnastics :refer [gymnastics-routes]]
             [education.http.endpoints.lessons :refer [lessons-routes]]
+            [education.http.endpoints.presentations :refer [presentations-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
             [education.http.endpoints.users :refer [users-routes]]
             [ring.util.http-response :as status]
-            [taoensso.timbre :refer [error]])
+            [taoensso.timbre :refer [error trace]])
   (:import java.sql.SQLException))
 
 (defn sql-exception-handler
@@ -29,7 +30,8 @@
   "Verify request body and raise error."
   []
   (fn [^Exception e _ _]
-    (error e "Invalid request")
+    (trace e "Invalid request")
+    (error "Invalid request" (.getMessage e))
     (status/bad-request {:message const/bad-request-error-message
                          :details (.getMessage e)})))
 
@@ -37,7 +39,8 @@
   "Return error in case of invalid response."
   []
   (fn [^Exception e _ _]
-    (error e "Invalid response")
+    (trace e "Invalid response")
+    (error "Invalid response" (.getMessage e))
     (status/internal-server-error
      {:message const/server-error-message
       :details (.getMessage e)})))
@@ -86,4 +89,5 @@
      (lessons-routes datasource)
      (dresses-routes datasource)
      (gymnastics-routes datasource)
+     (presentations-routes datasource)
      (upload-routes config))))
