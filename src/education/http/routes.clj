@@ -69,6 +69,7 @@
              {:name "lessons" :description "Video lessons"}
              {:name "dresses" :description "Dresses rent"}
              {:name "gymnastics" :description "Different gymnastics for children"}
+             {:name "presentations" :description "Interactive presentations"}
              {:name "upload" :description "Upload media files"}]
       :securityDefinitions
       {:api_key
