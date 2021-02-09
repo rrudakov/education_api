@@ -7,9 +7,9 @@
 POST http://127.0.0.1:3000/api/users
 Content-Type: application/json
 {
-  "user_password": "123456",
-  "user_email": "rrudakov@pm.me",
-  "user_name": "rrudakov"
+  "password": "123456",
+  "email": "rrudakov@pm.me",
+  "username": "rrudakov"
 }
 #+end_src
 
@@ -23,59 +23,28 @@ Content-Type: application/json
 // Content-Type: application/json; charset=utf-8
 // Content-Length: 36
 // Server: http-kit
-// Date: Mon, 27 Apr 2020 19:25:41 GMT
-// Request duration: 0.491134s
+// Date: Wed, 03 Feb 2021 16:15:37 GMT
+// Request duration: 0.660154s
 #+END_SRC
 ** Get all users
 #+begin_src restclient
 GET http://127.0.0.1:3000/api/users
 Accept: application/json
-Authorization: Token eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjo0LCJ1c2VybmFtZSI6InJydWRha292IiwiZW1haWwiOiJycnVkYWtvZkBwbS5tZSIsInJvbGVzIjpbImFkbWluIiwiZ3Vlc3QiXSwiY3JlYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIiwidXBkYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIn0sImV4cCI6MTU4OTI5NTE4Mn0.hWEpLCD7ephjQ3SltFLcMUFYi27zO9gNZBh0n55VULR_SrBBWiYTnSnE2OJUHhDyak9OZ2Au5VuPp5KdNa7sAA
+Authorization: Token eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImVtYWlsIjoicnJ1ZGFrb2ZAcG0ubWUiLCJyb2xlcyI6WyJhZG1pbiIsImd1ZXN0Il0sInVzZXJuYW1lIjoicnJ1ZGFrb3YiLCJ1cGRhdGVkX29uIjoiMjAyMC0wNS0wN1QxNToxMzozNloiLCJjcmVhdGVkX29uIjoiMjAyMC0wNS0wN1QxNToxMzozNloiLCJpZCI6NH0sImV4cCI6MTYxMjQ1Mjc0Nn0
 #+end_src
 
 #+RESULTS:
 #+BEGIN_SRC js
-[
-  {
-    "id": 4,
-    "username": "rrudakov",
-    "email": "rrudakof@pm.me",
-    "roles": [
-      "admin",
-      "guest"
-    ],
-    "created_on": "2020-05-07T15:13:36Z",
-    "updated_on": "2020-05-07T15:13:36Z"
-  },
-  {
-    "id": 11,
-    "username": "rrudakov2",
-    "email": "rrudakov@pm.me2",
-    "roles": [
-      "admin",
-      "moderator"
-    ],
-    "created_on": "2020-05-08T20:20:15Z",
-    "updated_on": "2020-05-09T19:38:27Z"
-  },
-  {
-    "id": 13,
-    "username": "roma",
-    "email": "rrudakov@pm.me",
-    "roles": [
-      "moderator"
-    ],
-    "created_on": "2020-05-11T13:25:42Z",
-    "updated_on": "2020-05-11T13:26:48Z"
-  }
-]
+{
+  "message": "You are not authorized"
+}
 // GET http://127.0.0.1:3000/api/users
-// HTTP/1.1 200 OK
+// HTTP/1.1 401 Unauthorized
 // Content-Type: application/json; charset=utf-8
-// Content-Length: 463
+// Content-Length: 36
 // Server: http-kit
-// Date: Mon, 11 May 2020 14:56:48 GMT
-// Request duration: 0.013609s
+// Date: Wed, 03 Feb 2021 15:32:51 GMT
+// Request duration: 0.002908s
 #+END_SRC
 ** Get user by ID
 #+begin_src restclient
@@ -85,15 +54,15 @@ GET http://127.0.0.1:3000/api/users/3
 #+RESULTS:
 #+BEGIN_SRC js
 {
-  "message": "User with id 3 not found!"
+  "message": "You are not authorized"
 }
 // GET http://127.0.0.1:3000/api/users/3
-// HTTP/1.1 404 Not Found
+// HTTP/1.1 401 Unauthorized
 // Content-Type: application/json; charset=utf-8
-// Content-Length: 39
+// Content-Length: 36
 // Server: http-kit
-// Date: Mon, 27 Apr 2020 17:46:37 GMT
-// Request duration: 0.094216s
+// Date: Wed, 03 Feb 2021 15:31:29 GMT
+// Request duration: 0.103569s
 #+END_SRC
 
 * Authentication
@@ -110,91 +79,44 @@ Content-Type: application/json
 #+RESULTS:
 #+BEGIN_SRC js
 {
-  "token": "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImlkIjo0LCJ1c2VybmFtZSI6InJydWRha292IiwiZW1haWwiOiJycnVkYWtvZkBwbS5tZSIsInJvbGVzIjpbImFkbWluIiwiZ3Vlc3QiXSwiY3JlYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIiwidXBkYXRlZF9vbiI6IjIwMjAtMDUtMDdUMTU6MTM6MzZaIn0sImV4cCI6MTU4OTI5NTE4Mn0.hWEpLCD7ephjQ3SltFLcMUFYi27zO9gNZBh0n55VULR_SrBBWiYTnSnE2OJUHhDyak9OZ2Au5VuPp5KdNa7sAA"
+  "token": "eyJhbGciOiJIUzUxMiJ9.eyJ1c2VyIjp7ImVtYWlsIjoicnJ1ZGFrb2ZAcG0ubWUiLCJyb2xlcyI6WyJhZG1pbiIsImd1ZXN0Il0sInVzZXJuYW1lIjoicnJ1ZGFrb3YiLCJ1cGRhdGVkX29uIjoiMjAyMC0wNS0wN1QxNToxMzozNloiLCJjcmVhdGVkX29uIjoiMjAyMC0wNS0wN1QxNToxMzozNloiLCJpZCI6NH0sImV4cCI6MTYxMjQ1Mjc0Nn0.aPuxt4_GwAT1z_WlkuYppCjbM55IE0OYFGlnOVobmwDtwua7ftcYeVTIKyDYznHKN4Y-zwo-wmYxWGYXJaDgiQ"
 }
 // POST http://127.0.0.1:3000/api/login
 // HTTP/1.1 200 OK
 // Content-Type: application/json; charset=utf-8
 // Content-Length: 359
 // Server: http-kit
-// Date: Mon, 11 May 2020 14:53:02 GMT
-// Request duration: 0.541608s
+// Date: Wed, 03 Feb 2021 15:32:26 GMT
+// Request duration: 0.599448s
 #+END_SRC
 
 * Articles
 ** Get latest articles
 #+begin_src restclient
 GET http://127.0.0.1:3000/api/articles
-Origin: http://localhost:81
 #+end_src
 
 #+RESULTS:
 #+BEGIN_SRC js
 [
   {
-    "updated_on": "2020-05-10T19:00:08Z",
-    "title": "New article",
-    "featured_image": "https://google.photo",
-    "id": 1,
-    "user_id": 4
+    "description": "",
+    "updated_on": "2020-06-05T15:56:52Z",
+    "title": "gavasdcva",
+    "featured_image": "",
+    "id": 16,
+    "user_id": 15
   },
   {
-    "updated_on": "2020-05-10T19:32:46Z",
-    "title": "New article",
-    "featured_image": "https://google.photo",
-    "id": 3,
-    "user_id": 4
-  },
-  {
-    "updated_on": "2020-05-11T11:47:57Z",
-    "title": "Some title",
-    "featured_image": "https://featured-image",
-    "id": 5,
-    "user_id": 11
-  },
-  {
-    "updated_on": "2020-05-11T21:09:51Z",
-    "title": "Some title",
-    "featured_image": "http://jopa",
-    "id": 7,
-    "user_id": 4
-  },
-  {
-    "updated_on": "2020-05-11T21:11:30Z",
-    "title": "Some title",
-    "featured_image": "http://jopa",
-    "id": 8,
-    "user_id": 4
-  },
-  {
-    "updated_on": "2020-05-11T21:14:15Z",
+    "description": "No description...",
+    "updated_on": "2020-06-02T19:52:48Z",
     "title": "Some title",
     "featured_image": "http://jopa",
     "id": 9,
     "user_id": 4
   },
   {
-    "updated_on": "2020-05-13T16:29:39Z",
-    "title": "Some title",
-    "featured_image": "http://jopa",
-    "id": 11,
-    "user_id": 4
-  },
-  {
-    "updated_on": "2020-05-13T16:30:13Z",
-    "title": "Some title",
-    "featured_image": "http://jopa",
-    "id": 12,
-    "user_id": 4
-  },
-  {
-    "updated_on": "2020-05-13T16:31:17Z",
-    "title": "Some title",
-    "featured_image": "http://jopa",
-    "id": 13,
-    "user_id": 4
-  },
-  {
+    "description": "No description...",
     "updated_on": "2020-05-13T16:35:56Z",
     "title": "Some title",
     "featured_image": "http://jopa",
@@ -202,18 +124,86 @@ Origin: http://localhost:81
     "user_id": 4
   },
   {
-    "updated_on": "2020-05-13T16:39:41Z",
-    "title": "",
-    "featured_image": "",
-    "id": 15,
+    "description": "No description...",
+    "updated_on": "2020-05-13T16:31:17Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 13,
+    "user_id": 4
+  },
+  {
+    "description": "No description...",
+    "updated_on": "2020-05-13T16:30:13Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 12,
+    "user_id": 4
+  },
+  {
+    "description": "No description...",
+    "updated_on": "2020-05-13T16:29:39Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 11,
+    "user_id": 4
+  },
+  {
+    "description": "No description...",
+    "updated_on": "2020-05-11T21:11:30Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 8,
+    "user_id": 4
+  },
+  {
+    "description": "No description...",
+    "updated_on": "2020-05-11T21:09:51Z",
+    "title": "Some title",
+    "featured_image": "http://jopa",
+    "id": 7,
+    "user_id": 4
+  },
+  {
+    "description": "No description...",
+    "updated_on": "2020-05-11T11:47:57Z",
+    "title": "Some title",
+    "featured_image": "https://featured-image",
+    "id": 5,
+    "user_id": 11
+  },
+  {
+    "description": "No description...",
+    "updated_on": "2020-05-10T19:00:08Z",
+    "title": "New article",
+    "featured_image": "https://google.photo",
+    "id": 1,
     "user_id": 4
   }
 ]
 // GET http://127.0.0.1:3000/api/articles
 // HTTP/1.1 200 OK
 // Content-Type: application/json; charset=utf-8
-// Content-Length: 1216
+// Content-Length: 1430
 // Server: http-kit
-// Date: Wed, 13 May 2020 20:31:10 GMT
-// Request duration: 0.059589s
+// Date: Wed, 03 Feb 2021 15:33:02 GMT
+// Request duration: 0.054364s
+#+END_SRC
+
+
+* Dresses
+** Get dress by ID
+#+begin_src restclient
+GET http://127.0.0.1:3000/api/dresses/
+#+end_src
+
+#+RESULTS:
+#+BEGIN_SRC js
+[]
+// GET http://127.0.0.1:3000/api/dresses/
+// HTTP/1.1 200 OK
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 2
+// Server: http-kit
+// Date: Wed, 03 Feb 2021 16:22:06 GMT
+// Request duration: 0.048975s
 #+END_SRC

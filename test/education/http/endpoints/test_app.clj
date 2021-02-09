@@ -7,9 +7,9 @@
 
 (defn api-routes-with-auth
   "Return configured application with authorization middleware."
-  [db]
+  []
   (let [auth-backend (config/auth-backend test-config)]
-    (-> (routes/api-routes db test-config)
+    (-> (routes/api-routes nil test-config)
         (wrap-authorization auth-backend)
         (wrap-authentication auth-backend))))
 

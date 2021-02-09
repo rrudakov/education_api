@@ -3,12 +3,12 @@
             [clojure.string :as str]
             [compojure.api.sweet :refer [POST]]
             [education.config :as config]
+            [education.http.constants :as const]
+            [education.specs.common :as spec]
             [education.specs.upload :as specs]
             [education.utils.path :as path]
             [ring.middleware.multipart-params :as mw]
-            [ring.util.http-response :refer [ok]]
-            [education.http.constants :as const]
-            [education.specs.error :as err]))
+            [ring.util.http-response :refer [ok]]))
 
 (def ^:private img-prefix "img")
 
@@ -45,5 +45,5 @@
     :responses {200 {:description "Successful"
                      :schema      ::specs/upload-response}
                 400 {:description const/bad-request-error-message
-                     :schema      ::err/error-response}}
+                     :schema      ::spec/error-response}}
     (upload-file-handler file config)))

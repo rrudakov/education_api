@@ -31,9 +31,9 @@
     (testing "Test POST /dresses authorized with admin role and valid request body"
       (with-redefs [dresses-db/add-dress (spy/stub test-dress-id)]
         (let [role     :admin
-              app      (test-app/api-routes-with-auth (spy/spy))
+              app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/dresses")
-                                (mock/content-type "application/json")
+                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
                                 (mock/body (cheshire/generate-string request-body))))
               body     (test-app/parse-body (:body response))]
@@ -44,9 +44,9 @@
   (doseq [role [:guest :moderator]]
     (testing (str "Test POST /dresses authorized with " role " role and valid request body")
       (with-redefs [dresses-db/add-dress (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/dresses")
-                                (mock/content-type "application/json")
+                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
                                 (mock/body (cheshire/generate-string create-dress-request))))
               body     (test-app/parse-body (:body response))]
@@ -56,9 +56,9 @@
 
   (testing "Test POST /dresses without authorization header"
     (with-redefs [dresses-db/add-dress (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/dresses")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/body (cheshire/generate-string create-dress-request))))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -81,9 +81,9 @@
                         (assoc create-dress-request :price 35.555)]]
     (testing "Test POST /dresses authorized with invalid request body"
       (with-redefs [dresses-db/add-dress (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/dresses")
-                                (mock/content-type "application/json")
+                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
                                 (mock/body (cheshire/generate-string request-body))))
               body     (test-app/parse-body (:body response))]
@@ -112,9 +112,9 @@
     (testing "Test PATCH /dresses/:dress-id authorized with admin role and valid request body"
       (with-redefs [dresses-db/update-dress (spy/stub 1)]
         (let [role     :admin
-              app      (test-app/api-routes-with-auth (spy/spy))
+              app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                                (mock/content-type "application/json")
+                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
                                 (mock/body (cheshire/generate-string request-body))))]
           (is (= 204 (:status response)))
@@ -124,7 +124,7 @@
   (doseq [role [:guest :moderator]]
     (testing (str "Test PATCH /dresses/:dress-id authorized with " role " role and valid request body")
       (with-redefs [dresses-db/update-dress (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
                                 (mock/content-type "appliation/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -136,9 +136,9 @@
 
   (testing "Test PATCH /dresses/:dress-id without authorization token"
     (with-redefs [dresses-db/update-dress (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/body (cheshire/generate-string update-dress-request))))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -147,9 +147,9 @@
 
   (testing "Test PATCH /dresses/:dress-id with invalid `dress-id`"
     (with-redefs [dresses-db/update-dress (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/dresses/invalid")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
                               (mock/body (cheshire/generate-string update-dress-request))))
             body     (test-app/parse-body (:body response))]
@@ -159,9 +159,9 @@
 
   (testing "Test PATCH /dresses/:dress-id with non-existing `dress-id`"
     (with-redefs [dresses-db/update-dress (spy/stub 0)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
                               (mock/body (cheshire/generate-string update-dress-request))))
             body     (test-app/parse-body (:body response))]
@@ -171,9 +171,9 @@
 
   (testing "Test PATCH /dresses/:dress-id unexpected response from database"
     (with-redefs [dresses-db/update-dress (spy/stub 2)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
                               (mock/body (cheshire/generate-string update-dress-request))))
             body     (test-app/parse-body (:body response))]
@@ -192,9 +192,9 @@
                         (assoc update-dress-request :price 35.555)]]
     (testing "Test PATCH /dresses/:dress-id with invalid request body"
       (with-redefs [dresses-db/update-dress (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                                (mock/content-type "application/json")
+                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
                                 (mock/body (cheshire/generate-string request-body))))
               body     (test-app/parse-body (:body response))]
@@ -227,7 +227,7 @@
 (deftest get-dress-by-id-test
   (testing "Test GET /dresses/:dress-id with valid `dress-id`"
     (with-redefs [dresses-db/get-dress-by-id (spy/stub dress-from-db)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get (str "/api/dresses/" test-dress-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
@@ -236,7 +236,7 @@
 
   (testing "Test GET /dresses/:dress-id with non-existing `dress-id`"
     (with-redefs [dresses-db/get-dress-by-id (spy/stub nil)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get (str "/api/dresses/" test-dress-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
@@ -245,7 +245,7 @@
 
   (testing "Test get /dresses/:dress-id with invalid `dress-id`"
     (with-redefs [dresses-db/get-dress-by-id (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/dresses/invalid"))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
@@ -277,7 +277,7 @@
 (deftest get-all-dresses-test
   (testing "Test GET /dresses/ without any query parameters"
     (with-redefs [dresses-db/get-all-dresses (spy/stub [dress-from-db dress-from-db-extra])]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/dresses"))
             body     (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
@@ -286,7 +286,7 @@
 
   (testing "Test GET /dresses/ with optional `limit` and `offset` parameters"
     (with-redefs [dresses-db/get-all-dresses (spy/stub [dress-from-db dress-from-db-extra])]
-      (let [app          (test-app/api-routes-with-auth (spy/spy))
+      (let [app          (test-app/api-routes-with-auth)
             limit-param  99
             offset-param 20
             response     (app (mock/request :get (str "/api/dresses?limit=" limit-param "&offset=" offset-param)))
@@ -299,7 +299,7 @@
                "/api/dresses?offset=invalid"]]
     (testing "Test GET /dresses/ with invalid query parameters"
       (with-redefs [dresses-db/get-all-dresses (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (mock/request :get url))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
@@ -309,7 +309,7 @@
 (deftest delete-dress-by-id-test
   (testing "Test DELETE /dresses/:dress-id authorized with :admin role and valid `dress-id`"
     (with-redefs [dresses-db/delete-dress (spy/stub 1)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))]
         (is (= 204 (:status response)))
@@ -319,7 +319,7 @@
   (doseq [role [:moderator :guest]]
     (testing (str "Test DELETE /dresses/:dress-id authorized with " role " role and valid `dress-id`")
       (with-redefs [dresses-db/delete-dress (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
                                 (mock/header :authorization (td/test-auth-token #{role}))))
               body     (test-app/parse-body (:body response))]
@@ -329,7 +329,7 @@
 
   (testing "Test DELETE /dresses/:dress-id without authorization header"
     (with-redefs [dresses-db/delete-dress (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :delete (str "/api/dresses/" test-dress-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -338,7 +338,7 @@
 
   (testing "Test DELETE /dresses/:dress-id for non-existing `dress-id`"
     (with-redefs [dresses-db/delete-dress (spy/stub 0)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
@@ -348,7 +348,7 @@
 
   (testing "Test DELETE /dresses/:dress-id with invalid `dress-id`"
     (with-redefs [dresses-db/delete-dress (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete "/api/dresses/invalid")
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
@@ -358,7 +358,7 @@
 
   (testing "Test DELETE /dresses/:dress-id unexpected result from database"
     (with-redefs [dresses-db/delete-dress (spy/stub 2)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/dresses/" test-dress-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]

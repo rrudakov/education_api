@@ -34,7 +34,7 @@
   (testing "Test GET /users authorized with moderator role"
     (with-redefs [usersdb/get-all-users (spy/stub [(assoc td/db-test-user2 :users/roles td/user2-roles)
                                                    (assoc td/db-test-user1 :users/roles td/user1-roles)])]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :get "/api/users")
                               (mock/header :authorization (td/test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
@@ -44,7 +44,7 @@
 
   (testing "Test GET /users without authorization token"
     (with-redefs [usersdb/get-all-users (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (mock/request :get "/api/users"))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -53,7 +53,7 @@
 
   (testing "Test GET /users with guest role"
     (with-redefs [usersdb/get-all-users (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :get "/api/users")
                               (mock/header :authorization (td/test-auth-token #{:guest}))))
             body     (parse-body (:body response))]
@@ -65,7 +65,7 @@
   (testing "Test GET /users/:id authorized with moderator role"
     (with-redefs [usersdb/get-user (spy/stub (assoc td/db-test-user1 :users/roles td/user1-roles))]
       (let [user-id  (:users/id td/db-test-user1)
-            app      (api-routes-with-auth (spy/spy))
+            app      (api-routes-with-auth)
             response (app (-> (mock/request :get (str "/api/users/" user-id))
                               (mock/header :authorization (td/test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
@@ -76,7 +76,7 @@
   (testing "Test GET /users/:id authorized with moderator role (no user in db)"
     (with-redefs [usersdb/get-user (spy/stub nil)]
       (let [user-id  43
-            app      (api-routes-with-auth (spy/spy))
+            app      (api-routes-with-auth)
             response (app (-> (mock/request :get (str "/api/users/" user-id))
                               (mock/header :authorization (td/test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
@@ -86,7 +86,7 @@
 
   (testing "Test GET /users/:id without authorization token"
     (with-redefs [usersdb/get-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (mock/request :get "/api/users/55"))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -95,7 +95,7 @@
 
   (testing "Test GET /users/:id with guest role"
     (with-redefs [usersdb/get-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :get "/api/users/53")
                               (mock/header :authorization (td/test-auth-token #{:guest}))))
             body     (parse-body (:body response))]
@@ -105,7 +105,7 @@
 
   (testing "Test GET /users/:id with invalid id"
     (with-redefs [usersdb/get-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :get "/api/users/invalid")
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (parse-body (:body response))]
@@ -118,7 +118,7 @@
   (testing "Test POST /users with valid request body"
     (let [user-id 777]
       (with-redefs [usersdb/add-user (spy/stub user-id)]
-        (let [app      (api-routes-with-auth (spy/spy))
+        (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :post "/api/users")
                                 (mock/content-type "application/json")
                                 (mock/body (cheshire/generate-string td/add-user1-request))))
@@ -130,7 +130,7 @@
 
   (testing "Test POST /users conflict logins"
     (with-redefs [usersdb/add-user (spy/mock (fn [_ _] (throw (SQLException. "Conflict" "23505"))))]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/users")
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string td/add-user1-request))))
@@ -143,7 +143,7 @@
     (with-redefs [usersdb/add-user (spy/spy)]
       (doseq [req-body (->> [:username :email :password]
                             (map #(cheshire/generate-string (dissoc td/add-user1-request %))))]
-        (let [app      (api-routes-with-auth (spy/spy))
+        (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :post "/api/users")
                                 (mock/content-type "application/json")
                                 (mock/body req-body)))
@@ -157,7 +157,7 @@
   (testing "Test PATCH /users/:id with valid request body and admin role"
     (let [user-id 6766]
       (with-redefs [usersdb/update-user (spy/stub 0)]
-        (let [app      (api-routes-with-auth (spy/spy))
+        (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/users/" user-id))
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -169,7 +169,7 @@
 
   (testing "Test PATCH /users/:id with valid request body and moderator role"
     (with-redefs [usersdb/update-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/users/342")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:moderator}))
@@ -181,7 +181,7 @@
 
   (testing "Test PATCH /users/:id without authorization token"
     (with-redefs [usersdb/update-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/users/342")
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string td/update-user1-request))))
@@ -192,7 +192,7 @@
 
   (testing "Test PATCH /users/:id with invalid user-id"
     (with-redefs [usersdb/update-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/users/invalid")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -207,7 +207,7 @@
     (with-redefs [usersdb/update-user (spy/spy)]
       (doseq [req-body [{:roles ["god" "superhero"]}
                         {:roles []}]]
-        (let [app      (api-routes-with-auth (spy/spy))
+        (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :patch "/api/users/invalid")
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -222,7 +222,7 @@
   (testing "Test DELETE /users/:id with valid user-id and admin role"
     (let [user-id 666]
       (with-redefs [usersdb/delete-user (spy/stub 0)]
-        (let [app      (api-routes-with-auth (spy/spy))
+        (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :delete (str "/api/users/" user-id))
                                 (mock/header :authorization (td/test-auth-token #{:admin}))))
               body     (:body response)]
@@ -232,7 +232,7 @@
 
   (testing "Test DELETE /users/:id with valid user-id and moderator role"
     (with-redefs [usersdb/delete-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :delete "/api/users/1")
                               (mock/header :authorization (td/test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
@@ -242,7 +242,7 @@
 
   (testing "Test DELETE /users/:id without authorization token"
     (with-redefs [usersdb/delete-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :delete "/api/users/43")))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -251,7 +251,7 @@
 
   (testing "Test DELETE /users/:id with invalid user-id"
     (with-redefs [usersdb/delete-user (spy/spy)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :delete "/api/users/invalid")
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (parse-body (:body response))]
@@ -263,7 +263,7 @@
 (deftest login-test
   (testing "Test POST /login with valid credentials"
     (with-redefs [usersdb/auth-user (spy/stub td/db-user-auth-successful)]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/login")
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string td/auth-user1-request))))
@@ -277,7 +277,7 @@
 
   (testing "Test POST /login bad credentials"
     (with-redefs [usersdb/auth-user (spy/stub [false {:message const/invalid-credentials-error-message}])]
-      (let [app      (api-routes-with-auth (spy/spy))
+      (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/login")
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string td/auth-user1-request))))

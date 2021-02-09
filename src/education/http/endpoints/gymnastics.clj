@@ -1,12 +1,11 @@
 (ns education.http.endpoints.gymnastics
-  (:require [compojure.api.sweet :refer [context POST GET PATCH DELETE]]
+  (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.database.gymnastics :as gymnastics-db]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
-            [education.specs.gymnastics :as specs]
+            [education.specs.common :as spec]
             [education.utils.maps :refer [unqualify-map]]
-            [ring.util.http-response :as status]
-            [education.specs.error :as err]))
+            [ring.util.http-response :as status]))
 
 ;; Handlers
 (defn- create-gymnastic-handler
@@ -48,65 +47,65 @@
     :tags ["gymnastics"]
     (POST "/" []
       :middleware [[require-roles #{:admin}]]
-      :body [gymnastic ::specs/gymnastic-create-request]
+      :body [gymnastic ::spec/gymnastic-create-request]
       :summary "Create new gymnastic"
       :responses {201 {:description "Gymnastic created successfully"
-                       :schema      ::specs/gymnastic-create-response}
+                       :schema      ::spec/create-response}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (create-gymnastic-handler db gymnastic))
     (PATCH "/:gymnastic-id" []
       :middleware [[require-roles #{:admin}]]
-      :body [gymnastic ::specs/gymnastic-update-request]
-      :path-params [gymnastic-id :- ::specs/id]
+      :body [gymnastic ::spec/gymnastic-update-request]
+      :path-params [gymnastic-id :- ::spec/id]
       :summary "Update gymnastic entry"
       :description "Update existing gymnastic by `gymnastic-id`"
       :responses {400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (update-gymnastic-handler db gymnastic-id gymnastic))
     (GET "/:gymnastic-id" []
-      :path-params [gymnastic-id :- ::specs/id]
+      :path-params [gymnastic-id :- ::spec/id]
       :summary "Get gymnastic entry"
       :description "Get gymnastic by `gymnastic-id`"
       :responses {200 {:description "Gymnastic was successfully found in the database"
-                       :schema      ::specs/gymnastic-response}
+                       :schema      ::spec/gymnastic-response}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-gymnastic-by-id-handler db gymnastic-id))
     (GET "/" []
-      :query-params [subtype_id :- ::specs/subtype_id
-                     {limit :- ::specs/limit nil}
-                     {offset :- ::specs/offset nil}]
+      :query-params [subtype_id :- ::spec/subtype_id
+                     {limit :- ::spec/limit nil}
+                     {offset :- ::spec/offset nil}]
       :summary "Get all gymnastics"
       :description "Get list of gymnastics with given optional `limit` and `offset`"
       :responses {200 {:description "Successful response"
-                       :schema      ::specs/gymnastics-response}
+                       :schema      ::spec/gymnastics-response}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-all-gymnastics-handler db subtype_id limit offset))
     (DELETE "/:gymnastic-id" []
       :middleware [[require-roles #{:admin}]]
-      :path-params [gymnastic-id :- ::specs/id]
+      :path-params [gymnastic-id :- ::spec/id]
       :summary "Delete gymnastic entry"
       :description "Delete gymnastic entry by `gymnastic-id`"
       :responses {400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (delete-gymnastic-by-id-handler db gymnastic-id))))

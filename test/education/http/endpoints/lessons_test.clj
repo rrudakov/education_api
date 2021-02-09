@@ -34,7 +34,7 @@
     (testing "Test POST /lessons authorized with admin role and valid request body"
       (with-redefs [lessons-db/add-lesson (spy/stub test-lesson-id)]
         (let [role     :admin
-              app      (test-app/api-routes-with-auth (spy/spy))
+              app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/lessons")
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -47,7 +47,7 @@
   (doseq [role [:guest :moderator]]
     (testing (str "Test POST /lessons authorized with " role " role and valid request body")
       (with-redefs [lessons-db/add-lesson (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/lessons")
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -59,7 +59,7 @@
 
   (testing "Test POST /lessons without authorization header"
     (with-redefs [lessons-db/add-lesson (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string create-lesson-request))))
@@ -82,7 +82,7 @@
                         (assoc create-lesson-request :price "-234.23")]]
     (testing "Test POST /lessons authorized with invalid request body"
       (with-redefs [lessons-db/add-lesson (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/lessons")
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -94,7 +94,7 @@
 
   (testing "Test POST /lessons authorized with valid body, database conflict error"
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Conflict" "23505"))))]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -106,7 +106,7 @@
 
   (testing "Test POST /lessons authorized with valid body, database not found error"
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Not found" "23503"))))]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -118,7 +118,7 @@
 
   (testing "Test POST /lessons authorized with valid body, database bad query error"
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Bad query" "23502"))))]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -130,7 +130,7 @@
 
   (testing "Test POST /lessons authorized with valid body, database unexpected error"
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Shit happens" "987987987"))))]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -142,7 +142,7 @@
 
   (testing "Test POST /lessons authorized with valid body, verify response validation"
     (with-redefs [sut/create-lesson-handler (spy/stub (status/created "/lessons/invalid" {:lessonId "invalid"}))]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -171,7 +171,7 @@
     (testing "Test PATCH /lessons/:lesson-id authorized with admin role and valid request body"
       (with-redefs [lessons-db/update-lesson (spy/stub 1)]
         (let [role     :admin
-              app      (test-app/api-routes-with-auth (spy/spy))
+              app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -183,7 +183,7 @@
   (doseq [role [:guest :moderator]]
     (testing (str "Test PATCH /lessons/:lesson-id authorized with " role " role and valid request body")
       (with-redefs [lessons-db/update-lesson (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
@@ -195,7 +195,7 @@
 
   (testing "Test PATCH /lessons/:lesson-id without authorization header"
     (with-redefs [lessons-db/update-lesson (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
                               (mock/content-type "application/json")
                               (mock/body (cheshire/generate-string update-lesson-request))))
@@ -206,7 +206,7 @@
 
   (testing "Test PATCH /lessons/:lesson-id with invalid `lesson-id`"
     (with-redefs [lessons-db/update-lesson (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/lessons/invalid")
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -218,7 +218,7 @@
 
   (testing "Test PATCH /lessons/:lesson-id with non-existing `lesson-id`"
     (with-redefs [lessons-db/update-lesson (spy/stub 0)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -230,7 +230,7 @@
 
   (testing "Test PATCH /lessons/:lesson-id unexpected response from database"
     (with-redefs [lessons-db/update-lesson (spy/stub 2)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
                               (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -249,7 +249,7 @@
                         (assoc create-lesson-request :price "-234.23")]]
     (testing "Test PATCH /lessons/:lesson-id with invalid request body"
       (with-redefs [lessons-db/update-lesson (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
                                 (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
@@ -284,7 +284,7 @@
 (deftest get-lesson-by-id-test
   (testing "Test GET /lessons/:lesson-id with valid `lesson-id`"
     (with-redefs [lessons-db/get-lesson-by-id (spy/stub lesson-from-db)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get (str "/api/lessons/" test-lesson-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
@@ -293,7 +293,7 @@
 
   (testing "Test GET /lessons/:lesson-id with non-existing `lesson-id`"
     (with-redefs [lessons-db/get-lesson-by-id (spy/stub nil)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get (str "/api/lessons/" test-lesson-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
@@ -302,7 +302,7 @@
 
   (testing "Test GET /lessons/:lesson-id with invalid `lesson-id`"
     (with-redefs [lessons-db/get-lesson-by-id (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/lessons/invalid"))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
@@ -334,7 +334,7 @@
 (deftest get-all-lessons-test
   (testing "Test GET /lessons/ without any query parameters"
     (with-redefs [lessons-db/get-all-lessons (spy/stub [lesson-from-db lesson-from-db-extra])]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/lessons"))
             body     (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
@@ -343,7 +343,7 @@
 
   (testing "Test GET /lessons/ with optional `limit` and `offset` parameters"
     (with-redefs [lessons-db/get-all-lessons (spy/stub [lesson-from-db lesson-from-db-extra])]
-      (let [app          (test-app/api-routes-with-auth (spy/spy))
+      (let [app          (test-app/api-routes-with-auth)
             limit-param  99
             offset-param 20
             response     (app (mock/request :get (str "/api/lessons?limit=" limit-param "&offset=" offset-param)))
@@ -356,7 +356,7 @@
                "/api/lessons?offset=invalid"]]
     (testing "Test GET /lessons/ with invalid query parameters"
       (with-redefs [lessons-db/get-all-lessons (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (mock/request :get url))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
@@ -366,7 +366,7 @@
 (deftest delete-lesson-by-id-test
   (testing "Test DELETE /lessons/:lesson-id authorized with :admin role and valid `lesson-id`"
     (with-redefs [lessons-db/delete-lesson (spy/stub 1)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))]
         (is (= 204 (:status response)))
@@ -376,7 +376,7 @@
   (doseq [role [:moderator :guest]]
     (testing (str "Test DELETE /lessons/:lesson-id authorized with " role " role and valid `lesson-id`")
       (with-redefs [lessons-db/delete-lesson (spy/spy)]
-        (let [app      (test-app/api-routes-with-auth (spy/spy))
+        (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
                                 (mock/header :authorization (td/test-auth-token #{role}))))
               body     (test-app/parse-body (:body response))]
@@ -386,7 +386,7 @@
 
   (testing "Test DELETE /lessons/:lesson-id without authorization header"
     (with-redefs [lessons-db/delete-lesson (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :delete (str "/api/lessons/" test-lesson-id)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -395,7 +395,7 @@
 
   (testing "Test DELETE /lessons/:lesson-id for non-existing `lesson-id`"
     (with-redefs [lessons-db/delete-lesson (spy/stub 0)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
@@ -405,7 +405,7 @@
 
   (testing "Test DELETE /lessons/:lesson-id with invalid `lesson-id`"
     (with-redefs [lessons-db/delete-lesson (spy/spy)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete "/api/lessons/invalid")
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
@@ -415,7 +415,7 @@
 
   (testing "Test DELETE /lessons/:lesson-id unexpected result from database"
     (with-redefs [lessons-db/delete-lesson (spy/stub 2)]
-      (let [app      (test-app/api-routes-with-auth (spy/spy))
+      (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :delete (str "/api/lessons/" test-lesson-id))
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]

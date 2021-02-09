@@ -6,16 +6,19 @@
             [education.http.endpoints.dresses :refer [dresses-routes]]
             [education.http.endpoints.gymnastics :refer [gymnastics-routes]]
             [education.http.endpoints.lessons :refer [lessons-routes]]
+            [education.http.endpoints.presentations :refer [presentations-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
             [education.http.endpoints.users :refer [users-routes]]
-            [ring.util.http-response :as status])
+            [ring.util.http-response :as status]
+            [taoensso.timbre :refer [error trace]])
   (:import java.sql.SQLException))
 
 (defn sql-exception-handler
   "Database exception mapper."
   []
   (fn [^SQLException e _ _]
+    (error e "Database exception occurred")
     (case (.getSQLState e)
       "23505" (status/conflict {:message const/conflict-error-message})
       "23503" (status/not-found {:message const/not-found-error-message})
@@ -27,6 +30,8 @@
   "Verify request body and raise error."
   []
   (fn [^Exception e _ _]
+    (trace e "Invalid request")
+    (error "Invalid request" (.getMessage e))
     (status/bad-request {:message const/bad-request-error-message
                          :details (.getMessage e)})))
 
@@ -34,13 +39,15 @@
   "Return error in case of invalid response."
   []
   (fn [^Exception e _ _]
+    (trace e "Invalid response")
+    (error "Invalid response" (.getMessage e))
     (status/internal-server-error
      {:message const/server-error-message
       :details (.getMessage e)})))
 
 (defn api-routes
   "Define top-level API routes."
-  [{:keys [datasource]} config]
+  [datasource config]
   (api
    {:swagger
     {:ui   "/swagger"
@@ -50,7 +57,7 @@
       :spec {}}
      :data
      {:info
-      {:version     "0.1-alpha"
+      {:version     "1.0.0"
        :title       "Education API"
        :description "REST API for education application"
        :contact
@@ -62,6 +69,7 @@
              {:name "lessons" :description "Video lessons"}
              {:name "dresses" :description "Dresses rent"}
              {:name "gymnastics" :description "Different gymnastics for children"}
+             {:name "presentations" :description "Interactive presentations"}
              {:name "upload" :description "Upload media files"}]
       :securityDefinitions
       {:api_key
@@ -82,4 +90,5 @@
      (lessons-routes datasource)
      (dresses-routes datasource)
      (gymnastics-routes datasource)
+     (presentations-routes datasource)
      (upload-routes config))))

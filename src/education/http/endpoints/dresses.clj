@@ -1,12 +1,12 @@
 (ns education.http.endpoints.dresses
-  (:require [compojure.api.sweet :refer [context PATCH POST GET DELETE]]
+  (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
             [education.database.dresses :as dresses-db]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
-            [education.specs.dresses :as specs]
-            [education.specs.error :as err]
+            [education.specs.common :as spec]
             [education.utils.maps :refer [unqualify-map]]
-            [ring.util.http-response :as status]))
+            [ring.util.http-response :as status]
+            [taoensso.timbre :refer [info]]))
 
 ;; Helper functions
 (defn- db->response
@@ -19,6 +19,7 @@
   "Create new dress handler."
   [db dress]
   (let [dress-id (dresses-db/add-dress db dress)]
+    (info "Dress with ID " dress-id " was successfully created")
     (status/created (str "/dresses/" dress-id) {:id dress-id})))
 
 (defn- update-dress-handler
@@ -39,7 +40,9 @@
 (defn- get-all-dresses-handler
   "Get list of dresses with optional `offset` and `limit` handler."
   [db limit offset]
-  (status/ok (mapv db->response (dresses-db/get-all-dresses db :limit limit :offset offset))))
+  (->> (dresses-db/get-all-dresses db :limit limit :offset offset)
+       (mapv db->response)
+       (status/ok)))
 
 (defn- delete-dress-by-id-handler
   "Delete dress by `dress-id` handler."
@@ -57,64 +60,64 @@
     :tags ["dresses"]
     (POST "/" []
       :middleware [[require-roles #{:admin}]]
-      :body [dress ::specs/dress-create-request]
+      :body [dress ::spec/dress-create-request]
       :summary "Create new dress"
       :responses {201 {:description "Dress created successfully"
-                       :schema      ::specs/dress-create-response}
+                       :schema      ::spec/create-response}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (create-dress-handler db dress))
     (PATCH "/:dress-id" []
       :middleware [[require-roles #{:admin}]]
-      :body [dress ::specs/dress-update-request]
-      :path-params [dress-id :- ::specs/id]
+      :body [dress ::spec/dress-update-request]
+      :path-params [dress-id :- ::spec/id]
       :summary "Update dress entry"
       :description "Update existing dress by `dress-id`"
       :responses {400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (update-dress-handler db dress-id dress))
     (GET "/:dress-id" []
-      :path-params [dress-id :- ::specs/id]
+      :path-params [dress-id :- ::spec/id]
       :summary "Get dress entry"
       :description "Get dress by `dress-id`"
       :responses {200 {:description "Dress was successfully found in the database"
-                       :schema      ::specs/dress-response}
+                       :schema      ::spec/dress-response}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-dress-by-id-handler db dress-id))
     (GET "/" []
-      :query-params [{limit :- ::specs/limit nil}
-                     {offset :- ::specs/offset nil}]
+      :query-params [{limit :- ::spec/limit nil}
+                     {offset :- ::spec/offset nil}]
       :summary "Get all dresses"
       :description "Get list of dresses with given optional `limit` and `offset`"
       :responses {200 {:description "Successful response"
-                       :schema      ::specs/dresses-response}
+                       :schema      ::spec/dresses-response}
                   400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (get-all-dresses-handler db limit offset))
     (DELETE "/:dress-id" []
       :middleware [[require-roles #{:admin}]]
-      :path-params [dress-id :- ::specs/id]
+      :path-params [dress-id :- ::spec/id]
       :summary "Delete dress entry"
       :description "Delete dress entry by `dress-id`"
       :responses {400 {:description const/bad-request-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   401 {:description const/not-authorized-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   403 {:description const/no-access-error-message
-                       :schema      ::err/error-response}
+                       :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
-                       :schema      ::err/error-response}}
+                       :schema      ::spec/error-response}}
       (delete-dress-by-id-handler db dress-id))))
