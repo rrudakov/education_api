@@ -2,7 +2,7 @@
 
 name: Deploy to VPS
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
@@ -35,6 +35,7 @@ jobs:
             git reset --hard HEAD
             git pull
             bash --login -c 'lein migrate prod'
+            bash --login -c 'lein clean'
             bash --login -c 'lein uberjar'
             cp target/education-api-standalone.jar /home/site/API/education-api-standalone.jar
             bash --login -c 'pm2 restart education-api'
