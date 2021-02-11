@@ -18,11 +18,7 @@
 
 (s/def ::role #{"admin" "moderator" "guest"})
 
-(s/def ::roles (s/coll-of ::role :kind vector? :into []))
-
-(s/def ::role-request #{"admin" "moderator" "guest"})
-
-(s/def ::roles-request (s/coll-of ::role-request :distinct true :min-count 1))
+(s/def ::roles (s/coll-of ::role :kind vector? :into [] :distinct true :min-count 1))
 
 (s/def ::created_on inst?)
 
@@ -34,7 +30,7 @@
   (s/keys :req-un [::username ::password ::email]))
 
 (s/def ::user-update-request
-  (s/map-of #{:roles} ::roles-request))
+  (s/keys :req-un [::roles]))
 
 (s/def ::user-create-response
   (s/keys :req-un [::id]))

@@ -59,8 +59,7 @@
 (deftest roles-test
   (doseq [roles [["admin" "moderator" "guest"]
                  ["moderator" "admin"]
-                 ["guest" "moderator"]
-                 []]]
+                 ["guest" "moderator"]]]
     (testing (str "::roles valid " roles)
       (is (s/valid? ::sut/roles roles))))
 
@@ -75,38 +74,11 @@
                  "string"
                  #{:admin :moderator :guest :someone-else}
                  [1 2 3 4]
+                 []
                  #{}
                  '()]]
     (testing (str "::roles invalid " roles)
       (is (not (s/valid? ::sut/roles roles))))))
-
-(deftest role-request-test
-  (doseq [role ["admin" "moderator" "guest"]]
-    (testing (str "::role-request valid " role)
-      (is (s/valid? ::sut/role-request role))))
-
-  (doseq [role [:admin :moderator :guest "god" 1234 false]]
-    (testing (str "::role-request invalid " role)
-      (is (not (s/valid? ::sut/role-request role))))))
-
-(deftest roles-request-test
-  (doseq [roles [["admin" "moderator" "guest"]
-                 #{"admin" "guest"}
-                 '("guest")]]
-    (testing (str "::roles-request valid " roles)
-      (is (s/valid? ::sut/roles-request roles))))
-
-  (doseq [roles [["admin" "moderator" "god"]
-                 ["admin" "guest" "guest"]
-                 #{"admin" :guest}
-                 '(true)
-                 99999999
-                 [1 2 3 4 5]
-                 []
-                 #{}
-                 '()]]
-    (testing (str "::roles-request invalid " roles)
-      (is (not (s/valid? ::sut/roles-request roles))))))
 
 (deftest created-on-test
   (testing "::created-on valid"
