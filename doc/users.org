@@ -1,0 +1,105 @@
+#+TITLE: Users API documentation
+#+AUTHOR: Roman Rudakov
+#+EMAIL: rrudakov@protonmail.com
+
+* About the API
+
+Manage users and roles. Login to the system and obtaining authorization token.
+
+* Endpoints
+
+The API provides the following endpoints:
+
+** Register new user
+
+To create new user you should send =POST= request to =/api/users= endpoint with
+the following request body:
+
+#+begin_src json
+{
+    "username": "string",
+    "password": "string",
+    "email": "string"
+}
+#+end_src
+
+Server will return successful response with 201 status and the following
+response body:
+
+#+begin_src json
+{
+    "id": 1
+}
+#+end_src
+
+=username= should be unique, in case =username= was already taken server will
+respond with 409 error and the following body:
+
+#+begin_src json
+{
+    "message": "Resource already exist"
+}
+#+end_src
+
+In case of incorrect request body you'll get the following error:
+
+#+begin_src json
+{
+    "message": "Please check request data",
+    "details": "Some debug information for developer"
+}
+#+end_src
+
+** Authentication
+
+To authenticate existing user you can send =POST= request to =/api/login= with
+the following request body:
+
+#+begin_src json
+{
+    "username": "string",
+    "password": "string"
+}
+#+end_src
+
+If all the validations pass you'll get response with JSON body containing
+single =token= field. This token should be passed in =Authorization= header for
+all requests which require authentication.
+
+Example of response:
+
+#+begin_src json
+{
+    "token": "token"
+}
+#+end_src
+
+To perform authorized request you should use =Authorization= header of
+following format: =Token <token returned by login request>=.
+
+Just created user will have role =guest= and doesn't have rights to create any
+resources. To assign another role to user [[*Update user][update endpoint]] should be used.
+
+** Update user
+
+This endpoint can be used to update some fields of existing user. Currently
+only user role can be changed. To use this endpoint you should have =admin=
+role.
+
+To update user you should use endpoint =/api/users/:user_id= with the following
+request body:
+
+#+begin_src json
+{
+    "roles": [
+        "admin"
+    ]
+}
+#+end_src
+
+The possible roles are =admin=, =moderator= and =guest=. You can set list of
+roles but you cannot set empty list (user must have at least 1 role).
+
+** Other
+
+The rest of endpoint is quite straightforward and well described in swagger.

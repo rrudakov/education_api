@@ -1,0 +1,23 @@
+#+TITLE: Education API documentation
+#+AUTHOR: Roman Rudakov
+#+EMAIL: rrudakov@protonmail.com
+
+* About the website
+
+The website supposed to be full featured portal for children education
+including video lessons, online and offline lessons, rent dresses, information
+for parents, materials for lessons etc.
+
+* API endpoints
+
+Currently API includes the following endpoints:
+- [[file:users.org][users]] :: Manage users, access rights, roles etc.
+- roles :: List of possible roles
+- articles :: (deprecated) Initial API example
+- lessons :: Manage video lessons
+- dresses :: Dresses rent
+- gymnastics :: Different gymnastics for children
+- presentations :: Interactive presentations
+- upload :: upload media files to server
+
+All endpoints follow REST principals and well described in swagger.

@@ -1,0 +1,43 @@
+#+TITLE: Change Log
+#+AUTHOR: Roman Rudakov
+#+EMAIL: rrudakov@protonmail.com
+
+All notable changes to this project will be documented in this file. This
+change log follows the conventions of [[http://keepachangelog.com/][keepachangelog.com]].
+
+* [[https://github.com/rrudakov/education_api/compare/v0.1-beta.2..HEAD][Unreleased]]
+
+** Fixed
+- Get articles API now returns properly sorted items.
+
+* [[https://github.com/rrudakov/education_api/compare/v0.1-beta.1..v0.1-beta.2][v0.1-beta.2]] - 2020-07-01
+
+** Added
+- A lot of unit tests (coverage was increased up to 90%).
+
+** Changed
+- Spy library is now used for mocking and stubbing in unit tests.
+
+** Fixed
+- A lot of small issues (mostly found by clj-condo checker).
+
+* [[https://github.com/rrudakov/education_api/compare/v0.1-alpha..v0.1-beta.1][v0.1-beta.1]] - 2020-06-04
+
+** Added
+- Articles management API.
+- CORS headers support.
+- Cover code by unit tests.
+
+** Changed
+- Migrated to Clojure specs.
+- Namespaces was renamed according to the project name.
+
+* v0.1-alpha - 2020-05-09
+
+** Added
+- Users management API.
+- Roles list API.
+
+# Local Variables:
+# org-hide-leading-stars: nil
+# End:
