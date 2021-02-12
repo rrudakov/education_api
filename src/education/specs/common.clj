@@ -1,19 +1,26 @@
 (ns education.specs.common
   (:require [clojure.spec.alpha :as s]
             [education.http.constants :as const]
-            [education.specs.gymnastics :as g]))
+            [education.specs.gymnastics :as g]
+            [clojure.string :as str]))
 
 (s/def ::id pos-int?)
 
 (s/def ::subtype_id pos-int?)
 
-(s/def ::title (s/and string? not-empty #(<= (count %) 500)))
+(s/def ::title
+  (s/and string?
+         (complement str/blank?)
+         #(<= (count %) 500)))
 
-(s/def ::subtitle (s/and string? not-empty #(<= (count %) 500)))
+(s/def ::subtitle
+  (s/and string?
+         (complement str/blank?)
+         #(<= (count %) 500)))
 
 (s/def ::url
   (s/and string?
-         not-empty
+         (complement str/blank?)
          (partial re-matches const/valid-url-regex)
          #(<= (count %) 1000)))
 
@@ -27,11 +34,13 @@
 (s/def ::screenshots
   (s/coll-of ::screenshot :kind vector? :distinct true :into []))
 
-(s/def ::description (s/and string? not-empty))
+(s/def ::description
+  (s/and string?
+         (complement str/blank?)))
 
 (s/def ::price
   (s/and string?
-         not-empty
+         (complement str/blank?)
          (partial re-matches const/valid-decimal)))
 
 (s/def ::size pos-int?)

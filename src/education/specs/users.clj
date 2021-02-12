@@ -1,20 +1,17 @@
 (ns education.specs.users
-  (:require [clojure.spec.alpha :as s]))
-
-(def email-regex
-  "Check new email addresses using this regex."
-  #"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
+  (:require [clojure.spec.alpha :as s]
+            [education.http.constants :as const]))
 
 (s/def ::id int?)
 
 (s/def ::username
   (s/and string?
-         #(re-matches #"^[a-zA-Z]+[a-zA-Z0-9]*$" %)
+         #(re-matches const/valid-username-regex %)
          #(>= (count %) 2)))
 
 (s/def ::password (s/and string? #(>= (count %) 6)))
 
-(s/def ::email (s/and string? #(re-matches email-regex %)))
+(s/def ::email (s/and string? #(re-matches const/valid-email-regex %)))
 
 (s/def ::role #{"admin" "moderator" "guest"})
 

@@ -6,6 +6,8 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  ;; Configuration file parsing
                  [aero "1.1.6"]
+                 ;; Human readable errors
+                 [phrase "0.3-alpha4"]
                  ;; Ring and compojure
                  [ring/ring-defaults "0.3.2"]
                  [metosin/compojure-api "2.0.0-alpha31"]

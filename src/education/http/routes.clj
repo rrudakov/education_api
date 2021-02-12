@@ -11,7 +11,8 @@
             [education.http.endpoints.upload :refer [upload-routes]]
             [education.http.endpoints.users :refer [users-routes]]
             [ring.util.http-response :as status]
-            [taoensso.timbre :refer [error trace]])
+            [taoensso.timbre :refer [error trace]]
+            [clojure.spec.alpha :as s])
   (:import java.sql.SQLException))
 
 (defn sql-exception-handler
@@ -29,11 +30,14 @@
 (defn request-validation-handler
   "Verify request body and raise error."
   []
-  (fn [^Exception e _ _]
-    (trace e "Invalid request")
-    (error "Invalid request" (.getMessage e))
-    (status/bad-request {:message const/bad-request-error-message
-                         :details (.getMessage e)})))
+  (fn [^Exception e ex-data request]
+    (let [spec (:spec ex-data)
+          body (:body-params request)
+          errors (const/->phrases spec body)]
+      (trace e "Invalid request")
+      (error "Invalid request" (s/explain spec body))
+      (status/bad-request {:message const/bad-request-error-message
+                           :errors  errors}))))
 
 (defn response-validation-handler
   "Return error in case of invalid response."
