@@ -33,6 +33,12 @@
   "Check new email addresses using this regex."
   #"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
 
+(defn- ->prefix-or
+  [{:keys [in via]} or-value]
+  (->> (or (first in) (first via) or-value)
+       (name)
+       (str/capitalize)))
+
 ;; Phrases
 (p/defphraser #(contains? % key)
   [_ _ key]
@@ -43,34 +49,32 @@
   "Username must start from letter")
 
 (p/defphraser #(>= (count %) min-length)
-  [_ {:keys [in]} min-length]
-  (str (str/capitalize (name (first in))) " must be at least " min-length " characters"))
+  [_ problem min-length]
+  (str (->prefix-or problem "value") " must be at least " min-length " characters"))
 
 (p/defphraser (complement str/blank?)
-  [_ {:keys [in]}]
-  (str (str/capitalize (name (first in))) " must not be empty"))
+  [_ problem]
+  (str (->prefix-or problem "value") " must not be empty"))
 
 (p/defphraser #(<= (count %) max-length)
-  [_ {:keys [in]} max-length]
-  (str (str/capitalize (name (first in))) " must not be longer than " max-length " characters"))
+  [_ problem max-length]
+  (str (->prefix-or problem "value") " must not be longer than " max-length " characters"))
 
 (p/defphraser (partial re-matches valid-url-regex)
-  [_ {:keys [in]}]
-  (str (str/capitalize (name (first in))) " URL is not valid"))
+  [_ problem]
+  (str (->prefix-or problem "field") " URL is not valid"))
 
 (p/defphraser (partial re-matches valid-decimal)
-  [_ {:keys [in]}]
-  (str (str/capitalize (name (first in))) " is not valid"))
+  [_ problem]
+  (str (->prefix-or problem "value") " is not valid"))
 
 (p/defphraser #(re-matches valid-email-regex %)
   [_ _]
   "Email is not valid")
 
 (p/defphraser :default
-  [_ {:keys [in]}]
-  (if (seq in)
-    (str (str/capitalize (name (first in))) " is not valid")
-    "Value is not valid"))
+  [_ problem]
+  (str (->prefix-or problem "value") " is not valid"))
 
 ;; Convert problems to
 (defn ->phrases
