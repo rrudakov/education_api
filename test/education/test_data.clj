@@ -46,8 +46,8 @@
    :users/user_name     (:username add-user1-request)
    :users/user_password (hs/encrypt password)
    :users/user_email    (:email add-user1-request)
-   :users/created_on    (Instant/now)
-   :users/updated_on    (Instant/now)})
+   :users/created_on    (Instant/parse "2020-12-12T18:22:12Z")
+   :users/updated_on    (Instant/parse "2020-12-12T19:22:12Z")})
 
 (def db-test-user2
   "Second mocked testing user."
@@ -55,8 +55,8 @@
    :users/user_name     (:username add-user2-request)
    :users/user_password (hs/encrypt password)
    :users/user_email    (:email add-user2-request)
-   :users/created_on    (Instant/now)
-   :users/updated_on    (Instant/now)})
+   :users/created_on    (Instant/parse "2019-12-12T18:22:12Z")
+   :users/updated_on    (Instant/parse "2019-12-12T18:22:12Z")})
 
 (def db-all-roles
   "All roles from database."
@@ -129,8 +129,8 @@
    :articles/body             (:body add-article-request)
    :articles/description      "Test description"
    :articles/is_main_featured false
-   :articles/created_on       (Instant/now)
-   :articles/updated_on       (Instant/now)})
+   :articles/created_on       (Instant/parse "2020-12-12T13:22:12Z")
+   :articles/updated_on       (Instant/parse "2020-12-12T15:22:12Z")})
 
 (def application-json
   "Content-Type header value for mock requests."

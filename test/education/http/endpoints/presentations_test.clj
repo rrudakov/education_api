@@ -58,14 +58,22 @@
         (is (spy/not-called? presentations-db/add-presentation))
         (is (= {:message const/not-authorized-error-message} body)))))
 
-  (doseq [request-body [(dissoc create-presentation-request :title)
-                        (dissoc create-presentation-request :url)
-                        (dissoc create-presentation-request :description)
-                        (assoc create-presentation-request :title (str/join (repeat 501 "a")))
-                        (assoc create-presentation-request :title 123)
-                        (assoc create-presentation-request :url "invalid")
-                        (assoc create-presentation-request :url 2828)
-                        (assoc create-presentation-request :description 1234)]]
+  (doseq [[request-body errors] [[(dissoc create-presentation-request :title)
+                                  ["Field title is mandatory"]]
+                                 [(dissoc create-presentation-request :url)
+                                  ["Field url is mandatory"]]
+                                 [(dissoc create-presentation-request :description)
+                                  ["Field description is mandatory"]]
+                                 [(assoc create-presentation-request :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 500 characters"]]
+                                 [(assoc create-presentation-request :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc create-presentation-request :url "invalid")
+                                  ["Url URL is not valid"]]
+                                 [(assoc create-presentation-request :url 2828)
+                                  ["Url is not valid"]]
+                                 [(assoc create-presentation-request :description 1234)
+                                  ["Description is not valid"]]]]
     (testing "Test POST /presentations authorized with invalid request body"
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/presentations")
@@ -75,7 +83,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/add-presentation))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  errors}
+               body))))))
 
 (def ^:private update-presentation-request
   "Test API request to update presentation."
@@ -134,7 +144,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/update-presentation))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Field presentation-id is mandatory"]}
+               body)))))
 
   (testing "Test PATCH /presentations/:presentation-id with non-existing `presentation-id`"
     (with-redefs [presentations-db/update-presentation (spy/stub 0)]
@@ -160,11 +172,16 @@
         (is (spy/called-once-with? presentations-db/update-presentation nil test-presentation-id update-presentation-request))
         (is (= {:message const/server-error-message} body)))))
 
-  (doseq [request-body [(assoc update-presentation-request :title (str/join (repeat 501 "a")))
-                        (assoc update-presentation-request :title 123)
-                        (assoc update-presentation-request :url "invalid")
-                        (assoc update-presentation-request :url 123)
-                        (assoc update-presentation-request :description 1234)]]
+  (doseq [[request-body errors] [[(assoc update-presentation-request :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 500 characters"]]
+                                 [(assoc update-presentation-request :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc update-presentation-request :url "invalid")
+                                  ["Url URL is not valid"]]
+                                 [(assoc update-presentation-request :url 123)
+                                  ["Url is not valid"]]
+                                 [(assoc update-presentation-request :description 1234)
+                                  ["Description is not valid"]]]]
     (testing "Test PATCH /presentations/:presentation-id with invalid request body"
       (with-redefs [presentations-db/update-presentation (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -175,7 +192,9 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? presentations-db/update-presentation))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body)))))))
 
 (def ^:private presentation-from-db
   "Test presentation database query result."
@@ -221,7 +240,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/get-presentation-by-id))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))))))
 
 (def ^:private presentation-from-db-extra
   "One more test presentation database query result."
@@ -270,7 +291,9 @@
               response (app (mock/request :get url))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+          (is (= {:message const/bad-request-error-message
+                  :errors  ["Value is not valid"]}
+                 body))
           (is (spy/not-called? presentations-db/get-all-presentations)))))))
 
 (deftest delete-presentation-by-id-test
@@ -320,7 +343,9 @@
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? presentations-db/delete-presentation)))))
 
   (testing "Test DELETE /presentations/:presentation-id unexpected result from database"

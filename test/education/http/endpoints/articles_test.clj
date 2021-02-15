@@ -1,11 +1,12 @@
 (ns education.http.endpoints.articles-test
   (:require [cheshire.core :as cheshire]
-            [clojure.test :refer [are deftest is testing]]
+            [clojure.string :as str]
+            [clojure.test :refer [deftest is testing]]
             [education.database.articles :as articlesdb]
             [education.http.constants :as const]
             [education.http.endpoints.test-app
              :refer
-             [parse-body api-routes-with-auth]]
+             [api-routes-with-auth parse-body]]
             [education.test-data :as td]
             [ring.mock.request :as mock]
             [spy.core :as spy])
@@ -98,7 +99,7 @@
               user-expected (assoc td/auth-user-deserialized :roles (vector (name role)))
               app           (api-routes-with-auth)
               response      (app (-> (mock/request :post "/api/articles")
-                                     (mock/content-type "application/json")
+                                     (mock/content-type td/application-json)
                                      (mock/header :authorization (td/test-auth-token #{role}))
                                      (mock/body (cheshire/generate-string test-article-request-valid))))
               body          (parse-body (:body response))]
@@ -110,30 +111,44 @@
     (with-redefs [articlesdb/add-article (spy/spy)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/articles")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/body (cheshire/generate-string test-article-request-valid))))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? articlesdb/add-article))
         (is (= {:message const/not-authorized-error-message} body)))))
 
-  (testing "Test POST /articles authorized bad requests"
-    (with-redefs [articlesdb/add-article (spy/spy)]
-      (let [app (api-routes-with-auth)
-            req #(-> (mock/request :post "/api/articles")
-                     (mock/content-type "application/json")
-                     (mock/header :authorization (td/test-auth-token #{:moderator}))
-                     (mock/body (cheshire/generate-string %)))]
-        (are [status-expected request] (= status-expected (:status (app (req request))))
-          400 (dissoc test-article-request-valid :title)
-          400 (dissoc test-article-request-valid :body)
-          400 (dissoc test-article-request-valid :featured_image)
-          400 (dissoc test-article-request-valid :is_main_featured))
-        (are [body-expected request] (= body-expected (:message (parse-body (:body (app (req request))))))
-          const/bad-request-error-message (dissoc test-article-request-valid :title)
-          const/bad-request-error-message (dissoc test-article-request-valid :body)
-          const/bad-request-error-message (dissoc test-article-request-valid :featured_image)
-          const/bad-request-error-message (dissoc test-article-request-valid :is_main_featured))))))
+  (doseq [[request-body errors] [[(dissoc test-article-request-valid :title)
+                                  ["Field title is mandatory"]]
+                                 [(dissoc test-article-request-valid :body)
+                                  ["Field body is mandatory"]]
+                                 [(dissoc test-article-request-valid :featured_image)
+                                  ["Field featured_image is mandatory"]]
+                                 [(dissoc test-article-request-valid :is_main_featured)
+                                  ["Field is_main_featured is mandatory"]]
+                                 [(assoc test-article-request-valid :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 100 characters"]]
+                                 [(assoc test-article-request-valid :title "")
+                                  ["Title must not be empty"]]
+                                 [(assoc test-article-request-valid :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc test-article-request-valid :featured_image (str/join (repeat 501 "a")))
+                                  ["Featured_image must not be longer than 500 characters"]]
+                                 [(assoc test-article-request-valid :body "")
+                                  ["Body must not be empty"]]]]
+    (testing "Test POST /articles authorized with invalid request body"
+      (with-redefs [articlesdb/add-article (spy/spy)]
+        (let [app      (api-routes-with-auth)
+              response (app (-> (mock/request :post "/api/articles")
+                                (mock/content-type td/application-json)
+                                (mock/header :authorization (td/test-auth-token #{:moderator}))
+                                (mock/body (cheshire/generate-string request-body))))
+              body     (parse-body (:body response))]
+          (is (= 400 (:status response)))
+          (is (spy/not-called? articlesdb/add-article))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body)))))))
 
 (deftest update-article-test
   (testing "Test PATCH /article/:id authorized with valid body"
@@ -143,7 +158,7 @@
             role       :guest
             app        (api-routes-with-auth)
             response   (app (-> (mock/request :patch (str "/api/articles/" article-id))
-                                (mock/content-type "application/json")
+                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
                                 (mock/body (cheshire/generate-string test-article-request-valid))))]
         (is (= 204 (:status response)))
@@ -160,7 +175,7 @@
     (with-redefs [articlesdb/update-article (spy/spy)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/43")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/body (cheshire/generate-string test-article-request-valid))))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
@@ -172,7 +187,7 @@
                   articlesdb/can-update?    (spy/stub false)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/44")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:guest}))
                               (mock/body (cheshire/generate-string test-article-request-valid))))
             body     (parse-body (:body response))]
@@ -185,20 +200,21 @@
       (let [article-id-param "invalid"
             app              (api-routes-with-auth)
             response         (app (-> (mock/request :patch (str "/api/articles/" article-id-param))
-                                      (mock/content-type "application/json")
+                                      (mock/content-type td/application-json)
                                       (mock/header :authorization (td/test-auth-token #{:moderator}))
                                       (mock/body (cheshire/generate-string test-article-request-valid))))
             body             (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? articlesdb/update-article))
-        (is (contains? body :message))
-        (is (= const/bad-request-error-message (:message body))))))
+        (is (= {:message const/bad-request-error-message
+                :errors ["Field id is mandatory"]}
+               body)))))
 
   (testing "Test PATCH /articles/:id with non-existing article id"
     (with-redefs [articlesdb/update-article (spy/stub 0)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/456")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
                               (mock/body (cheshire/generate-string test-article-request-valid))))
             body     (parse-body (:body response))]
@@ -210,7 +226,7 @@
     (with-redefs [articlesdb/update-article (spy/stub 2)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/3")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:moderator}))
                               (mock/body (cheshire/generate-string test-article-request-valid))))
             body     (parse-body (:body response))]
@@ -267,9 +283,9 @@
             response (app (-> (mock/request :get url)))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (contains? body :message))
-        (is (contains? body :details))
-        (is (= const/bad-request-error-message (:message body)))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))))))
 
 
 (deftest get-latest-articles-test
@@ -293,9 +309,10 @@
               response (app (-> (mock/request :get url)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (contains? body :message))
           (is (spy/not-called? articlesdb/get-latest-full-sized-articles))
-          (is (= const/bad-request-error-message (:message body)))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  ["Value is not valid"]}
+                 body))))))
 
   (testing "Test GET /articles/latest verify default description"
     (with-redefs [articlesdb/get-latest-full-sized-articles
@@ -327,8 +344,9 @@
               response (app (-> (mock/request :get url)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (contains? body :message))
-          (is (= const/bad-request-error-message (:message body))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  ["Value is not valid"]}
+                 body)))))))
 
 (deftest get-article-by-id-test
   (testing "Test GET /articles/:id with valid article-id"
@@ -357,8 +375,9 @@
             response (app (-> (mock/request :get "/api/articles/invalid")))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (contains? body :message))
-        (is (= const/bad-request-error-message (:message body)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? articlesdb/get-article-by-id))))))
 
 (deftest get-last-featured-article-test
@@ -446,8 +465,9 @@
                               (mock/header :authorization (td/test-auth-token #{:moderator}))))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (contains? body :message))
-        (is (= const/bad-request-error-message (:message body)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? articlesdb/delete-article))
         (is (spy/not-called? articlesdb/can-update?)))))
 

@@ -110,8 +110,9 @@
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (some #{:details :message} (keys body)))
-        (is (= const/bad-request-error-message (:message body)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? usersdb/get-user))))))
 
 (deftest add-user-test
@@ -120,7 +121,7 @@
       (with-redefs [usersdb/add-user (spy/stub user-id)]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :post "/api/users")
-                                (mock/content-type "application/json")
+                                (mock/content-type td/application-json)
                                 (mock/body (cheshire/generate-string td/add-user1-request))))
               body     (:body response)]
           (is (= 201 (:status response)))
@@ -132,7 +133,7 @@
     (with-redefs [usersdb/add-user (spy/mock (fn [_ _] (throw (SQLException. "Conflict" "23505"))))]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/users")
-                              (mock/content-type "application/json")
+                              (mock/content-type td/application-json)
                               (mock/body (cheshire/generate-string td/add-user1-request))))
             body     (parse-body (:body response))]
         (is (= 409 (:status response)))
@@ -141,16 +142,21 @@
 
   (testing "Test POST /users without required request fields"
     (with-redefs [usersdb/add-user (spy/spy)]
-      (doseq [req-body (->> [:username :email :password]
-                            (map #(cheshire/generate-string (dissoc td/add-user1-request %))))]
+      (doseq [[req-body errors] [[(dissoc td/add-user1-request :username)
+                                  ["Field username is mandatory"]]
+                                 [(dissoc td/add-user1-request :email)
+                                  ["Field email is mandatory"]]
+                                 [(dissoc td/add-user1-request :password)
+                                  ["Field password is mandatory"]]]]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :post "/api/users")
                                 (mock/content-type "application/json")
-                                (mock/body req-body)))
+                                (mock/body (cheshire/generate-string req-body))))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (some #{:message :details} (keys body)))
-          (is (= const/bad-request-error-message (:message body)))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body))
           (is (spy/not-called? usersdb/add-user)))))))
 
 (deftest update-user-test
@@ -199,14 +205,17 @@
                               (mock/body (cheshire/generate-string td/update-user1-request))))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (some #{:message :details} (keys body)))
-        (is (= const/bad-request-error-message (:message body)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Field id is mandatory"]}
+               body))
         (is (spy/not-called? usersdb/update-user)))))
 
   (testing "Test PATCH /users/:id with invalid request body"
     (with-redefs [usersdb/update-user (spy/spy)]
-      (doseq [req-body [{:roles ["god" "superhero"]}
-                        {:roles []}]]
+      (doseq [[req-body errors] [[{:roles ["god" "superhero"]}
+                                  ["Roles is not valid"]]
+                                 [{:roles []}
+                                  ["Roles is not valid"]]]]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :patch "/api/users/invalid")
                                 (mock/content-type "application/json")
@@ -214,8 +223,9 @@
                                 (mock/body (cheshire/generate-string req-body))))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (some #{:message :details} (keys body)))
-          (is (= const/bad-request-error-message (:message body)))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body))
           (is (spy/not-called? usersdb/update-user)))))))
 
 (deftest delete-user-test
@@ -256,8 +266,9 @@
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (some #{:message :details} (keys body)))
-        (is (= const/bad-request-error-message (:message body)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? usersdb/delete-user))))))
 
 (deftest login-test

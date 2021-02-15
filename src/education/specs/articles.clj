@@ -1,5 +1,6 @@
 (ns education.specs.articles
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]))
 
 (s/def ::id pos-int?)
 
@@ -7,11 +8,18 @@
 
 (s/def ::user-id-param pos-int?)
 
-(s/def ::title (s/and string? not-empty #(<= (count %) 100)))
+(s/def ::title
+  (s/and string?
+         (complement str/blank?)
+         #(<= (count %) 100)))
 
-(s/def ::body (s/and string? not-empty))
+(s/def ::body
+  (s/and string?
+         (complement str/blank?)))
 
-(s/def ::featured_image (s/and string? #(<= (count %) 500)))
+(s/def ::featured_image
+  (s/and string?
+         #(<= (count %) 500)))
 
 (s/def ::is_main_featured boolean?)
 

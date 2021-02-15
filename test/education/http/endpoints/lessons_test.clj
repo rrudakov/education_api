@@ -68,18 +68,30 @@
         (is (spy/not-called? lessons-db/add-lesson))
         (is (= {:message const/not-authorized-error-message} body)))))
 
-  (doseq [request-body [(dissoc create-lesson-request :title)
-                        (dissoc create-lesson-request :subtitle)
-                        (dissoc create-lesson-request :screenshots)
-                        (dissoc create-lesson-request :description)
-                        (dissoc create-lesson-request :price)
-                        (assoc create-lesson-request :title (str/join (repeat 501 "a")))
-                        (assoc create-lesson-request :title 123)
-                        (assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
-                        (assoc create-lesson-request :subtitle 123)
-                        (assoc create-lesson-request :screenshots "non-list string")
-                        (assoc create-lesson-request :price "7 euro")
-                        (assoc create-lesson-request :price "-234.23")]]
+  (doseq [[request-body errors] [[(dissoc create-lesson-request :title)
+                                  ["Field title is mandatory"]]
+                                 [(dissoc create-lesson-request :subtitle)
+                                  ["Field subtitle is mandatory"]]
+                                 [(dissoc create-lesson-request :screenshots)
+                                  ["Field screenshots is mandatory"]]
+                                 [(dissoc create-lesson-request :description)
+                                  ["Field description is mandatory"]]
+                                 [(dissoc create-lesson-request :price)
+                                  ["Field price is mandatory"]]
+                                 [(assoc create-lesson-request :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 500 characters"]]
+                                 [(assoc create-lesson-request :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
+                                  ["Subtitle must not be longer than 500 characters"]]
+                                 [(assoc create-lesson-request :subtitle 123)
+                                  ["Subtitle is not valid"]]
+                                 [(assoc create-lesson-request :screenshots "non-list string")
+                                  ["Screenshots is not valid"]]
+                                 [(assoc create-lesson-request :price "7 euro")
+                                  ["Price is not valid"]]
+                                 [(assoc create-lesson-request :price "-234.23")
+                                  ["Price is not valid"]]]]
     (testing "Test POST /lessons authorized with invalid request body"
       (with-redefs [lessons-db/add-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -90,7 +102,9 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? lessons-db/add-lesson))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details)))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body))))))
 
   (testing "Test POST /lessons authorized with valid body, database conflict error"
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Conflict" "23505"))))]
@@ -214,7 +228,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? lessons-db/update-lesson))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Field lesson-id is mandatory"]}
+               body)))))
 
   (testing "Test PATCH /lessons/:lesson-id with non-existing `lesson-id`"
     (with-redefs [lessons-db/update-lesson (spy/stub 0)]
@@ -240,13 +256,20 @@
         (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id update-lesson-request))
         (is (= {:message const/server-error-message} body)))))
 
-  (doseq [request-body [(assoc create-lesson-request :title (str/join (repeat 501 "a")))
-                        (assoc create-lesson-request :title 123)
-                        (assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
-                        (assoc create-lesson-request :subtitle 123)
-                        (assoc create-lesson-request :screenshots "non-list string")
-                        (assoc create-lesson-request :price "7 euro")
-                        (assoc create-lesson-request :price "-234.23")]]
+  (doseq [[request-body errors] [[(assoc create-lesson-request :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 500 characters"]]
+                                 [(assoc create-lesson-request :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc create-lesson-request :subtitle (str/join (repeat 501 "a")))
+                                  ["Subtitle must not be longer than 500 characters"]]
+                                 [(assoc create-lesson-request :subtitle 123)
+                                  ["Subtitle is not valid"]]
+                                 [(assoc create-lesson-request :screenshots "non-list string")
+                                  ["Screenshots is not valid"]]
+                                 [(assoc create-lesson-request :price "7 euro")
+                                  ["Price is not valid"]]
+                                 [(assoc create-lesson-request :price "-234.23")
+                                  ["Price is not valid"]]]]
     (testing "Test PATCH /lessons/:lesson-id with invalid request body"
       (with-redefs [lessons-db/update-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -257,7 +280,9 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? lessons-db/update-lesson))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body)))))))
 
 (def ^:private lesson-from-db
   "Test lesson database query result."
@@ -306,7 +331,9 @@
             response (app (mock/request :get "/api/lessons/invalid"))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? lessons-db/get-lesson-by-id))))))
 
 (def ^:private lesson-from-db-extra
@@ -360,7 +387,9 @@
               response (app (mock/request :get url))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+          (is (= {:message const/bad-request-error-message
+                  :errors  ["Value is not valid"]}
+                 body))
           (is (spy/not-called? lessons-db/get-all-lessons)))))))
 
 (deftest delete-lesson-by-id-test
@@ -410,7 +439,9 @@
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? lessons-db/delete-lesson)))))
 
   (testing "Test DELETE /lessons/:lesson-id unexpected result from database"
