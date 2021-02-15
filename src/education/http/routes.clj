@@ -35,19 +35,21 @@
           body (:body-params request)
           errors (const/->phrases spec body)]
       (trace e "Invalid request")
-      (error "Invalid request" (s/explain spec body))
+      (error "Invalid request" (s/explain-str spec body))
       (status/bad-request {:message const/bad-request-error-message
                            :errors  errors}))))
 
 (defn response-validation-handler
   "Return error in case of invalid response."
   []
-  (fn [^Exception e _ _]
-    (trace e "Invalid response")
-    (error "Invalid response" (.getMessage e))
-    (status/internal-server-error
-     {:message const/server-error-message
-      :details (.getMessage e)})))
+  (fn [^Exception e ex-data _]
+    (let [spec (:spec ex-data)
+          body (:response ex-data)]
+      (trace e "Invalid response")
+      (error "Invalid response" (s/explain spec body))
+      (status/internal-server-error
+       {:message const/server-error-message
+        :details (s/explain-str spec body)}))))
 
 (defn api-routes
   "Define top-level API routes."

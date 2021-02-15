@@ -65,20 +65,34 @@
         (is (spy/not-called? dresses-db/add-dress))
         (is (= {:message const/not-authorized-error-message} body)))))
 
-  (doseq [request-body [(dissoc create-dress-request :title)
-                        (dissoc create-dress-request :description)
-                        (dissoc create-dress-request :size)
-                        (dissoc create-dress-request :pictures)
-                        (dissoc create-dress-request :price)
-                        (assoc create-dress-request :title (str/join (repeat 501 "a")))
-                        (assoc create-dress-request :title 123)
-                        (assoc create-dress-request :description 1234)
-                        (assoc create-dress-request :size "33")
-                        (assoc create-dress-request :size 32.2)
-                        (assoc create-dress-request :pictures "https://some.nonlist.url")
-                        (assoc create-dress-request :price "7 euro")
-                        (assoc create-dress-request :price "-123.23")
-                        (assoc create-dress-request :price 35.555)]]
+  (doseq [[request-body expected-errors] [[(dissoc create-dress-request :title)
+                                           ["Field title is mandatory"]]
+                                          [(dissoc create-dress-request :description)
+                                           ["Field description is mandatory"]]
+                                          [(dissoc create-dress-request :size)
+                                           ["Field size is mandatory"]]
+                                          [(dissoc create-dress-request :pictures)
+                                           ["Field pictures is mandatory"]]
+                                          [(dissoc create-dress-request :price)
+                                           ["Field price is mandatory"]]
+                                          [(assoc create-dress-request :title (str/join (repeat 501 "a")))
+                                           ["Title must not be longer than 500 characters"]]
+                                          [(assoc create-dress-request :title 123)
+                                           ["Title is not valid"]]
+                                          [(assoc create-dress-request :description 1234)
+                                           ["Description is not valid"]]
+                                          [(assoc create-dress-request :size "33")
+                                           ["Size is not valid"]]
+                                          [(assoc create-dress-request :size 32.2)
+                                           ["Size is not valid"]]
+                                          [(assoc create-dress-request :pictures "https://some.nonlist.url")
+                                           ["Pictures is not valid"]]
+                                          [(assoc create-dress-request :price "7 euro")
+                                           ["Price is not valid"]]
+                                          [(assoc create-dress-request :price "-123.23")
+                                           ["Price is not valid"]]
+                                          [(assoc create-dress-request :price 35.555)
+                                           ["Price is not valid"]]]]
     (testing "Test POST /dresses authorized with invalid request body"
       (with-redefs [dresses-db/add-dress (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -89,7 +103,8 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? dresses-db/add-dress))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  expected-errors} (dissoc body :details))))))))
 
 (def ^:private update-dress-request
   "Test API request to update dress."
@@ -155,7 +170,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? dresses-db/update-dress))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Field dress-id is mandatory"]}
+               body)))))
 
   (testing "Test PATCH /dresses/:dress-id with non-existing `dress-id`"
     (with-redefs [dresses-db/update-dress (spy/stub 0)]
@@ -181,15 +198,24 @@
         (is (spy/called-once-with? dresses-db/update-dress nil test-dress-id update-dress-request))
         (is (= {:message const/server-error-message} body)))))
 
-  (doseq [request-body [(assoc update-dress-request :title (str/join (repeat 501 "a")))
-                        (assoc update-dress-request :title 123)
-                        (assoc update-dress-request :description 1234)
-                        (assoc update-dress-request :size "33")
-                        (assoc update-dress-request :size 32.2)
-                        (assoc update-dress-request :pictures "https://some.nonlist.url")
-                        (assoc update-dress-request :price "7 euro")
-                        (assoc update-dress-request :price "-123.23")
-                        (assoc update-dress-request :price 35.555)]]
+  (doseq [[request-body errors] [[(assoc update-dress-request :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 500 characters"]]
+                                 [(assoc update-dress-request :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc update-dress-request :description 1234)
+                                  ["Description is not valid"]]
+                                 [(assoc update-dress-request :size "33")
+                                  ["Size is not valid"]]
+                                 [(assoc update-dress-request :size 32.2)
+                                  ["Size is not valid"]]
+                                 [(assoc update-dress-request :pictures "https://some.nonlist.url")
+                                  ["Pictures is not valid"]]
+                                 [(assoc update-dress-request :price "7 euro")
+                                  ["Price is not valid"]]
+                                 [(assoc update-dress-request :price "-123.23")
+                                  ["Price is not valid"]]
+                                 [(assoc update-dress-request :price 35.555)
+                                  ["Price is not valid"]]]]
     (testing "Test PATCH /dresses/:dress-id with invalid request body"
       (with-redefs [dresses-db/update-dress (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -200,7 +226,9 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? dresses-db/update-dress))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body)))))))
 
 (def ^:private dress-from-db
   "Test dress database query result."
@@ -249,7 +277,8 @@
             response (app (mock/request :get "/api/dresses/invalid"))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]} body))
         (is (spy/not-called? dresses-db/get-dress-by-id))))))
 
 (def ^:private dress-from-db-extra
@@ -303,7 +332,9 @@
               response (app (mock/request :get url))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+          (is (= {:message const/bad-request-error-message
+                  :errors  ["Value is not valid"]}
+                 body))
           (is (spy/not-called? dresses-db/get-all-dresses)))))))
 
 (deftest delete-dress-by-id-test
@@ -353,7 +384,9 @@
                               (mock/header :authorization (td/test-auth-token #{:admin}))))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))
         (is (spy/not-called? dresses-db/delete-dress)))))
 
   (testing "Test DELETE /dresses/:dress-id unexpected result from database"

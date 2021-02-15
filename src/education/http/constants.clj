@@ -82,4 +82,5 @@
   (some->> (s/explain-data spec x)
            ::s/problems
            (mapv #(p/phrase {} %))
+           (distinct)
            (filterv (complement nil?))))

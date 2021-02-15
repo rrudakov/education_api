@@ -4,7 +4,9 @@
             [education.http.endpoints.presentations :as presentations-endpoint]
             [education.http.endpoints.test-app :as test-app]
             [ring.mock.request :as mock]
-            [spy.core :as spy])
+            [spy.core :as spy]
+            [clojure.spec.alpha :as s]
+            [education.specs.common :as spec])
   (:import java.time.Instant))
 
 (def ^:private presentation-response-invalid
@@ -13,8 +15,8 @@
    :title       "Title"
    :url         "invalid url"
    :description "Some description"
-   :created_on  (str (Instant/now))
-   :updated_on  (str (Instant/now))})
+   :created_on  (Instant/now)
+   :updated_on  (Instant/now)})
 
 (deftest response-validation-handler-test
   (testing "Test exception handler for invalid response body"
@@ -23,5 +25,6 @@
             response (app (mock/request :get "/api/presentations/22"))
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
-        (is (= {:message const/server-error-message} (dissoc body :details)))
-        (is (contains? body :details))))))
+        (is (= {:message const/server-error-message
+                :details (s/explain-str ::spec/presentation-response presentation-response-invalid)}
+               body))))))

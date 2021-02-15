@@ -62,16 +62,27 @@
         (is (spy/not-called? gymnastics-db/add-gymnastic))
         (is (= {:message const/not-authorized-error-message} body)))))
 
-  (doseq [request-body [(dissoc create-gymnastic-request :subtype_id)
-                        (dissoc create-gymnastic-request :title)
-                        (dissoc create-gymnastic-request :description)
-                        (assoc create-gymnastic-request :subtype_id "3")
-                        (assoc create-gymnastic-request :subtype_id 0)
-                        (assoc create-gymnastic-request :title (str/join (repeat 501 "a")))
-                        (assoc create-gymnastic-request :title 123)
-                        (assoc create-gymnastic-request :description 123)
-                        (assoc create-gymnastic-request :picture 123)
-                        (assoc create-gymnastic-request :picture "invalidUrl")]]
+  (doseq [[request-body errors] [[(dissoc create-gymnastic-request :subtype_id)
+                                  ["Field subtype_id is mandatory"]]
+                                 [(dissoc create-gymnastic-request :title)
+                                  ["Field title is mandatory"]]
+                                 [(dissoc create-gymnastic-request :description)
+                                  ["Field description is mandatory"]]
+                                 [(assoc create-gymnastic-request :subtype_id "3")
+                                  ["Subtype_id is not valid"]]
+                                 [(assoc create-gymnastic-request :subtype_id 0)
+                                  ["Subtype_id is not valid"]]
+                                 [(assoc create-gymnastic-request :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 500 characters"]]
+                                 [(assoc create-gymnastic-request :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc create-gymnastic-request :description 123)
+                                  ["Description is not valid"]]
+                                 [(assoc create-gymnastic-request :picture 123)
+                                  ["Picture is not valid"]]
+                                 [(assoc create-gymnastic-request :picture "invalidUrl")
+                                  ["Picture URL is not valid"
+                                   "Picture is not valid"]]]]
     (testing "Test POST /gymnastics authorized with invalid request body"
       (with-redefs [gymnastics-db/add-gymnastic (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -82,7 +93,9 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/add-gymnastic))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body)))))))
 
 (def ^:private update-gymnastic-request
   "Test API request to update gymnastic."
@@ -142,7 +155,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/update-gymnastic))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Field gymnastic-id is mandatory"]}
+               body)))))
 
   (testing "Test PATCH /gymnastics/:gymnastic-id with non-existing `gymnastic-id`"
     (with-redefs [gymnastics-db/update-gymnastic (spy/stub 0)]
@@ -168,16 +183,27 @@
         (is (spy/called-once-with? gymnastics-db/update-gymnastic nil test-gymnastic-id update-gymnastic-request))
         (is (= {:message const/server-error-message} body)))))
 
-  (doseq [request-body [(assoc update-gymnastic-request :subtype_id 0)
-                        (assoc update-gymnastic-request :subtype_id "32")
-                        (assoc update-gymnastic-request :subtype_id nil)
-                        (assoc update-gymnastic-request :title (str/join (repeat 501 "a")))
-                        (assoc update-gymnastic-request :title 123)
-                        (assoc update-gymnastic-request :title nil)
-                        (assoc update-gymnastic-request :description 123)
-                        (assoc update-gymnastic-request :description nil)
-                        (assoc update-gymnastic-request :picture "invalid")
-                        (assoc update-gymnastic-request :picture 123)]]
+  (doseq [[request-body errors] [[(assoc update-gymnastic-request :subtype_id 0)
+                                  ["Subtype_id is not valid"]]
+                                 [(assoc update-gymnastic-request :subtype_id "32")
+                                  ["Subtype_id is not valid"]]
+                                 [(assoc update-gymnastic-request :subtype_id nil)
+                                  ["Subtype_id is not valid"]]
+                                 [(assoc update-gymnastic-request :title (str/join (repeat 501 "a")))
+                                  ["Title must not be longer than 500 characters"]]
+                                 [(assoc update-gymnastic-request :title 123)
+                                  ["Title is not valid"]]
+                                 [(assoc update-gymnastic-request :title nil)
+                                  ["Title is not valid"]]
+                                 [(assoc update-gymnastic-request :description 123)
+                                  ["Description is not valid"]]
+                                 [(assoc update-gymnastic-request :description nil)
+                                  ["Description is not valid"]]
+                                 [(assoc update-gymnastic-request :picture "invalid")
+                                  ["Picture URL is not valid"
+                                   "Picture is not valid"]]
+                                 [(assoc update-gymnastic-request :picture 123)
+                                  ["Picture is not valid"]]]]
     (testing "Test PATCH /gymnastics/:gymnastic-id with invalid request body"
       (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -188,7 +214,9 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/update-gymnastic))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  errors}
+                 body)))))))
 
 (def ^:private created-on
   "Constant `created_on` value for tests."
@@ -244,7 +272,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/get-gymnastic-by-id))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details)))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body))))))
 
 (def ^:private gymnastic-from-db-extra
   "One more test gymnastic database query result."
@@ -302,7 +332,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/get-all-gymnastics))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body)))))
 
   (testing "Test GET /gymnastics with invalid `subtype_id`"
     (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
@@ -311,7 +343,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/get-all-gymnastics))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body)))))
 
   (doseq [url ["/api/gymnastics?subtype_id=3&limit=invalid"
                "/api/gymnastics?subtype_id=3&offset=invalid"]]
@@ -322,7 +356,9 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/get-all-gymnastics))
-          (is (= {:message const/bad-request-error-message} (dissoc body :details))))))))
+          (is (= {:message const/bad-request-error-message
+                  :errors  ["Value is not valid"]}
+                 body)))))))
 
 (deftest delete-gymnastic-by-id-test
   (testing "Test DELETE /gymnastics/:gymnastic-id authorized with :admin role and valid `gymnastic-id`"
@@ -372,7 +408,9 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/delete-gymnastic))
-        (is (= {:message const/bad-request-error-message} (dissoc body :details))))))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body)))))
 
   (testing "Test DELETE /gymnastics/:gymnastic-id unexpected result from database"
     (with-redefs [gymnastics-db/delete-gymnastic (spy/stub 2)]
