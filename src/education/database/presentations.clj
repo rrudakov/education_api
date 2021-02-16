@@ -32,9 +32,9 @@
        (hsql/format)
        (sql/query conn)
        (map (fn [presentation]
-              (if (:is_public presentation)
-                (dissoc presentation :url)
-                presentation)))))
+              (if (:presentations/is_public presentation)
+                presentation
+                (dissoc presentation :presentations/url))))))
 
 (defn delete-presentation
   "Delete presentation by `presentation-id` with given `conn`."
