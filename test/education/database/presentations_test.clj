@@ -122,7 +122,7 @@
   (testing "Test get all presentation filter URLs from non-public"
     (with-redefs [sql/query (spy/stub [create-presentation-result create-presentation-result-not-public])]
       (let [result (sut/get-all-presentations nil)]
-        (is (= [create-presentation-result (dissoc create-presentation-result-not-public :url)] result))
+        (is (= [create-presentation-result (dissoc create-presentation-result-not-public :presentations/url)] result))
         (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 0]))))))
 
 (def ^:private delete-presentation-result
