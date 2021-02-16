@@ -4,10 +4,10 @@
 
 (defn add-presentation
   "Create new `presentation` entry in database with given `conn`."
-  [conn presentation]
-  (-> conn
-      (sql/insert! :presentations presentation)
-      (:presentations/id)))
+  [conn {:keys [is_public] :as presentation :or {is_public true}}]
+  (->> (assoc presentation :is_public is_public)
+       (sql/insert! conn :presentations)
+       (:presentations/id)))
 
 (defn update-presentation
   "Update existing `presentation` entry by `presentation-id` with given `conn`."
@@ -30,7 +30,11 @@
                    :limit (or limit 20)
                    :offset (or offset 0))
        (hsql/format)
-       (sql/query conn)))
+       (sql/query conn)
+       (map (fn [presentation]
+              (if (:is_public presentation)
+                (dissoc presentation :url)
+                presentation)))))
 
 (defn delete-presentation
   "Delete presentation by `presentation-id` with given `conn`."

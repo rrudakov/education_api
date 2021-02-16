@@ -287,7 +287,6 @@
                 :errors  ["Value is not valid"]}
                body))))))
 
-
 (deftest get-latest-articles-test
   (testing "Test GET /articles/latest with valid limit parameter"
     (with-redefs [articlesdb/get-latest-full-sized-articles

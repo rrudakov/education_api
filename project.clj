@@ -43,5 +43,6 @@
                                   [peridot "0.5.3"]
                                   [org.clojure/test.check "1.0.0"]]}
              :uberjar {:aot :all}}
-  :plugins [[lein-cloverage "1.1.2"]]
+  :plugins [[lein-cloverage "1.1.2"]
+            [lein-cljfmt "0.7.0"]]
   :main education.core)

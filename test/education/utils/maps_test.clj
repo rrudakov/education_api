@@ -64,3 +64,8 @@
                               :some_title "Some title"
                               :sub-title  "Subtitle"
                               :newField   33})))))
+
+(deftest remove-nils-test
+  (testing "Test remove-nils"
+    (is (= {:id 1 :some_title "Title"}
+           (sut/remove-nils {:id 1 :some_title "Title" :attachment nil})))))

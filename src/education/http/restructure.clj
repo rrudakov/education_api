@@ -6,12 +6,12 @@
             [ring.util.http-response :refer [forbidden unauthorized]]))
 
 #_(defn- expire?
-  "Check if `user` data from token is expired."
-  [user]
-  (let [now (quot (System/currentTimeMillis) 1000)]
-    (if (> now (:exp user))
-      user
-      nil)))
+    "Check if `user` data from token is expired."
+    [user]
+    (let [now (quot (System/currentTimeMillis) 1000)]
+      (if (> now (:exp user))
+        user
+        nil)))
 
 (defn has-role?
   "Check if `user` has one or many of `required-roles`."
