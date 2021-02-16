@@ -118,6 +118,30 @@
     (testing (str "::screenshots is invalid " screenshots)
       (is (not (s/valid? ::sut/screenshots screenshots))))))
 
+(deftest attachment-test
+  (doseq [attachment ["http://insecure.com"
+                      "https://secure.net/some.img.jpg"
+                      "https://some.url/"
+                      "http://127.0.0.1:3000/some_image.jpg"
+                      (str "https://some.url/" (str/join (repeat 979 "a")) ".jpg")]]
+    (testing (str "::attachment is valid " attachment)
+      (is (s/valid? ::sut/attachment attachment))))
+
+  (doseq [attachment ["juststring"
+                      "www.attachment.com/image.jpg"
+                      (str "https://some.url/" (str/join (repeat 980 "a")) ".jpg")]]
+    (testing (str "::attachment is invalid " attachment)
+      (is (not (s/valid? ::sut/attachment attachment))))))
+
+(deftest is-public-test
+  (doseq [is-public [true false]]
+    (testing (str "::is-public is valid " is-public)
+      (is (s/valid? ::sut/is_public is-public))))
+
+  (doseq [is-public ["string" 123 nil [] #{} :keyword]]
+    (testing (str "::is-public is invalid")
+      (is ((complement s/valid?) ::sut/is_public is-public)))))
+
 (deftest created-on-test
   (testing "::created_on is valid"
     (is (s/valid? ::sut/created_on (Instant/now))))
@@ -227,7 +251,7 @@
     (is (s/valid? ::sut/gymnastics-response [gymnastic-response gymnastic-response2])))
 
   (testing "::gymnastics-response is invalid"
-    (is (not (s/valid? ::sut/gymnastics-response [gymnastic-response gymnastic-response ])))))
+    (is (not (s/valid? ::sut/gymnastics-response [gymnastic-response gymnastic-response])))))
 
 (def ^:private dress-create-request
   {:title       "Dress title"
@@ -432,17 +456,22 @@
 (def ^:private presentation-create-request
   {:title       "My awesome presentation"
    :url         "https://google.com/api/presentations/bla-bla-bla"
-   :description "This presentations is about bla-bla-bla"})
+   :description "This presentations is about bla-bla-bla"
+   :is_public   false
+   :attachment  "https://alenkinaskazka.net/some_file.pdf"})
 
 (deftest presentation-create-request-test
-  (testing "::presentations-create-request is valid"
-    (is (s/valid? ::sut/presentation-create-request presentation-create-request)))
+  (doseq [request [presentation-create-request
+                   (dissoc presentation-create-request :is_public)
+                   (dissoc presentation-create-request :attachment)]]
+    (testing "::presentations-create-request is valid"
+      (is (s/valid? ::sut/presentation-create-request request))))
 
   (doseq [request [(dissoc presentation-create-request :title)
                    (dissoc presentation-create-request :url)
                    (dissoc presentation-create-request :description)]]
     (testing "::presentation-create-request is invalid"
-      (is (not (s/valid? ::sut/presentation-create-request request))))))
+      (is ((complement s/valid?) ::sut/presentation-create-request request)))))
 
 (deftest presentations-update-request-test
   (doseq [request [{}
@@ -457,28 +486,32 @@
    :title       "First title"
    :url         "https://google.com/first/presentation"
    :description "First presentation description"
+   :is_public   false
    :created_on  (Instant/now)
    :updated_on  (Instant/now)})
 
 (def ^:private presentation-response2
   {:id          2
    :title       "Second title"
-   :url         "https://google.com/second/presentation"
    :description "Second presentation description"
+   :is_public   false
+   :attachment  "https://alenkinaskazka.net/some-file.pdf"
    :created_on  (Instant/now)
    :updated_on  (Instant/now)})
 
 (deftest presentation-response-test
-  (testing "::presentation-response is valid"
-    (is (s/valid? ::sut/presentation-response presentation-response)))
+  (doseq [response [presentation-response
+                    presentation-response2]]
+    (testing "::presentation-response is valid"
+      (is (s/valid? ::sut/presentation-response response))))
 
   (doseq [response [(dissoc presentation-response :id)
                     (dissoc presentation-response :title)
-                    (dissoc presentation-response :url)
                     (dissoc presentation-response :description)
+                    (dissoc presentation-response :is_public)
                     (dissoc presentation-response :created_on)
                     (dissoc presentation-response :updated_on)]]
-    (is (not (s/valid? ::sut/presentation-response response)))))
+    (is ((complement s/valid?) ::sut/presentation-response response))))
 
 (deftest presentations-response-test
   (testing "::presentations-response is valid"
@@ -488,4 +521,4 @@
   (doseq [response [[presentation-response presentation-response]
                     #{presentation-response presentation-response2}]]
     (testing "::presentations-response is invalid"
-      (is (not (s/valid? ::sut/presentations-response response))))))
+      (is ((complement s/valid?) ::sut/presentations-response response)))))

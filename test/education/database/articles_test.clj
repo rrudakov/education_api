@@ -52,10 +52,10 @@
                   :body           (:body td/add-article-request)
                   :featured_image (:featured_image td/add-article-request)
                   :updated_on     now}
-                (assoc query :updated_on now)))
-         (is (= :articles table))
-         (is (= {:id (:articles/id td/db-test-article)} opts))
-         (is (= updated-rows result))))))
+                 (assoc query :updated_on now)))
+          (is (= :articles table))
+          (is (= {:id (:articles/id td/db-test-article)} opts))
+          (is (= updated-rows result))))))
 
   (testing "Test update article with empty body"
     (let [updated-rows 2]
@@ -63,10 +63,10 @@
         (let [article-id             42
               result                 (sut/update-article nil article-id {})
               [[_ table query opts]] (spy/calls sql/update!)]
-         (is (= (list :updated_on) (keys query)))
-         (is (= :articles table))
-         (is (= {:id article-id} opts))
-         (is (= updated-rows result)))))))
+          (is (= (list :updated_on) (keys query)))
+          (is (= :articles table))
+          (is (= {:id article-id} opts))
+          (is (= updated-rows result)))))))
 
 (def get-all-articles-query
   "Expected raw SQL query for fetching all articles from database."

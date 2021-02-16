@@ -89,7 +89,7 @@
     (testing (str "::description is valid " description)
       (is (s/valid? ::sut/description description))))
 
-  (doseq [description [ false 1234 []]]
+  (doseq [description [false 1234 []]]
     (testing (str "::description is invalid " description)
       (is (not (s/valid? ::sut/description description))))))
 

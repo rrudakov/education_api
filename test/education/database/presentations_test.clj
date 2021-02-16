@@ -19,12 +19,32 @@
    :url         "https://google.com/presentation/bla-bla"
    :description "This presentation is about bla-bla-bla..."})
 
+(def ^:private create-presentation-request-v2
+  "Test create presentation API v2 request."
+  {:title       "Presentation title"
+   :url         "https://google.com/presentation/bla-bla"
+   :description "This presentation is about bla-bla-bla..."
+   :is_public   false
+   :attachment  "https://alenkinaskazka.net/some_file.pdf"})
+
 (def ^:private create-presentation-result
   "Stub data for create presentation call."
   {:presentations/id          32
    :presentations/title       "Presentation title"
    :presentations/url         "https://google.com/presentation/bla-bla"
    :presentations/description "This presentation is about bla-bla-bla..."
+   :presentations/is_public   true
+   :presentations/attachment  nil
+   :presentations/created_on  created-on
+   :presentations/updated_on  updated-on})
+
+(def ^:private create-presentation-result-not-public
+  {:presentations/id          33
+   :presentations/title       "Presentation title"
+   :presentations/url         "https://google.com/presentation/bla-bla"
+   :presentations/description "This presentation is about bla-bla-bla..."
+   :presentations/is_public   false
+   :presentations/attachment  "https://alenkinaskazka.net/some_file.pdf"
    :presentations/created_on  created-on
    :presentations/updated_on  updated-on})
 
@@ -33,7 +53,14 @@
     (with-redefs [sql/insert! (spy/stub create-presentation-result)]
       (let [result (sut/add-presentation nil create-presentation-request)]
         (is (= (:presentations/id create-presentation-result) result))
-        (is (spy/called-once-with? sql/insert! nil :presentations create-presentation-request))))))
+        (is (spy/called-once-with? sql/insert! nil :presentations
+                                   (assoc create-presentation-request :is_public true))))))
+
+  (testing "Test add presentation for v2 API request"
+    (with-redefs [sql/insert! (spy/stub create-presentation-result)]
+      (let  [result (sut/add-presentation nil create-presentation-request-v2)]
+        (is (= (:presentations/id create-presentation-result) result))
+        (is (spy/called-once-with? sql/insert! nil :presentations create-presentation-request-v2))))))
 
 (def ^:private update-presentation-id
   "Test API presentation-id."
@@ -47,6 +74,8 @@
   (doseq [request [{:title "New title"}
                    {:url "https://google.com/presentation/new-bla-bla"}
                    {:description "Updated description"}
+                   {:is_public false}
+                   {:attachment "https://alenkinaskazka.net/some_file.pdf"}
                    {}]]
     (testing "Test update presentation with valid fields"
       (with-redefs [sql/update! (spy/stub update-presentation-result)]
@@ -88,7 +117,13 @@
       (let [offset 20
             result (sut/get-all-presentations nil :offset offset)]
         (is (= [create-presentation-result] result))
-        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 offset]))))))
+        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 offset])))))
+
+  (testing "Test get all presentation filter URLs from non-public"
+    (with-redefs [sql/query (spy/stub [create-presentation-result create-presentation-result-not-public])]
+      (let [result (sut/get-all-presentations nil)]
+        (is (= [create-presentation-result (dissoc create-presentation-result-not-public :url)] result))
+        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 0]))))))
 
 (def ^:private delete-presentation-result
   "Stub data for delete presentation call."

@@ -44,7 +44,7 @@
             [[_ name]] (spy/calls sut/write-file)]
         (is (= 200 (:status response)))
         (is (= {:url (str (config/base-url td/test-config) "/img/" test-uuid "_" test-img-name)} body))
-        (is (= (str (config/storage-path td/test-config) "img/" test-uuid "_" test-img-name) name )))))
+        (is (= (str (config/storage-path td/test-config) "img/" test-uuid "_" test-img-name) name)))))
 
   (testing "Test POST /upload with invalid request"
     (with-redefs [sut/write-file (spy/spy)]

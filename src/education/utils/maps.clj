@@ -30,3 +30,7 @@
   "Take map `m` with kebab or snake case keys and produce new one with snake case."
   [m]
   (apply hash-map (mapcat ->camel-key m)))
+
+(defn remove-nils
+  [m]
+  (apply dissoc m (for [[k v] m :when (nil? v)] k)))

@@ -4,7 +4,7 @@
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
             [education.specs.common :as spec]
-            [education.utils.maps :refer [unqualify-map]]
+            [education.utils.maps :refer [remove-nils unqualify-map]]
             [ring.util.http-response :as status]))
 
 ;; Handlers
@@ -23,13 +23,14 @@
 (defn- get-presentation-by-id-handler
   [db presentation-id]
   (if-let [presentation (presentations-db/get-presentation-by-id db presentation-id)]
-    (status/ok (unqualify-map presentation))
+    (status/ok (-> presentation unqualify-map remove-nils))
     (status/not-found {:message const/not-found-error-message})))
 
 (defn- get-all-presentations-handler
   [db limit offset]
   (->> (presentations-db/get-all-presentations db :limit limit :offset offset)
        (mapv unqualify-map)
+       (mapv remove-nils)
        (status/ok)))
 
 (defn- delete-presentation-by-id-handler
@@ -74,6 +75,7 @@
                        :schema      ::spec/error-response}}
       (update-presesntation-handler db presentation-id presentation))
     (GET "/:presentation-id" []
+      :middleware [[require-roles #{:admin}]]
       :path-params [presentation-id :- ::spec/id]
       :summary "Get presentation entry"
       :description "Get presentations by `presentation-id`"

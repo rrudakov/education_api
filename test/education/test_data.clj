@@ -119,7 +119,7 @@
   "Article to create."
   {:title          "Test title",
    :body           "Test body",
-   :featured_image "https://featured.image.com/image.png",})
+   :featured_image "https://featured.image.com/image.png"})
 
 (def db-test-article
   "Created article."
