@@ -25,7 +25,8 @@
    :url         "https://google.com/presentation/bla-bla"
    :description "This presentation is about bla-bla-bla..."
    :is_public   false
-   :attachment  "https://alenkinaskazka.net/some_file.pdf"})
+   :attachment  "https://alenkinaskazka.net/some_file.pdf"
+   :preview     "https://alenkinaskazka.net/some_image.png"})
 
 (def ^:private create-presentation-result
   "Stub data for create presentation call."
@@ -35,6 +36,7 @@
    :presentations/description "This presentation is about bla-bla-bla..."
    :presentations/is_public   true
    :presentations/attachment  nil
+   :presentations/preview     nil
    :presentations/created_on  created-on
    :presentations/updated_on  updated-on})
 
@@ -45,6 +47,7 @@
    :presentations/description "This presentation is about bla-bla-bla..."
    :presentations/is_public   false
    :presentations/attachment  "https://alenkinaskazka.net/some_file.pdf"
+   :presentations/preview     "https://alenkinaskazka.net/some_image.png"
    :presentations/created_on  created-on
    :presentations/updated_on  updated-on})
 
@@ -76,6 +79,7 @@
                    {:description "Updated description"}
                    {:is_public false}
                    {:attachment "https://alenkinaskazka.net/some_file.pdf"}
+                   {:preview "https://alenkinaskazka.net/some_image.png"}
                    {}]]
     (testing "Test update presentation with valid fields"
       (with-redefs [sql/update! (spy/stub update-presentation-result)]
@@ -92,6 +96,12 @@
     (with-redefs [sql/get-by-id (spy/stub create-presentation-result)]
       (let [result (sut/get-presentation-by-id nil get-presentation-id)]
         (is (= create-presentation-result result))
+        (is (spy/called-once-with? sql/get-by-id nil :presentations get-presentation-id)))))
+
+  (testing "Test get presentation by ID with valid `presentation-id` v2"
+    (with-redefs [sql/get-by-id (spy/stub create-presentation-result-not-public)]
+      (let [result (sut/get-presentation-by-id nil get-presentation-id)]
+        (is (= create-presentation-result-not-public result))
         (is (spy/called-once-with? sql/get-by-id nil :presentations get-presentation-id))))))
 
 (def ^:private get-all-presentations-query

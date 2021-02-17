@@ -133,6 +133,22 @@
     (testing (str "::attachment is invalid " attachment)
       (is (not (s/valid? ::sut/attachment attachment))))))
 
+(deftest preview-test
+  (doseq [preview ["http://insecure.com"
+                   "https://secure.net/some.img.jpg"
+                   "https://some.url/"
+                   "http://127.0.0.1:3000/some_image.jpg"
+                   (str "https://some.url/" (str/join (repeat 979 "a")) ".jpg")]]
+    (testing (str "::preview is valid " preview)
+      (is (s/valid? ::sut/preview preview))))
+
+  (doseq [preview ["juststring"
+                   "www.preview.com/image.jpg"
+                   (str "https://some.url/" (str/join (repeat 980 "a")) ".jpg")
+                   nil]]
+    (testing (str "::preview is invalid " preview)
+      (is (not (s/valid? ::sut/preview preview))))))
+
 (deftest is-public-test
   (doseq [is-public [true false]]
     (testing (str "::is-public is valid " is-public)
@@ -458,12 +474,14 @@
    :url         "https://google.com/api/presentations/bla-bla-bla"
    :description "This presentations is about bla-bla-bla"
    :is_public   false
-   :attachment  "https://alenkinaskazka.net/some_file.pdf"})
+   :attachment  "https://alenkinaskazka.net/some_file.pdf"
+   :preview     "https://alenkinaskazka.net/some_image.png"})
 
 (deftest presentation-create-request-test
   (doseq [request [presentation-create-request
                    (dissoc presentation-create-request :is_public)
-                   (dissoc presentation-create-request :attachment)]]
+                   (dissoc presentation-create-request :attachment)
+                   (dissoc presentation-create-request :preview)]]
     (testing "::presentations-create-request is valid"
       (is (s/valid? ::sut/presentation-create-request request))))
 
@@ -477,7 +495,10 @@
   (doseq [request [{}
                    {:title "New title"}
                    {:url "https://google.com/new-url"}
-                   {:description "Updated description"}]]
+                   {:description "Updated description"}
+                   {:is_public false}
+                   {:attachment "https://alenkinaskazka.net/some_file.pdf"}
+                   {:preview "https://alenkinaskazka.net/some_image.png"}]]
     (testing "::presentation-update-request is valid"
       (is (s/valid? ::sut/presentation-update-request request)))))
 
@@ -496,6 +517,7 @@
    :description "Second presentation description"
    :is_public   false
    :attachment  "https://alenkinaskazka.net/some-file.pdf"
+   :preview     "https://alenkinaskazka.net/some_image.png"
    :created_on  (Instant/now)
    :updated_on  (Instant/now)})
 

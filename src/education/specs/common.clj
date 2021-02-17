@@ -28,6 +28,7 @@
 (s/def ::picture ::url)
 (s/def ::screenshot ::url)
 (s/def ::attachment ::url)
+(s/def ::preview ::url)
 
 (s/def ::pictures
   (s/coll-of ::picture :kind vector? :distinct true :into []))
@@ -117,14 +118,14 @@
 ;; Presentations
 (s/def ::presentation-create-request
   (s/keys :req-un [::title ::url ::description]
-          :opt-un [::attachment ::is_public]))
+          :opt-un [::attachment ::is_public ::preview]))
 
 (s/def ::presentation-update-request
-  (s/keys :opt-un [::title ::url ::description ::attachment ::is_public]))
+  (s/keys :opt-un [::title ::url ::description ::attachment ::preview ::is_public]))
 
 (s/def ::presentation-response
   (s/keys :req-un [::id ::title ::description ::is_public ::created_on ::updated_on]
-          :opt-un [::url ::attachment]))
+          :opt-un [::url ::attachment ::preview]))
 
 (s/def ::presentations-response
   (s/coll-of ::presentation-response :kind vector? :distinct true :into []))
