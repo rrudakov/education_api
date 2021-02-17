@@ -26,7 +26,8 @@
    :url         "https://google.com/api/presentation"
    :description "This presentation is about bla-bla-bla..."
    :is_public   false
-   :attachment  "https://alenkinaskazka.net/some_file.pdf"})
+   :attachment  "https://alenkinaskazka.net/some_file.pdf"
+   :preview     "https://alenkinaskazka.net/some_image.png"})
 
 (deftest create-presentation-test
   (testing "Test POST /presentations authorized with admin role and valid request body"
@@ -99,7 +100,9 @@
                                  [(assoc create-presentation-request-v2 :attachment nil)
                                   ["Attachment is not valid"]]
                                  [(assoc create-presentation-request-v2 :attachment "invalid")
-                                  ["Attachment URL is not valid"]]]]
+                                  ["Attachment URL is not valid"]]
+                                 [(assoc create-presentation-request-v2 :preview "invalid")
+                                  ["Preview URL is not valid"]]]]
     (testing "Test POST /presentations authorized with invalid request body"
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/presentations")
@@ -125,7 +128,8 @@
    :url         "https://google.com/api/presentation/some/fancy/stuff/"
    :description "Updated description for presentation"
    :is_public   false
-   :attachment  "https://alenkinaskazka.net/some-file.pdf"})
+   :attachment  "https://alenkinaskazka.net/some-file.pdf"
+   :preview     "https://alenkinaskazka.net/some_image.png"})
 
 (deftest update-presentation-test
   (doseq [request-body [update-presentation-request
@@ -134,6 +138,7 @@
                         (dissoc update-presentation-request-v2 :description)
                         (dissoc update-presentation-request-v2 :is_public)
                         (dissoc update-presentation-request-v2 :attachment)
+                        (dissoc update-presentation-request-v2 :preview)
                         {}]]
     (testing "Test PATCH /presentations/:presentation-id authorized with admin role and valid request body"
       (with-redefs [presentations-db/update-presentation (spy/stub 1)]
@@ -223,7 +228,9 @@
                                  [(assoc update-presentation-request-v2 :attachment nil)
                                   ["Attachment is not valid"]]
                                  [(assoc update-presentation-request-v2 :attachment "invalid")
-                                  ["Attachment URL is not valid"]]]]
+                                  ["Attachment URL is not valid"]]
+                                 [(assoc update-presentation-request-v2 :preview "invalid")
+                                  ["Preview URL is not valid"]]]]
     (testing "Test PATCH /presentations/:presentation-id with invalid request body"
       (with-redefs [presentations-db/update-presentation (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -246,6 +253,7 @@
    :presentations/description "This is presentation about bla-bla.."
    :presentations/is_public   true
    :presentations/attachment  "https://alenkinaskazka.net/some_file.pdf"
+   :presentations/preview     "https://alenkinaskazka.net/some_image.png"
    :presentations/created_on  (Instant/now)
    :presentations/updated_on  (Instant/now)})
 
@@ -257,6 +265,7 @@
    :description (:presentations/description presentation-from-db)
    :is_public   (:presentations/is_public presentation-from-db)
    :attachment  (:presentations/attachment presentation-from-db)
+   :preview     (:presentations/preview presentation-from-db)
    :created_on  (str (:presentations/created_on presentation-from-db))
    :updated_on  (str (:presentations/updated_on presentation-from-db))})
 
@@ -332,6 +341,7 @@
    :presentations/description "This is another presentation about bla-bla.."
    :presentations/is_public   false
    :presentations/attachment  nil
+   :presentations/preview     nil
    :presentations/created_on  (Instant/now)
    :presentations/updated_on  (Instant/now)})
 
