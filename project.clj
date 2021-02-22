@@ -1,4 +1,4 @@
-(defproject education-api "1.3.0"
+(defproject education-api "1.3.1"
   :description "Back end for education web application"
   :url "http://educationapp-api.herokuapp.com/swagger"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"

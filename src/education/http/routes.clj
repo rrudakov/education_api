@@ -63,7 +63,7 @@
       :spec {}}
      :data
      {:info
-      {:version     "1.3.0"
+      {:version     "1.3.1"
        :title       "Education API"
        :description "REST API for education application"
        :contact
