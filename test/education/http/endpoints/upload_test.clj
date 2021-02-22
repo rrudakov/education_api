@@ -16,6 +16,12 @@
   Must be real image name from `test-resources` folder."
   "1.png")
 
+(def ^:private test-image-name-without-extension
+  "Image name to be uploaded.
+
+  This image without extension to check `extract-file-extension` function."
+  "2")
+
 (deftest uuid-test
   (testing "Test `uuid` function returns unique string every time"
     (let [first-uuid  (sut/uuid)
@@ -37,14 +43,30 @@
   (testing "Test POST /upload successfully"
     (with-redefs [sut/write-file (spy/spy)
                   sut/uuid       (spy/stub test-uuid)]
-      (let [app        (test-app/api-routes-with-auth)
+      (let [file       (io/file (io/resource test-img-name))
+            app        (test-app/api-routes-with-auth)
             response   (app (-> (mock/request :post "/api/upload")
-                                (merge (mp/build {:file (io/file (io/resource test-img-name))}))))
+                                (merge (mp/build {:file file}))))
             body       (test-app/parse-body (:body response))
-            [[_ name]] (spy/calls sut/write-file)]
+            [[f name]] (spy/calls sut/write-file)]
         (is (= 200 (:status response)))
         (is (= {:url (str (config/base-url td/test-config) "/img/" test-uuid ".png")} body))
-        (is (= (str (config/storage-path td/test-config) "img/" test-uuid ".png") name)))))
+        (is (= (str (config/storage-path td/test-config) "img/" test-uuid ".png") name))
+        (is (= (slurp f) (slurp file))))))
+
+  (testing "test POST /upload successfully without file extension"
+    (with-redefs [sut/write-file (spy/spy)
+                  sut/uuid       (spy/stub test-uuid)]
+      (let [file       (io/file (io/resource test-image-name-without-extension))
+            app        (test-app/api-routes-with-auth)
+            response   (app (-> (mock/request :post "/api/upload")
+                                (merge (mp/build {:file file}))))
+            body       (test-app/parse-body (:body response))
+            [[f name]] (spy/calls sut/write-file)]
+        (is (= 200 (:status response)))
+        (is (= {:url (str (config/base-url td/test-config) "/img/" test-uuid)} body))
+        (is (= (str (config/storage-path td/test-config) "img/" test-uuid) name))
+        (is (= (slurp f) (slurp file))))))
 
   (testing "Test POST /upload with invalid request"
     (with-redefs [sut/write-file (spy/spy)]
