@@ -27,10 +27,17 @@
   (with-open [out (output-stream (file name))]
     (.write out (file->byte-array f))))
 
+(defn- extract-file-extension
+  [filename]
+  (if (str/includes? filename ".")
+    (str "." (last (str/split filename #"\.")))
+    ""))
+
 (defn upload-file-handler
   [{:keys [filename _content-type tempfile]} config]
-  (let [name (str/join "_" [(uuid) filename])
-        path (path/join (config/storage-path config) img-prefix name)]
+  (let [extension (extract-file-extension filename)
+        name      (str/join [(uuid) extension])
+        path      (path/join (config/storage-path config) img-prefix name)]
     (write-file tempfile path)
     (ok {:url (path/join (config/base-url config) img-prefix name)})))
 
