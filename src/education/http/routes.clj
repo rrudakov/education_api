@@ -1,6 +1,8 @@
 (ns education.http.routes
-  (:require [compojure.api.exception :as ex]
+  (:require [clojure.spec.alpha :as s]
+            [compojure.api.exception :as ex]
             [compojure.api.sweet :refer [api context]]
+            education.http.coercion
             [education.http.constants :as const]
             [education.http.endpoints.articles :refer [articles-routes]]
             [education.http.endpoints.dresses :refer [dresses-routes]]
@@ -10,9 +12,9 @@
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
             [education.http.endpoints.users :refer [users-routes]]
+            [education.http.openapi :refer [openapi-routes]]
             [ring.util.http-response :as status]
-            [taoensso.timbre :refer [error trace]]
-            [clojure.spec.alpha :as s])
+            [taoensso.timbre :refer [error trace]])
   (:import java.sql.SQLException))
 
 (defn sql-exception-handler
@@ -55,12 +57,9 @@
   "Define top-level API routes."
   [datasource config]
   (api
-   {:swagger
-    {:ui   "/swagger"
-     :spec "/swagger.json"
-     :options
-     {:ui   {}
-      :spec {}}
+   (openapi-routes
+    {;; :ui   "/swagger"
+     ;; :spec "/swagger.json"
      :data
      {:info
       {:version     "1.3.1"
@@ -77,19 +76,22 @@
              {:name "gymnastics" :description "Different gymnastics for children"}
              {:name "presentations" :description "Interactive presentations"}
              {:name "upload" :description "Upload media files"}]
-      :securityDefinitions
-      {:api_key
-       {:type "apiKey"
-        :name "Authorization"
-        :in   "header"}}}}
-    :exceptions
+      :components
+      {:securitySchemes
+       {"ApiKeyAuth"
+        {:type "apiKey"
+         :name "Authorization"
+         :in "header"}}}
+      :security [{"ApiKeyAuth" []}]}}
+    )
+   {:exceptions
     {:handlers
      {SQLException             (sql-exception-handler)
       ::ex/request-validation  (request-validation-handler)
       ::ex/response-validation (response-validation-handler)}}}
 
    (context "/api" []
-     :coercion :spec
+     :coercion :openapi
      (users-routes datasource config)
      (articles-routes datasource)
      (roles-routes datasource)

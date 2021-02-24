@@ -15,7 +15,8 @@
                  [ring-cors "0.1.13"]
                  [http-kit "2.3.0"]
                  ;; No support for OpenAPI 3.0
-                 ;; [metosin/ring-swagger-ui "3.25.0"]
+                 [metosin/spec-tools "0.10.5"]
+                 [metosin/ring-swagger-ui "3.36.0"]
                  ;; Database stuff
                  [ragtime "0.8.0"]
                  [seancorfield/next.jdbc "1.1.588"]
