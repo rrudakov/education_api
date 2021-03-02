@@ -3,10 +3,22 @@
             [spec-tools.core :as st]
             [education.http.constants :as const]))
 
+(s/def ::filename string?)
+
+(s/def ::content-type string?)
+
+(s/def ::size pos-int?)
+
+(s/def ::tempfile (partial instance? java.io.File))
+
+(s/def ::file
+  (st/spec
+   {:spec    (s/keys :req-un [::filename ::content-type ::size] :opt-un [::tempfile])
+    :openapi {:type   "object"
+              :properties {:file {:type "string" :format "binary"}}}}))
+
 (s/def ::upload
-  (st/spec {:json-schema/type "file"
-            :swagger/in       "formData"
-            :swagger/name     "file"
+  (st/spec {:swagger/name     "file"
             :description      "The media file to upload"}))
 
 (s/def ::url (s/and string? not-empty (partial re-matches const/valid-url-regex)))

@@ -6,7 +6,8 @@
             [clojure.walk :as walk]
             [compojure.api.coercion.core :as cc]
             [spec-tools.openapi.core :as openapi]
-            [compojure.api.common :as common])
+            [compojure.api.common :as common]
+            [clojure.set :as set])
   (:import (clojure.lang IPersistentMap)
            (schema.core RequiredKey OptionalKey)
            (spec_tools.core Spec)
@@ -88,11 +89,14 @@
 (defn get-apidocs-internal
   [_ _ {:keys [parameters responses] :as info}]
   (cond-> (dissoc info :parameters :responses)
-    parameters
+    (and parameters
+         (seq (set/intersection #{:path :query :header :cookie}
+                                (set (keys parameters)))))
     (assoc ::openapi/parameters
            (into (empty parameters)
                  (for [[in spec] parameters
-                       :when     (not= in :body)]
+                       :when     (not= in :body)
+                       :when     (not= in :formData)]
                    [in (maybe-memoized-specify spec)])))
 
     (and parameters
@@ -100,6 +104,12 @@
     (assoc :requestBody
            {::openapi/content
             {"default" (maybe-memoized-specify (:body parameters))}})
+
+    (and parameters
+         (contains? parameters :formData))
+    (assoc :requestBody
+           {::openapi/content
+            {"multipart/form-data" (maybe-memoized-specify (:file (:formData parameters)))}})
 
     responses
     (assoc

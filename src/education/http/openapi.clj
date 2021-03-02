@@ -1,13 +1,59 @@
 (ns education.http.openapi
   (:require [clojure.string :as str]
+            [clojure.walk :as walk]
             [compojure.api.middleware :as mw]
             [compojure.api.request :as request]
-            [compojure.api.sweet :refer [routes undocumented GET]]
+            [compojure.api.sweet :refer [GET routes undocumented]]
             [ring.swagger.common :as rsc]
             [ring.swagger.core :as swagger]
             [ring.swagger.swagger-ui :as swagger-ui]
             [ring.util.http-response :refer [ok]]
             [spec-tools.openapi.core :as openapi]))
+
+(defn update-parameters
+  [x]
+  (walk/postwalk
+   (fn [y]
+     (if (and (map-entry? y) (= (first y) :parameters))
+       nil
+       y))
+   x))
+
+(defn replace-content
+  [x content-types]
+  (walk/postwalk
+   (fn [y]
+     (if (and (map-entry? y) (= (first y) ::openapi/content))
+       (if-let [body (get (second y) "default")]
+         [::openapi/content
+          (into {} (map (fn [content-type]
+                          [content-type body])
+                        content-types))]
+         y)
+       y))
+   x))
+
+(defn update-request-bodies
+  [x consumes]
+  (walk/postwalk
+   (fn [y]
+     (if (map-entry? y)
+       (if (= (first y) :requestBody)
+         (replace-content y consumes)
+         y)
+       y))
+   x))
+
+(defn update-responses
+  [x produces]
+  (walk/postwalk
+   (fn [y]
+     (if (map-entry? y)
+       (if (= (first y) :responses)
+         (replace-content y produces)
+         y)
+       y))
+   x))
 
 (defn base-path
   [request]
@@ -17,6 +63,14 @@
 (defn- openapi-path
   [uri]
   (str/replace uri #":([\p{L}_][\p{L}_0-9-]*)" "{$1}"))
+
+(defn update-paths
+  [x]
+  (let [paths (:paths x)]
+    (assoc x :paths
+           (into (empty paths)
+                 (map (fn [[path methods]]
+                        [(openapi-path path) methods]) paths)))))
 
 (defn swagger-ui
   [options]
@@ -29,54 +83,24 @@
    {:title   "OpenAPI"
     :version "0.0.1"}})
 
-(defn request-body->contents
-  [parameters consumes]
-  (if-let [contents (get-in parameters [:requestBody ::openapi/content])]
-    (let [new-contents (into (empty contents)
-                             (map (fn [content-type]
-                                    [content-type (get contents "default")]) consumes))]
-      (assoc-in parameters [:requestBody ::openapi/content] new-contents))
-    parameters))
-
-(defn responses->contents
-  [parameters produces]
-  (let [responses (:responses parameters)]
-    (assoc parameters
-           :responses
-           (into (empty responses)
-                 (map (fn [[code response]]
-                        (if-let [content (::openapi/content response)]
-                          [code {::openapi/content
-                                 (into (empty content)
-                                       (map (fn [content-type]
-                                              [content-type (get content "default")]) produces))}]
-                          [code response]))
-                      responses)))))
-
-(defn remove-parameters
-  [p {:keys [consumes produces]}]
-  (into (empty p)
-        (map (fn [[path methods]]
-               [(openapi-path path) (into (empty methods)
-                                          (map (fn [[method v]]
-                                                 [method (-> (dissoc v :parameters)
-                                                             (request-body->contents consumes)
-                                                             (responses->contents produces))]) methods))]) p)))
-
 (defn openapi-docs
   [{:keys [path] :or {path "/openapi.json"} :as options}]
   (let [extra-info (dissoc options :path)]
     (GET path request
       :no-doc true
       :name ::swagger
-      (let [runtime-info1 (mw/get-swagger-data request)
-            base-path     {:basePath (base-path request)}
-            options       (::request/ring-swagger request)
-            paths         (update (::request/paths request) :paths (fn [path] (remove-parameters path runtime-info1)))
-            openapi       (merge openapi-defaults
-                                 (apply rsc/deep-merge
-                                        (keep identity [base-path paths extra-info runtime-info1])))
-            spec          (openapi/openapi-spec openapi options)]
+      (let [runtime-info (mw/get-swagger-data request)
+            base-path    {:basePath (base-path request)}
+            options      (::request/ring-swagger request)
+            paths        (-> (::request/paths request)
+                             (update-parameters)
+                             (update-request-bodies (:consumes runtime-info))
+                             (update-responses (:produces runtime-info))
+                             (update-paths))
+            openapi      (merge openapi-defaults
+                                (apply rsc/deep-merge
+                                       (keep identity [base-path paths extra-info])))
+            spec         (openapi/openapi-spec openapi options)]
         (ok spec)))))
 
 (def openapi-default-options
