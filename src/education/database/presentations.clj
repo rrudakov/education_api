@@ -23,9 +23,10 @@
 
 (defn get-all-presentations
   "Get all presentations from database with given `conn`."
-  [conn & {:keys [limit offset]}]
+  [conn subtype-id & {:keys [limit offset]}]
   (->> (hsql/build :select :*
                    :from :presentations
+                   :where [:= :subtype_id subtype-id]
                    :order-by [[:updated_on :desc]]
                    :limit (or limit 20)
                    :offset (or offset 0))

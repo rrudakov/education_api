@@ -366,28 +366,58 @@
    :updated_on  (str (:presentations/updated_on presentation-from-db-extra))})
 
 (deftest get-all-presentations-test
-  (testing "Test GET /presentations without any query parameters"
+  (testing "Test GET /presentations with valid `subtype_id` parameter"
     (with-redefs [presentations-db/get-all-presentations (spy/stub [presentation-from-db presentation-from-db-extra])]
-      (let [app      (test-app/api-routes-with-auth)
-            response (app (mock/request :get "/api/presentations"))
-            body     (test-app/parse-body (:body response))]
+      (let [subtype-id 4
+            app        (test-app/api-routes-with-auth)
+            response   (app (mock/request :get (str "/api/presentations?subtype_id=" subtype-id)))
+            body       (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= [presentation-response-expected presentation-response-expected-extra] body))
-        (is (spy/called-once-with? presentations-db/get-all-presentations nil :limit nil :offset nil)))))
+        (is (spy/called-once-with? presentations-db/get-all-presentations nil subtype-id :limit nil :offset nil)))))
 
-  (testing "Test GET /presentations with optional `limit` and `offset` parameters"
+  (testing "Test GET /presentations with valid `subtype_id` and optional `limit` and `offset` parameters"
     (with-redefs [presentations-db/get-all-presentations (spy/stub [presentation-from-db presentation-from-db-extra])]
-      (let [app          (test-app/api-routes-with-auth)
+      (let [subtype-id   3
+            app          (test-app/api-routes-with-auth)
             limit-param  838
             offset-param 99
-            response     (app (mock/request :get (str "/api/presentations?limit=" limit-param "&offset=" offset-param)))
+            response     (app (mock/request :get (str "/api/presentations?subtype_id=" subtype-id
+                                                      "&limit=" limit-param
+                                                      "&offset=" offset-param)))
             body         (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= [presentation-response-expected presentation-response-expected-extra] body))
-        (is (spy/called-once-with? presentations-db/get-all-presentations nil :limit limit-param :offset offset-param)))))
+        (is (spy/called-once-with? presentations-db/get-all-presentations
+                                   nil
+                                   subtype-id
+                                   :limit limit-param
+                                   :offset offset-param)))))
 
-  (doseq [url ["/api/presentations?limit=invalid"
-               "/api/presentations?offset=invalid"]]
+  (testing "Test GET /presentations/ without `subtype_id`"
+    (with-redefs [presentations-db/get-all-presentations (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth)
+            response (app (mock/request :get "/api/presentations"))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (spy/not-called? presentations-db/get-all-presentations))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body)))))
+
+  (testing "Test GET /presentations with invalid `subtype_id`"
+    (with-redefs [presentations-db/get-all-presentations (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth)
+            response (app (mock/request :get "/api/gymnastics?subtype_is=invalid"))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (spy/not-called? presentations-db/get-all-presentations))
+        (is (= {:message const/bad-request-error-message
+                :errors  ["Value is not valid"]}
+               body)))))
+
+  (doseq [url ["/api/presentations?subtype_id=3&limit=invalid"
+               "/api/presentations?subtype_id=3&offset=invalid"]]
     (testing "Test GET /presentations with invalid query parameters"
       (with-redefs [presentations-db/get-all-presentations (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
