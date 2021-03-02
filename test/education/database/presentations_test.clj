@@ -110,34 +110,46 @@
 
 (def ^:private get-all-presentations-query
   "Expected SQL query to get all presentations."
-  "SELECT * FROM presentations ORDER BY updated_on DESC LIMIT ? OFFSET ?")
+  "SELECT * FROM presentations WHERE subtype_id = ? ORDER BY updated_on DESC LIMIT ? OFFSET ?")
+
+(def ^:private get-all-presentations-subtype-id
+  "Test API subtype-id."
+  3)
 
 (deftest get-all-presentations-test
   (testing "Test get all presentations without optional parameters"
     (with-redefs [sql/query (spy/stub [create-presentation-result])]
-      (let [result (sut/get-all-presentations nil)]
+      (let [result (sut/get-all-presentations nil get-all-presentations-subtype-id)]
         (is (= [create-presentation-result] result))
-        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 0])))))
+        (is (spy/called-once-with? sql/query
+                                   nil
+                                   [get-all-presentations-query get-all-presentations-subtype-id 20 0])))))
 
   (testing "Test get all presentations with limit specified"
     (with-redefs [sql/query (spy/stub [create-presentation-result])]
       (let [limit  1
-            result (sut/get-all-presentations nil :limit limit)]
+            result (sut/get-all-presentations nil get-all-presentations-subtype-id :limit limit)]
         (is (= [create-presentation-result] result))
-        (is (spy/called-once-with? sql/query nil [get-all-presentations-query limit 0])))))
+        (is (spy/called-once-with? sql/query
+                                   nil
+                                   [get-all-presentations-query get-all-presentations-subtype-id limit 0])))))
 
   (testing "Test get all presentations with offset specified"
     (with-redefs [sql/query (spy/stub [create-presentation-result])]
       (let [offset 20
-            result (sut/get-all-presentations nil :offset offset)]
+            result (sut/get-all-presentations nil get-all-presentations-subtype-id :offset offset)]
         (is (= [create-presentation-result] result))
-        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 offset])))))
+        (is (spy/called-once-with? sql/query
+                                   nil
+                                   [get-all-presentations-query get-all-presentations-subtype-id 20 offset])))))
 
   (testing "Test get all presentation filter URLs from non-public"
     (with-redefs [sql/query (spy/stub [create-presentation-result create-presentation-result-not-public])]
-      (let [result (sut/get-all-presentations nil)]
+      (let [result (sut/get-all-presentations nil get-all-presentations-subtype-id)]
         (is (= [create-presentation-result (dissoc create-presentation-result-not-public :presentations/url)] result))
-        (is (spy/called-once-with? sql/query nil [get-all-presentations-query 20 0]))))))
+        (is (spy/called-once-with? sql/query
+                                   nil
+                                   [get-all-presentations-query get-all-presentations-subtype-id 20 0]))))))
 
 (def ^:private delete-presentation-result
   "Stub data for delete presentation call."

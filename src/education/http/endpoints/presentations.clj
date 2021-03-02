@@ -27,8 +27,8 @@
     (status/not-found {:message const/not-found-error-message})))
 
 (defn- get-all-presentations-handler
-  [db limit offset]
-  (->> (presentations-db/get-all-presentations db :limit limit :offset offset)
+  [db subtype-id limit offset]
+  (->> (presentations-db/get-all-presentations db subtype-id :limit limit :offset offset)
        (mapv unqualify-map)
        (mapv remove-nils)
        (status/ok)))
@@ -87,7 +87,8 @@
                        :schema      ::spec/error-response}}
       (get-presentation-by-id-handler db presentation-id))
     (GET "/" []
-      :query-params [{limit :- ::spec/limit nil}
+      :query-params [subtype_id :- ::spec/subtype_id
+                     {limit :- ::spec/limit nil}
                      {offset :- ::spec/offset nil}]
       :summary "Get all presentations"
       :description "Get list of presentations with given optionsl `limit` and `offset`"
@@ -95,7 +96,7 @@
                        :schema      ::spec/presentations-response}
                   400 {:description const/bad-request-error-message
                        :schema      ::spec/error-response}}
-      (get-all-presentations-handler db limit offset))
+      (get-all-presentations-handler db subtype_id limit offset))
     (DELETE "/:presentation-id" []
       :middleware [[require-roles #{:admin}]]
       :path-params [presentation-id :- ::spec/id]
