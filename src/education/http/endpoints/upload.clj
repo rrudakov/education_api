@@ -46,7 +46,7 @@
   [config]
   (POST "/upload" []
     :tags ["upload"]
-    :multipart-params [file :- ::specs/file]
+    :multipart-params [file :- ::specs/upload]
     :middleware [mw/wrap-multipart-params]
     :summary "Upload any file and get link to it"
     :responses {200 {:description "Successful"
