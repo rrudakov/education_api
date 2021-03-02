@@ -508,6 +508,7 @@
    :url         "https://google.com/first/presentation"
    :description "First presentation description"
    :is_public   false
+   :subtype_id  2
    :created_on  (Instant/now)
    :updated_on  (Instant/now)})
 
@@ -518,6 +519,7 @@
    :is_public   false
    :attachment  "https://alenkinaskazka.net/some-file.pdf"
    :preview     "https://alenkinaskazka.net/some_image.png"
+   :subtype_id  1
    :created_on  (Instant/now)
    :updated_on  (Instant/now)})
 
@@ -531,6 +533,7 @@
                     (dissoc presentation-response :title)
                     (dissoc presentation-response :description)
                     (dissoc presentation-response :is_public)
+                    (dissoc presentation-response :subtype_id)
                     (dissoc presentation-response :created_on)
                     (dissoc presentation-response :updated_on)]]
     (is ((complement s/valid?) ::sut/presentation-response response))))

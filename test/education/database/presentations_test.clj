@@ -26,7 +26,8 @@
    :description "This presentation is about bla-bla-bla..."
    :is_public   false
    :attachment  "https://alenkinaskazka.net/some_file.pdf"
-   :preview     "https://alenkinaskazka.net/some_image.png"})
+   :preview     "https://alenkinaskazka.net/some_image.png"
+   :subtype_id  2})
 
 (def ^:private create-presentation-result
   "Stub data for create presentation call."
@@ -37,6 +38,7 @@
    :presentations/is_public   true
    :presentations/attachment  nil
    :presentations/preview     nil
+   :presentations/subtype_id  1
    :presentations/created_on  created-on
    :presentations/updated_on  updated-on})
 
@@ -48,6 +50,7 @@
    :presentations/is_public   false
    :presentations/attachment  "https://alenkinaskazka.net/some_file.pdf"
    :presentations/preview     "https://alenkinaskazka.net/some_image.png"
+   :presentations/subtype_id  2
    :presentations/created_on  created-on
    :presentations/updated_on  updated-on})
 
@@ -80,6 +83,7 @@
                    {:is_public false}
                    {:attachment "https://alenkinaskazka.net/some_file.pdf"}
                    {:preview "https://alenkinaskazka.net/some_image.png"}
+                   {:subtype_id 4}
                    {}]]
     (testing "Test update presentation with valid fields"
       (with-redefs [sql/update! (spy/stub update-presentation-result)]

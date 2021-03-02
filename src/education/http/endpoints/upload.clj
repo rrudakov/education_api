@@ -1,7 +1,7 @@
 (ns education.http.endpoints.upload
   (:require [clojure.java.io :refer [file input-stream output-stream]]
             [clojure.string :as str]
-            [compojure.api.sweet :refer [POST]]
+            [compojure.api.core :refer [POST]]
             [education.config :as config]
             [education.http.constants :as const]
             [education.specs.common :as spec]
@@ -46,7 +46,7 @@
   [config]
   (POST "/upload" []
     :tags ["upload"]
-    :multipart-params [file :- ::specs/upload]
+    :multipart-params [file :- ::specs/file]
     :middleware [mw/wrap-multipart-params]
     :summary "Upload any file and get link to it"
     :responses {200 {:description "Successful"

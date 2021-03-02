@@ -118,13 +118,13 @@
 ;; Presentations
 (s/def ::presentation-create-request
   (s/keys :req-un [::title ::url ::description]
-          :opt-un [::attachment ::is_public ::preview]))
+          :opt-un [::attachment ::is_public ::preview ::subtype_id]))
 
 (s/def ::presentation-update-request
-  (s/keys :opt-un [::title ::url ::description ::attachment ::preview ::is_public]))
+  (s/keys :opt-un [::title ::url ::description ::attachment ::preview ::is_public ::subtype_id]))
 
 (s/def ::presentation-response
-  (s/keys :req-un [::id ::title ::description ::is_public ::created_on ::updated_on]
+  (s/keys :req-un [::id ::title ::description ::is_public ::created_on ::updated_on ::subtype_id]
           :opt-un [::url ::attachment ::preview]))
 
 (s/def ::presentations-response

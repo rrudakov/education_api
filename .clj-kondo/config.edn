@@ -1,12 +1,12 @@
 {:linters
  {:unresolved-symbol
-  {:exclude [(compojure.api.sweet/context)
-             (compojure.api.sweet/GET)
-             (compojure.api.sweet/ANY)
-             (compojure.api.sweet/HEAD)
-             (compojure.api.sweet/PATCH)
-             (compojure.api.sweet/DELETE)
-             (compojure.api.sweet/OPTIONS)
-             (compojure.api.sweet/POST)
-             (compojure.api.sweet/PUT)
+  {:exclude [(compojure.api.core/context)
+             (compojure.api.core/GET)
+             (compojure.api.core/ANY)
+             (compojure.api.core/HEAD)
+             (compojure.api.core/PATCH)
+             (compojure.api.core/DELETE)
+             (compojure.api.core/OPTIONS)
+             (compojure.api.core/POST)
+             (compojure.api.core/PUT)
              (phrase.alpha/defphraser)]}}}
