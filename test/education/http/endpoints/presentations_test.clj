@@ -27,7 +27,8 @@
    :description "This presentation is about bla-bla-bla..."
    :is_public   false
    :attachment  "https://alenkinaskazka.net/some_file.pdf"
-   :preview     "https://alenkinaskazka.net/some_image.png"})
+   :preview     "https://alenkinaskazka.net/some_image.png"
+   :subtype_id  2})
 
 (deftest create-presentation-test
   (testing "Test POST /presentations authorized with admin role and valid request body"
@@ -102,7 +103,9 @@
                                  [(assoc create-presentation-request-v2 :attachment "invalid")
                                   ["Attachment URL is not valid"]]
                                  [(assoc create-presentation-request-v2 :preview "invalid")
-                                  ["Preview URL is not valid"]]]]
+                                  ["Preview URL is not valid"]]
+                                 [(assoc create-presentation-request-v2 :subtype_id "invalid")
+                                  ["Subtype_id is not valid"]]]]
     (testing "Test POST /presentations authorized with invalid request body"
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/presentations")
@@ -129,7 +132,8 @@
    :description "Updated description for presentation"
    :is_public   false
    :attachment  "https://alenkinaskazka.net/some-file.pdf"
-   :preview     "https://alenkinaskazka.net/some_image.png"})
+   :preview     "https://alenkinaskazka.net/some_image.png"
+   :subtype_id  2})
 
 (deftest update-presentation-test
   (doseq [request-body [update-presentation-request
@@ -139,6 +143,7 @@
                         (dissoc update-presentation-request-v2 :is_public)
                         (dissoc update-presentation-request-v2 :attachment)
                         (dissoc update-presentation-request-v2 :preview)
+                        (dissoc update-presentation-request-v2 :subtype_id)
                         {}]]
     (testing "Test PATCH /presentations/:presentation-id authorized with admin role and valid request body"
       (with-redefs [presentations-db/update-presentation (spy/stub 1)]
@@ -230,7 +235,9 @@
                                  [(assoc update-presentation-request-v2 :attachment "invalid")
                                   ["Attachment URL is not valid"]]
                                  [(assoc update-presentation-request-v2 :preview "invalid")
-                                  ["Preview URL is not valid"]]]]
+                                  ["Preview URL is not valid"]]
+                                 [(assoc update-presentation-request-v2 :subtype_id "invalid")
+                                  ["Subtype_id is not valid"]]]]
     (testing "Test PATCH /presentations/:presentation-id with invalid request body"
       (with-redefs [presentations-db/update-presentation (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -254,6 +261,7 @@
    :presentations/is_public   true
    :presentations/attachment  "https://alenkinaskazka.net/some_file.pdf"
    :presentations/preview     "https://alenkinaskazka.net/some_image.png"
+   :presentations/subtype_id  2
    :presentations/created_on  (Instant/now)
    :presentations/updated_on  (Instant/now)})
 
@@ -266,6 +274,7 @@
    :is_public   (:presentations/is_public presentation-from-db)
    :attachment  (:presentations/attachment presentation-from-db)
    :preview     (:presentations/preview presentation-from-db)
+   :subtype_id  (:presentations/subtype_id presentation-from-db)
    :created_on  (str (:presentations/created_on presentation-from-db))
    :updated_on  (str (:presentations/updated_on presentation-from-db))})
 
@@ -342,6 +351,7 @@
    :presentations/is_public   false
    :presentations/attachment  nil
    :presentations/preview     nil
+   :presentations/subtype_id  1
    :presentations/created_on  (Instant/now)
    :presentations/updated_on  (Instant/now)})
 
@@ -351,6 +361,7 @@
    :title       (:presentations/title presentation-from-db-extra)
    :description (:presentations/description presentation-from-db-extra)
    :is_public   (:presentations/is_public presentation-from-db-extra)
+   :subtype_id  (:presentations/subtype_id presentation-from-db-extra)
    :created_on  (str (:presentations/created_on presentation-from-db-extra))
    :updated_on  (str (:presentations/updated_on presentation-from-db-extra))})
 

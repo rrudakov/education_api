@@ -1,6 +1,6 @@
 (ns education.http.endpoints.users
   (:require [buddy.sign.jwt :as jwt]
-            [compojure.api.sweet :refer [context DELETE GET PATCH POST routes]]
+            [compojure.api.core :refer [context DELETE GET PATCH POST routes]]
             [education.config :as config]
             [education.database.users :as usersdb]
             [education.http.constants :as const]

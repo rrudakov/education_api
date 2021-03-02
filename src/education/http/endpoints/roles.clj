@@ -1,5 +1,5 @@
 (ns education.http.endpoints.roles
-  (:require [compojure.api.sweet :refer [context GET]]
+  (:require [compojure.api.core :refer [context GET]]
             [education.database.roles :as rolesdb]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]

@@ -1,0 +1,1 @@
+ALTER TABLE presentations ADD COLUMN subtype_id INTEGER NOT NULL DEFAULT 1;

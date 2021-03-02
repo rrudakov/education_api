@@ -1,5 +1,5 @@
 (ns education.http.endpoints.gymnastics
-  (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
+  (:require [compojure.api.core :refer [context DELETE GET PATCH POST]]
             [education.database.gymnastics :as gymnastics-db]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]

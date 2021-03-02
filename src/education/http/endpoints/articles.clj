@@ -1,5 +1,5 @@
 (ns education.http.endpoints.articles
-  (:require [compojure.api.sweet :refer [context DELETE GET PATCH POST]]
+  (:require [compojure.api.core :refer [context DELETE GET PATCH POST]]
             [education.database.articles :as articlesdb]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
