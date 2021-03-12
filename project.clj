@@ -3,7 +3,7 @@
   :url "http://educationapp-api.herokuapp.com/swagger"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :dependencies [[org.clojure/clojure "1.10.1"]
+  :dependencies [[org.clojure/clojure "1.10.3"]
                  ;; Configuration file parsing
                  [aero "1.1.6"]
                  ;; Human readable errors
@@ -28,6 +28,10 @@
                  [buddy/buddy-hashers "1.4.0"]
                  [buddy/buddy-sign "3.1.0"]
                  [buddy/buddy-auth "2.2.0"]
+                 ;; Send mail
+                 [com.draines/postal "2.0.4"]
+                 ;; Template rendering
+                 [de.ubercode.clostache/clostache "1.4.0"]
                  ;; Logging
                  [com.taoensso/timbre "5.1.1"]
                  ;; JSON parsing
