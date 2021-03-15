@@ -4,14 +4,36 @@
  {:url #profile
   {:dev  #ref [:secrets :dburi]
    :prod #env JDBC_DATABASE_URL}}
+
  :app
  {:port      #long #or [#env PORT 3000]
-  :base_url #profile
-  {:dev "http://127.0.0.1:3000"
+  :base_url  #profile
+  {:dev  "http://127.0.0.1:3000"
    :prod #env BASE_URL}
-  :storage #profile
-  {:dev "/home/rrudakov/tmp/"
+  :storage   #profile
+  {:dev  "/home/rrudakov/tmp/"
    :prod #env STORAGE_PATH}
   :tokensign #profile
   {:dev  #ref [:secrets :tokensign]
-   :prod #env SECRET}}}
+   :prod #env SECRET}
+  :crypto
+  {:key #profile
+   {:dev  #ref [:secrets :crypto-key]
+    :prod #env CRYPTO_KEY}
+   :iv  #profile
+   {:dev  #ref [:secrets :crypto-iv]
+    :prod #env CRYPTO_IV}}
+  :send-grid
+  {:base-url "https://api.sendgrid.com/v3"
+   :api-key  #profile
+   {:dev  #ref [:secrets :send-grid-api-key]
+    :prod #env SEND_GRID_API_KEY}
+   :templates
+   {:free-lesson "d-3d1491f539ae45328b15983e7619fd4e"}}
+  :video-lessons
+  {:root-path        #profile
+   {:dev  #ref [:secrets :video-lessons-root-path]
+    :prod #env VIDEO_LESSONS_ROOT_PATH}
+   :free-lesson-path #profile
+   {:dev  "zima.mp4"
+    :prod #env FREE_VIDEO_LESSON_PATH}}}}

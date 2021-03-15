@@ -1,6 +1,7 @@
 (ns education.database.gymnastics
   (:require [next.jdbc.sql :as sql]
-            [honeysql.core :as hsql]))
+            [honey.sql :as hsql]
+            [honey.sql.helpers :as h]))
 
 (defn add-gymnastic
   "Create new `gymnastic` entry in database with given `conn`."
@@ -26,12 +27,12 @@
 
   Accept optional parameters `limit` and `offset` to support pagination."
   [conn subtype-id & {:keys [limit offset]}]
-  (->> (hsql/build :select :*
-                   :from :gymnastics
-                   :where [:= :subtype_id subtype-id]
-                   :order-by [[:updated_on :desc]]
-                   :limit (or limit 20)
-                   :offset (or offset 0))
+  (->> (-> (h/select :*)
+           (h/from :gymnastics)
+           (h/where [:= :subtype_id subtype-id])
+           (h/order-by [:updated_on :desc])
+           (h/limit (or limit 20))
+           (h/offset (or offset 0)))
        (hsql/format)
        (sql/query conn)))
 

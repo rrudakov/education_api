@@ -3,9 +3,10 @@
             [clojure.set :refer [rename-keys]]
             [education.database.roles :as roles]
             [education.http.constants :refer [invalid-credentials-error-message]]
-            [honeysql.core :as hsql]
+            [honey.sql :as hsql]
             [next.jdbc :as jdbc]
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.sql :as sql]
+            [honey.sql.helpers :as h]))
 
 (defn add-user
   "Create new `user` in database."
@@ -39,18 +40,18 @@
 (defn get-all-users
   "Fetch all users from `database`."
   [conn]
-  (->> (hsql/build :select [:u.id
-                            :u.user_name
-                            :u.user_email
-                            [:%array_agg.r.role_name :roles]
-                            :u.created_on
-                            :u.updated_on]
-                   :from [[:users :u]]
-                   :left-join [[:user_roles :ur] [:= :ur.user_id :u.id]
-                               [:roles :r] [:= :r.id :ur.role_id]]
-                   :group-by :u.id
-                   :order-by [[:u.id :desc]])
-       hsql/format
+  (->> (-> (h/select :u.id
+                     :u.user_name
+                     :u.user_email
+                     [[:array_agg :r.role_name] :roles]
+                     :u.created_on
+                     :u.updated_on)
+           (h/from [:users :u])
+           (h/left-join [:user_roles :ur] [:= :ur.user_id :u.id])
+           (h/left-join [:roles :r] [:= :r.id :ur.role_id])
+           (h/group-by :u.id)
+           (h/order-by [:u.id :desc]))
+       (hsql/format)
        (sql/query conn)
        (map #(rename-keys % {:roles :users/roles}))))
 

@@ -1,7 +1,8 @@
 (ns education.database.dresses
   (:require [education.utils.maps :refer [update-if-exist]]
             [next.jdbc.sql :as sql]
-            [honeysql.core :as hsql])
+            [honey.sql :as hsql]
+            [honey.sql.helpers :as h])
   (:import java.time.Instant))
 
 (defn- request->db-create-statement
@@ -42,11 +43,11 @@
 
   Accept optional parameters `limit` and `offset` to support pagination."
   [conn & {:keys [limit offset]}]
-  (->> (hsql/build :select :*
-                   :from :dresses
-                   :order-by [[:updated_on :desc]]
-                   :limit (or limit 20)
-                   :offset (or offset 0))
+  (->> (-> (h/select :*)
+           (h/from :dresses)
+           (h/order-by [:updated_on :desc])
+           (h/limit (or limit 20))
+           (h/offset (or offset 0)))
        (hsql/format)
        (sql/query conn)))
 

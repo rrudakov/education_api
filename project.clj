@@ -18,10 +18,10 @@
                  ;; [metosin/ring-swagger-ui "3.25.0"]
                  ;; Database stuff
                  [ragtime "0.8.0"]
-                 [seancorfield/next.jdbc "1.1.588"]
+                 [com.github.seancorfield/next.jdbc "1.1.643"]
                  [org.postgresql/postgresql "42.2.14"]
                  [com.mchange/c3p0 "0.9.5.5"]
-                 [honeysql "0.9.10"]
+                 [com.github.seancorfield/honeysql "2.0.0-alpha3"]
                  ;; Integrant framework
                  [integrant "0.8.0"]
                  ;; Security
@@ -34,6 +34,8 @@
                  [de.ubercode.clostache/clostache "1.4.0"]
                  ;; Logging
                  [com.taoensso/timbre "5.1.1"]
+                 ;; HTTP client
+                 [clj-http "3.10.3"]
                  ;; JSON parsing
                  [com.fasterxml.jackson.core/jackson-core "2.11.1"]]
   :repl-options {:init-ns education.core}

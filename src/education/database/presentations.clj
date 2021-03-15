@@ -1,6 +1,7 @@
 (ns education.database.presentations
   (:require [next.jdbc.sql :as sql]
-            [honeysql.core :as hsql]))
+            [honey.sql :as hsql]
+            [honey.sql.helpers :as h]))
 
 (defn add-presentation
   "Create new `presentation` entry in database with given `conn`."
@@ -24,12 +25,12 @@
 (defn get-all-presentations
   "Get all presentations from database with given `conn`."
   [conn subtype-id & {:keys [limit offset]}]
-  (->> (hsql/build :select :*
-                   :from :presentations
-                   :where [:= :subtype_id subtype-id]
-                   :order-by [[:updated_on :desc]]
-                   :limit (or limit 20)
-                   :offset (or offset 0))
+  (->> (-> (h/select :*)
+           (h/from :presentations)
+           (h/where [:= :subtype_id subtype-id])
+           (h/order-by [:updated_on :desc])
+           (h/limit (or limit 20))
+           (h/offset (or offset 0)))
        (hsql/format)
        (sql/query conn)
        (map (fn [presentation]

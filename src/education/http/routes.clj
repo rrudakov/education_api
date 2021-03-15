@@ -88,13 +88,12 @@
      {SQLException             (sql-exception-handler)
       ::ex/request-validation  (request-validation-handler)
       ::ex/response-validation (response-validation-handler)}}}
-
    (context "/api" []
      :coercion :spec
      (users-routes datasource config)
      (articles-routes datasource)
      (roles-routes datasource)
-     (lessons-routes datasource)
+     (lessons-routes datasource config)
      (dresses-routes datasource)
      (gymnastics-routes datasource)
      (presentations-routes datasource)
