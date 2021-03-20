@@ -102,10 +102,7 @@
 
   (doseq [token [12345 true {} [:list :of :keywords]]]
     (testing (str "::token invalid " token)
-      (is (not (s/valid? ::sut/token token)))))
-
-  (testing "::token exercise"
-    (is (= 10 (count (s/exercise ::sut/token))))))
+      (is (not (s/valid? ::sut/token token))))))
 
 (deftest user-create-request-test
   (doseq [req [{:username "valid" :password "123456" :email "email@example.org"}
@@ -142,10 +139,7 @@
                #{true false}
                false]]
     (testing (str "::user-update-request invalid " req)
-      (is (not (s/valid? ::sut/user-update-request req)))))
-
-  (testing "::user-update exercise"
-    (is (= 10 (count (s/exercise ::sut/user-update-request))))))
+      (is (not (s/valid? ::sut/user-update-request req))))))
 
 (deftest user-create-response-test
   (testing "::user-create-response is valid"
@@ -268,10 +262,7 @@
                true
                9876354]]
     (testing (str "::login-request invalid " req)
-      (is (not (s/valid? ::sut/login-request req)))))
-
-  (testing "::login-request exercise"
-    (is (= 10 (count (s/exercise ::sut/login-request))))))
+      (is (not (s/valid? ::sut/login-request req))))))
 
 (deftest token-response-test
   (testing "::token-response valid"
@@ -285,7 +276,4 @@
                 838383838383
                 #{:set :of :values}]]
     (testing "::token-response invalid"
-      (is (not (s/valid? ::sut/token-response resp)))))
-
-  (testing "::token-response exercise"
-    (is (= 10 (count (s/exercise ::sut/token-response))))))
+      (is (not (s/valid? ::sut/token-response resp))))))

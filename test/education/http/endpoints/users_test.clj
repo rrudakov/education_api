@@ -1,12 +1,11 @@
 (ns education.http.endpoints.users-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :refer [blank?]]
+  (:require [clojure.string :refer [blank?]]
             [clojure.test :refer [deftest is testing]]
             [education.database.users :as usersdb]
             [education.http.constants :as const]
             [education.http.endpoints.test-app
              :refer
-             [parse-body api-routes-with-auth]]
+             [api-routes-with-auth parse-body]]
             [education.test-data :as td]
             [ring.mock.request :as mock]
             [spy.core :as spy])
@@ -121,8 +120,7 @@
       (with-redefs [usersdb/add-user (spy/stub user-id)]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :post "/api/users")
-                                (mock/content-type td/application-json)
-                                (mock/body (cheshire/generate-string td/add-user1-request))))
+                                (mock/json-body td/add-user1-request)))
               body     (:body response)]
           (is (= 201 (:status response)))
           (is (nil? body))
@@ -133,8 +131,7 @@
     (with-redefs [usersdb/add-user (spy/mock (fn [_ _] (throw (SQLException. "Conflict" "23505"))))]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/users")
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string td/add-user1-request))))
+                              (mock/json-body td/add-user1-request)))
             body     (parse-body (:body response))]
         (is (= 409 (:status response)))
         (is (= {:message const/conflict-error-message} body))
@@ -150,8 +147,7 @@
                                   ["Field password is mandatory"]]]]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :post "/api/users")
-                                (mock/content-type "application/json")
-                                (mock/body (cheshire/generate-string req-body))))
+                                (mock/json-body req-body)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
@@ -165,9 +161,8 @@
       (with-redefs [usersdb/update-user (spy/stub 0)]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/users/" user-id))
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string td/update-user1-request))))
+                                (mock/json-body td/update-user1-request)))
               body     (:body response)]
           (is (= 204 (:status response)))
           (is (blank? body))
@@ -177,9 +172,8 @@
     (with-redefs [usersdb/update-user (spy/spy)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/users/342")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:moderator}))
-                              (mock/body (cheshire/generate-string td/update-user1-request))))
+                              (mock/json-body td/update-user1-request)))
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
         (is (= {:message const/no-access-error-message} body))
@@ -189,8 +183,7 @@
     (with-redefs [usersdb/update-user (spy/spy)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/users/342")
-                              (mock/content-type "application/json")
-                              (mock/body (cheshire/generate-string td/update-user1-request))))
+                              (mock/json-body td/update-user1-request)))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (= {:message const/not-authorized-error-message} body))
@@ -200,9 +193,8 @@
     (with-redefs [usersdb/update-user (spy/spy)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/users/invalid")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string td/update-user1-request))))
+                              (mock/json-body td/update-user1-request)))
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
@@ -218,9 +210,8 @@
                                   ["Roles is not valid"]]]]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :patch "/api/users/invalid")
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string req-body))))
+                                (mock/json-body req-body)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
@@ -276,8 +267,7 @@
     (with-redefs [usersdb/auth-user (spy/stub td/db-user-auth-successful)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/login")
-                              (mock/content-type "application/json")
-                              (mock/body (cheshire/generate-string td/auth-user1-request))))
+                              (mock/json-body td/auth-user1-request)))
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (contains? body :token))
@@ -290,8 +280,7 @@
     (with-redefs [usersdb/auth-user (spy/stub [false {:message const/invalid-credentials-error-message}])]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/login")
-                              (mock/content-type "application/json")
-                              (mock/body (cheshire/generate-string td/auth-user1-request))))
+                              (mock/json-body td/auth-user1-request)))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (= {:message const/invalid-credentials-error-message} body))

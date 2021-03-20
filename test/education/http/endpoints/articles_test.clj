@@ -1,6 +1,5 @@
 (ns education.http.endpoints.articles-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [education.database.articles :as articlesdb]
             [education.http.constants :as const]
@@ -99,9 +98,8 @@
               user-expected (assoc td/auth-user-deserialized :roles (vector (name role)))
               app           (api-routes-with-auth)
               response      (app (-> (mock/request :post "/api/articles")
-                                     (mock/content-type td/application-json)
                                      (mock/header :authorization (td/test-auth-token #{role}))
-                                     (mock/body (cheshire/generate-string test-article-request-valid))))
+                                     (mock/json-body test-article-request-valid)))
               body          (parse-body (:body response))]
           (is (= 201 (:status response)))
           (is (= {:id new-article-id} body))
@@ -111,8 +109,7 @@
     (with-redefs [articlesdb/add-article (spy/spy)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :post "/api/articles")
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string test-article-request-valid))))
+                              (mock/json-body test-article-request-valid)))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? articlesdb/add-article))
@@ -140,9 +137,8 @@
       (with-redefs [articlesdb/add-article (spy/spy)]
         (let [app      (api-routes-with-auth)
               response (app (-> (mock/request :post "/api/articles")
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:moderator}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? articlesdb/add-article))
@@ -158,9 +154,8 @@
             role       :guest
             app        (api-routes-with-auth)
             response   (app (-> (mock/request :patch (str "/api/articles/" article-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string test-article-request-valid))))]
+                                (mock/json-body test-article-request-valid)))]
         (is (= 204 (:status response)))
         (is (spy/called-once-with? articlesdb/can-update?
                                    nil
@@ -175,8 +170,7 @@
     (with-redefs [articlesdb/update-article (spy/spy)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/43")
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string test-article-request-valid))))
+                              (mock/json-body test-article-request-valid)))
             body     (parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? articlesdb/update-article))
@@ -187,9 +181,8 @@
                   articlesdb/can-update?    (spy/stub false)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/44")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:guest}))
-                              (mock/body (cheshire/generate-string test-article-request-valid))))
+                              (mock/json-body test-article-request-valid)))
             body     (parse-body (:body response))]
         (is (= 403 (:status response)))
         (is (spy/not-called? articlesdb/update-article))
@@ -200,9 +193,8 @@
       (let [article-id-param "invalid"
             app              (api-routes-with-auth)
             response         (app (-> (mock/request :patch (str "/api/articles/" article-id-param))
-                                      (mock/content-type td/application-json)
                                       (mock/header :authorization (td/test-auth-token #{:moderator}))
-                                      (mock/body (cheshire/generate-string test-article-request-valid))))
+                                      (mock/json-body test-article-request-valid)))
             body             (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? articlesdb/update-article))
@@ -214,9 +206,8 @@
     (with-redefs [articlesdb/update-article (spy/stub 0)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/456")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string test-article-request-valid))))
+                              (mock/json-body test-article-request-valid)))
             body     (parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (spy/called-once? articlesdb/update-article))
@@ -226,9 +217,8 @@
     (with-redefs [articlesdb/update-article (spy/stub 2)]
       (let [app      (api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/articles/3")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:moderator}))
-                              (mock/body (cheshire/generate-string test-article-request-valid))))
+                              (mock/json-body test-article-request-valid)))
             body     (parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (spy/called-once? articlesdb/update-article))
@@ -293,19 +283,20 @@
                   (spy/stub [test-db-full-article-1 test-db-full-article-2])]
       (let [limit    88
             app      (api-routes-with-auth)
-            url      (str "/api/articles/latest?limit=" limit)
-            response (app (-> (mock/request :get url)))
+            response (app (-> (mock/request :get "/api/articles/latest")
+                              (mock/query-string {:limit limit})))
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (spy/called-once-with? articlesdb/get-latest-full-sized-articles nil limit))
         (is (= [test-response-full-article-1 test-response-full-article-2] body)))))
 
-  (doseq [url ["/api/articles/latest"
-               "/api/articles/latest?limit=invalid"]]
+  (doseq [query [{}
+                 {:latest "invalid"}]]
     (testing "Test GET /articles/latest limit parameter validation"
       (with-redefs [articlesdb/get-latest-full-sized-articles (spy/spy)]
         (let [app      (api-routes-with-auth)
-              response (app (-> (mock/request :get url)))
+              response (app (-> (mock/request :get "/api/articles/latest")
+                                (mock/query-string query)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? articlesdb/get-latest-full-sized-articles))
@@ -317,7 +308,8 @@
     (with-redefs [articlesdb/get-latest-full-sized-articles
                   (spy/stub [(dissoc test-db-full-article-1 :articles/description)])]
       (let [app      (api-routes-with-auth)
-            response (app (-> (mock/request :get "/api/articles/latest?limit=44")))
+            response (app (-> (mock/request :get "/api/articles/latest")
+                              (mock/query-string {:limit 44})))
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (spy/called-once? articlesdb/get-latest-full-sized-articles))
@@ -329,18 +321,20 @@
                   (spy/stub [test-db-full-article-1 test-db-full-article-2])]
       (let [limit    33
             app      (api-routes-with-auth)
-            response (app (-> (mock/request :get (str "/api/articles/featured/latest?limit=" limit))))
+            response (app (-> (mock/request :get "/api/articles/featured/latest")
+                              (mock/query-string {:limit limit})))
             body     (parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= [test-response-short-article-1 test-response-short-article-2] body))
         (is (spy/called-once-with? articlesdb/get-last-featured-articles nil limit)))))
 
-  (doseq [url ["/api/articles/featured/latest?limit=invalid"
-               "/api/articles/featured/latest"]]
+  (doseq [query [{:limit "invalid"}
+                 {}]]
     (testing "Test GET /articles/featured/latest with invalid query parameters"
       (with-redefs [articlesdb/get-last-featured-articles (spy/spy)]
         (let [app      (api-routes-with-auth)
-              response (app (-> (mock/request :get url)))
+              response (app (-> (mock/request :get "/api/articles/featured/latest")
+                                (mock/query-string query)))
               body     (parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message

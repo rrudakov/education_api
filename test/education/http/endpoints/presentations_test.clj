@@ -1,6 +1,5 @@
 (ns education.http.endpoints.presentations-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [education.database.presentations :as presentations-db]
             [education.http.constants :as const]
@@ -36,9 +35,8 @@
       (let [role     :admin
             app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/presentations")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{role}))
-                              (mock/body (cheshire/generate-string create-presentation-request))))
+                              (mock/json-body create-presentation-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 201 (:status response)))
         (is (= {:id test-presentation-id} body))
@@ -48,9 +46,8 @@
     (with-redefs [presentations-db/add-presentation (spy/stub test-presentation-id)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/presentations")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string create-presentation-request-v2))))
+                              (mock/json-body create-presentation-request-v2)))
             body     (test-app/parse-body (:body response))]
         (is (= 201 (:status response)))
         (is (= {:id test-presentation-id} body))
@@ -61,9 +58,8 @@
       (with-redefs [presentations-db/add-presentation (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/presentations")
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string create-presentation-request))))
+                                (mock/json-body create-presentation-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called? presentations-db/add-presentation))
@@ -73,8 +69,7 @@
     (with-redefs [presentations-db/add-presentation (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/presentations")
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string create-presentation-request))))
+                              (mock/json-body create-presentation-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? presentations-db/add-presentation))
@@ -109,9 +104,8 @@
     (testing "Test POST /presentations authorized with invalid request body"
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/presentations")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string request-body))))
+                              (mock/json-body request-body)))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/add-presentation))
@@ -149,9 +143,8 @@
       (with-redefs [presentations-db/update-presentation (spy/stub 1)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/presentations/" test-presentation-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))]
+                                (mock/json-body request-body)))]
           (is (= 204 (:status response)))
           (is (spy/called-once-with? presentations-db/update-presentation nil test-presentation-id request-body))
           (is (empty? (:body response)))))))
@@ -161,9 +154,8 @@
       (with-redefs [presentations-db/update-presentation (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/presentations/" test-presentation-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string update-presentation-request))))
+                                (mock/json-body update-presentation-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called? presentations-db/update-presentation))
@@ -173,8 +165,7 @@
     (with-redefs [presentations-db/update-presentation (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/presentations/" test-presentation-id))
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string update-presentation-request))))
+                              (mock/json-body update-presentation-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? presentations-db/update-presentation))
@@ -184,9 +175,8 @@
     (with-redefs [presentations-db/update-presentation (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/presentations/invalid")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-presentation-request))))
+                              (mock/json-body update-presentation-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/update-presentation))
@@ -198,9 +188,8 @@
     (with-redefs [presentations-db/update-presentation (spy/stub 0)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/presentations/" test-presentation-id))
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-presentation-request))))
+                              (mock/json-body update-presentation-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (spy/called-once-with? presentations-db/update-presentation nil test-presentation-id update-presentation-request))
@@ -210,9 +199,8 @@
     (with-redefs [presentations-db/update-presentation (spy/stub 2)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/presentations/" test-presentation-id))
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-presentation-request))))
+                              (mock/json-body update-presentation-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (spy/called-once-with? presentations-db/update-presentation nil test-presentation-id update-presentation-request))
@@ -242,9 +230,8 @@
       (with-redefs [presentations-db/update-presentation (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/presentations/" test-presentation-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? presentations-db/update-presentation))
@@ -382,9 +369,10 @@
             app          (test-app/api-routes-with-auth)
             limit-param  838
             offset-param 99
-            response     (app (mock/request :get (str "/api/presentations?subtype_id=" subtype-id
-                                                      "&limit=" limit-param
-                                                      "&offset=" offset-param)))
+            response     (app (-> (mock/request :get "/api/presentations")
+                                  (mock/query-string {:subtype_id subtype-id
+                                                      :limit      limit-param
+                                                      :offset     offset-param})))
             body         (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= [presentation-response-expected presentation-response-expected-extra] body))
@@ -408,7 +396,8 @@
   (testing "Test GET /presentations with invalid `subtype_id`"
     (with-redefs [presentations-db/get-all-presentations (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
-            response (app (mock/request :get "/api/gymnastics?subtype_is=invalid"))
+            response (app (-> (mock/request :get "/api/gymnastics")
+                              (mock/query-string {:subtype_id "invalid"})))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/get-all-presentations))
@@ -416,12 +405,13 @@
                 :errors  ["Value is not valid"]}
                body)))))
 
-  (doseq [url ["/api/presentations?subtype_id=3&limit=invalid"
-               "/api/presentations?subtype_id=3&offset=invalid"]]
+  (doseq [query [{:subtype_id 3 :limit "invalid"}
+                 {:subtype_id 3 :offset "invalid"}]]
     (testing "Test GET /presentations with invalid query parameters"
       (with-redefs [presentations-db/get-all-presentations (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
-              response (app (mock/request :get url))
+              response (app (-> (mock/request :get "/api/presentations")
+                                (mock/query-string query)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message

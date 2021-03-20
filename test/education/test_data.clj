@@ -131,7 +131,3 @@
    :articles/is_main_featured false
    :articles/created_on       (Instant/parse "2020-12-12T13:22:12Z")
    :articles/updated_on       (Instant/parse "2020-12-12T15:22:12Z")})
-
-(def application-json
-  "Content-Type header value for mock requests."
-  "application/json")

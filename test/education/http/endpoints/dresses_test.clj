@@ -1,6 +1,5 @@
 (ns education.http.endpoints.dresses-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [education.database.dresses :as dresses-db]
             [education.http.constants :as const]
@@ -33,9 +32,8 @@
         (let [role     :admin
               app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/dresses")
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 201 (:status response)))
           (is (= {:id test-dress-id} body))
@@ -46,9 +44,8 @@
       (with-redefs [dresses-db/add-dress (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/dresses")
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string create-dress-request))))
+                                (mock/json-body create-dress-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called?  dresses-db/add-dress))
@@ -58,8 +55,7 @@
     (with-redefs [dresses-db/add-dress (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/dresses")
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string create-dress-request))))
+                              (mock/json-body create-dress-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? dresses-db/add-dress))
@@ -97,9 +93,8 @@
       (with-redefs [dresses-db/add-dress (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/dresses")
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? dresses-db/add-dress))
@@ -129,9 +124,8 @@
         (let [role     :admin
               app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string request-body))))]
+                                (mock/json-body request-body)))]
           (is (= 204 (:status response)))
           (is (spy/called-once-with? dresses-db/update-dress nil test-dress-id request-body))
           (is (empty? (:body response)))))))
@@ -141,9 +135,8 @@
       (with-redefs [dresses-db/update-dress (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                                (mock/content-type "appliation/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string update-dress-request))))
+                                (mock/json-body update-dress-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called? dresses-db/update-dress))
@@ -153,8 +146,7 @@
     (with-redefs [dresses-db/update-dress (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string update-dress-request))))
+                              (mock/json-body update-dress-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? dresses-db/update-dress))
@@ -164,9 +156,8 @@
     (with-redefs [dresses-db/update-dress (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/dresses/invalid")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-dress-request))))
+                              (mock/json-body update-dress-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? dresses-db/update-dress))
@@ -178,9 +169,8 @@
     (with-redefs [dresses-db/update-dress (spy/stub 0)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-dress-request))))
+                              (mock/json-body update-dress-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (spy/called-once-with? dresses-db/update-dress nil test-dress-id update-dress-request))
@@ -190,9 +180,8 @@
     (with-redefs [dresses-db/update-dress (spy/stub 2)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-dress-request))))
+                              (mock/json-body update-dress-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (spy/called-once-with? dresses-db/update-dress nil test-dress-id update-dress-request))
@@ -220,9 +209,8 @@
       (with-redefs [dresses-db/update-dress (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/dresses/" test-dress-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? dresses-db/update-dress))
