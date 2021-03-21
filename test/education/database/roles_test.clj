@@ -24,5 +24,5 @@
       (is (spy/called-once-with?
            sql/query
            nil
-           ["SELECT r.role_name FROM user_roles ur LEFT JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = ?"
+           ["SELECT r.role_name FROM user_roles AS ur LEFT JOIN roles AS r ON ur.role_id = r.id WHERE ur.user_id = ?"
             (:users/id td/db-test-user1)])))))

@@ -1,9 +1,9 @@
-(defproject education-api "1.4.0"
+(defproject education-api "1.4.0-SNAPSHOT"
   :description "Back end for education web application"
   :url "http://educationapp-api.herokuapp.com/swagger"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
-            :url "https://www.eclipse.org/legal/epl-2.0/"}
-  :dependencies [[org.clojure/clojure "1.10.1"]
+            :url  "https://www.eclipse.org/legal/epl-2.0/"}
+  :dependencies [[org.clojure/clojure "1.10.3"]
                  ;; Configuration file parsing
                  [aero "1.1.6"]
                  ;; Human readable errors
@@ -18,10 +18,10 @@
                  ;; [metosin/ring-swagger-ui "3.25.0"]
                  ;; Database stuff
                  [ragtime "0.8.0"]
-                 [seancorfield/next.jdbc "1.1.588"]
+                 [com.github.seancorfield/next.jdbc "1.1.643"]
                  [org.postgresql/postgresql "42.2.14"]
                  [com.mchange/c3p0 "0.9.5.5"]
-                 [honeysql "0.9.10"]
+                 [com.github.seancorfield/honeysql "2.0.0-alpha3"]
                  ;; Integrant framework
                  [integrant "0.8.0"]
                  ;; Security
@@ -30,19 +30,31 @@
                  [buddy/buddy-auth "2.2.0"]
                  ;; Logging
                  [com.taoensso/timbre "5.1.1"]
-                 ;; JSON parsing
-                 [com.fasterxml.jackson.core/jackson-core "2.11.1"]]
+                 ;; HTTP client
+                 [clj-http "3.10.3"]
+                 ;; Content-type negotiation
+                 [metosin/muuntaja "0.6.8"]]
   :repl-options {:init-ns education.core}
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version"
+                   "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]]
   :aliases {"migrate"  ["run" "-m" "education.database.migrations/migrate" "--"]
             "rollback" ["run" "-m" "education.database.migrations/rollback" "--"]}
   :uberjar-name "education-api-standalone.jar"
   :min-lein-version "2.0.0"
-  :profiles {:dev {:resource-paths ["test-resources"]
-                   :dependencies [[tortue/spy "2.0.0"]
-                                  [ring/ring-mock "0.4.0"]
-                                  [peridot "0.5.3"]
-                                  [org.clojure/test.check "1.0.0"]]}
-             :uberjar {:aot :all}}
+  :profiles {:dev
+             {:resource-paths ["test-resources"]
+              :dependencies   [[tortue/spy "2.4.0"]
+                               [ring/ring-mock "0.4.0"]
+                               ;; Create multipart entity (consider removing this)
+                               [peridot "0.5.3"]]}
+             :uberjar
+             {:aot :all}}
   :plugins [[lein-cloverage "1.1.2"]
             [lein-cljfmt "0.7.0"]]
   :main education.core)

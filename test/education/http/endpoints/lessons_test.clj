@@ -1,6 +1,5 @@
 (ns education.http.endpoints.lessons-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [education.database.lessons :as lessons-db]
             [education.http.constants :as const]
@@ -8,8 +7,13 @@
             [education.http.endpoints.test-app :as test-app]
             [education.test-data :as td]
             [ring.mock.request :as mock]
+            [ring.util.http-response :as status]
             [spy.core :as spy]
-            [ring.util.http-response :as status])
+            [education.utils.crypt :as crypt]
+            [education.database.email-subscriptions :as email-subscriptions-db]
+            [education.utils.mail :as mail]
+            [clojure.java.io :as io]
+            [education.config :as config])
   (:import java.sql.SQLException
            java.time.Instant))
 
@@ -36,9 +40,8 @@
         (let [role     :admin
               app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/lessons")
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 201 (:status response)))
           (is (= {:id test-lesson-id} body))
@@ -49,9 +52,8 @@
       (with-redefs [lessons-db/add-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/lessons")
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string create-lesson-request))))
+                                (mock/json-body create-lesson-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called? lessons-db/add-lesson))
@@ -61,8 +63,7 @@
     (with-redefs [lessons-db/add-lesson (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
-                              (mock/content-type "application/json")
-                              (mock/body (cheshire/generate-string create-lesson-request))))
+                              (mock/json-body create-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? lessons-db/add-lesson))
@@ -96,9 +97,8 @@
       (with-redefs [lessons-db/add-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/lessons")
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? lessons-db/add-lesson))
@@ -110,9 +110,8 @@
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Conflict" "23505"))))]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string create-lesson-request))))
+                              (mock/json-body create-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 409 (:status response)))
         (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
@@ -122,9 +121,8 @@
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Not found" "23503"))))]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string create-lesson-request))))
+                              (mock/json-body create-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
@@ -134,9 +132,8 @@
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Bad query" "23502"))))]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string create-lesson-request))))
+                              (mock/json-body create-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
@@ -146,9 +143,8 @@
     (with-redefs [lessons-db/add-lesson (spy/mock (fn [_ _] (throw (SQLException. "Shit happens" "987987987"))))]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string create-lesson-request))))
+                              (mock/json-body create-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
@@ -158,9 +154,8 @@
     (with-redefs [sut/create-lesson-handler (spy/stub (status/created "/lessons/invalid" {:lessonId "invalid"}))]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/lessons")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string create-lesson-request))))
+                              (mock/json-body create-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (= {:message const/server-error-message} (dissoc body :details)))))))
@@ -187,9 +182,8 @@
         (let [role     :admin
               app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string request-body))))]
+                                (mock/json-body request-body)))]
           (is (= 204 (:status response)))
           (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id request-body))
           (is (empty? (:body response)))))))
@@ -199,9 +193,8 @@
       (with-redefs [lessons-db/update-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string update-lesson-request))))
+                                (mock/json-body update-lesson-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called? lessons-db/update-lesson))
@@ -211,8 +204,7 @@
     (with-redefs [lessons-db/update-lesson (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
-                              (mock/content-type "application/json")
-                              (mock/body (cheshire/generate-string update-lesson-request))))
+                              (mock/json-body update-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? lessons-db/update-lesson))
@@ -222,9 +214,8 @@
     (with-redefs [lessons-db/update-lesson (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/lessons/invalid")
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-lesson-request))))
+                              (mock/json-body update-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? lessons-db/update-lesson))
@@ -236,9 +227,8 @@
     (with-redefs [lessons-db/update-lesson (spy/stub 0)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-lesson-request))))
+                              (mock/json-body update-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id update-lesson-request))
@@ -248,9 +238,8 @@
     (with-redefs [lessons-db/update-lesson (spy/stub 2)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
-                              (mock/content-type "application/json")
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-lesson-request))))
+                              (mock/json-body update-lesson-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (spy/called-once-with? lessons-db/update-lesson nil test-lesson-id update-lesson-request))
@@ -274,9 +263,8 @@
       (with-redefs [lessons-db/update-lesson (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/lessons/" test-lesson-id))
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? lessons-db/update-lesson))
@@ -373,18 +361,21 @@
       (let [app          (test-app/api-routes-with-auth)
             limit-param  99
             offset-param 20
-            response     (app (mock/request :get (str "/api/lessons?limit=" limit-param "&offset=" offset-param)))
+            response     (app (-> (mock/request :get "/api/lessons")
+                                  (mock/query-string {:limit  limit-param
+                                                      :offset offset-param})))
             body         (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (= [lesson-response-expected lesson-response-expected-extra] body))
         (is (spy/called-once-with? lessons-db/get-all-lessons nil :limit limit-param :offset offset-param)))))
 
-  (doseq [url ["/api/lessons?limit=invalid"
-               "/api/lessons?offset=invalid"]]
+  (doseq [query [{:limit "invalid"}
+                 {:offset "invalid"}]]
     (testing "Test GET /lessons/ with invalid query parameters"
       (with-redefs [lessons-db/get-all-lessons (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
-              response (app (mock/request :get url))
+              response (app (-> (mock/request :get "/api/lessons")
+                                (mock/query-string query)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
@@ -453,3 +444,92 @@
         (is (= 500 (:status response)))
         (is (= {:message const/server-error-message} body))
         (is (spy/called-once-with? lessons-db/delete-lesson nil test-lesson-id))))))
+
+(def test-email
+  "Test email for request body"
+  "email@test.com")
+
+(def generated-hash
+  "Test hash."
+  "SomeRandomValue")
+
+(deftest request-free-lesson-test
+  (testing "Test POST /free-lesson with valid request body"
+    (with-redefs [crypt/generate-hash                           (spy/stub generated-hash)
+                  email-subscriptions-db/add-email-subscription (spy/spy)
+                  mail/send-free-lesson-email-http              (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth)
+            response (app (-> (mock/request :post "/api/lessons/free-lesson")
+                              (mock/json-body {:email test-email})))]
+        (is (= 200 (:status response)))
+        (is (nil? (:body response)))
+        (is (spy/called-once-with? crypt/generate-hash td/test-config test-email))
+        (is (spy/called-once-with? email-subscriptions-db/add-email-subscription nil test-email))
+        (is (spy/called-once-with? mail/send-free-lesson-email-http td/test-config generated-hash test-email)))))
+
+  (doseq [[body errors] [[{:email "invalid"}
+                          ["Email is not valid"]]
+                         [{:mail "valid@email.com"}
+                          ["Field email is mandatory"]]]]
+    (testing "Test POST /free-lesson with invalid request body"
+      (let [app      (test-app/api-routes-with-auth)
+            response (app (-> (mock/request :post "/api/lessons/free-lesson")
+                              (mock/json-body body)))
+            body     (test-app/parse-body (:body response))]
+        (is (= 400 (:status response)))
+        (is (= {:errors  errors
+                :message const/bad-request-error-message}
+               body))))))
+
+(def email-subscription-from-db
+  "Test email subscription from database."
+  {:email_subscriptions/email     test-email
+   :email_subscriptions/is_active true})
+
+(deftest get-free-lesson-test
+  (testing "Test GET /free-lesson with valid token and existing email in database"
+    (let [free-lesson-file       (io/as-file (io/resource "1.png"))
+          free-lesson-path       (.getName free-lesson-file)
+          video-lesson-root-path (.getParent free-lesson-file)]
+      (with-redefs [crypt/decrypt-hash                                     (spy/stub test-email)
+                    email-subscriptions-db/get-email-subscription-by-email (spy/stub email-subscription-from-db)
+                    config/free-lesson-path                                (spy/stub free-lesson-path)
+                    config/video-lessons-root-path                         (spy/stub video-lesson-root-path)]
+        (let [app      (test-app/api-routes-with-auth)
+              response (app (-> (mock/request :get "/api/lessons/free-lesson")
+                                (mock/query-string {:token generated-hash})))]
+          (is (= 200 (:status response)))
+          (is (instance? java.io.File (:body response)))
+          (is (spy/called-once-with? crypt/decrypt-hash td/test-config generated-hash))
+          (is (spy/called-once-with? email-subscriptions-db/get-email-subscription-by-email nil test-email))))))
+
+  (testing "Test GET /free-lesson with invalid token"
+    (with-redefs [crypt/decrypt-hash                                     (spy/stub nil)
+                  email-subscriptions-db/get-email-subscription-by-email (spy/spy)]
+      (let [app      (test-app/api-routes-with-auth)
+            response (app (-> (mock/request :get "/api/lessons/free-lesson")
+                              (mock/query-string {:token generated-hash})))
+            body     (test-app/parse-body (:body response))]
+        (is (= 403 (:status response)))
+        (is (= {:message const/no-access-error-message} body))
+        (is (spy/called-once-with? crypt/decrypt-hash td/test-config generated-hash))
+        (is (spy/called-once-with? email-subscriptions-db/get-email-subscription-by-email nil nil)))))
+
+  (testing "Test GET /free-lesson without record in database"
+    (with-redefs [crypt/decrypt-hash                                     (spy/stub test-email)
+                  email-subscriptions-db/get-email-subscription-by-email (spy/stub nil)]
+      (let [app      (test-app/api-routes-with-auth)
+            response (app (-> (mock/request :get "/api/lessons/free-lesson")
+                              (mock/query-string {:token generated-hash})))
+            body     (test-app/parse-body (:body response))]
+        (is (= 403 (:status response)))
+        (is (= {:message const/no-access-error-message} body))
+        (is (spy/called-once-with? crypt/decrypt-hash td/test-config generated-hash))
+        (is (spy/called-once-with? email-subscriptions-db/get-email-subscription-by-email nil test-email)))))
+
+  (testing "Test GET /free-lesson without token"
+    (let [app      (test-app/api-routes-with-auth)
+          response (app (mock/request :get "/api/lessons/free-lesson"))
+          body     (test-app/parse-body (:body response))]
+      (is (= 400 (:status response)))
+      (is (= {:errors ["Value is not valid"] :message const/bad-request-error-message} body)))))

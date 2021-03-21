@@ -1,11 +1,16 @@
 (ns education.http.endpoints.lessons
   (:require [compojure.api.core :refer [context DELETE GET PATCH POST]]
+            [education.config :as config]
+            [education.database.email-subscriptions :as email-subscriptions-db]
             [education.database.lessons :as lessons-db]
             [education.http.constants :as const]
             [education.http.restructure :refer [require-roles]]
             [education.specs.common :as spec]
+            [education.utils.crypt :as crypt]
+            [education.utils.mail :as mail]
             [education.utils.maps :refer [unqualify-map]]
-            [ring.util.http-response :as status]))
+            [ring.util.http-response :as status :refer [forbidden]]
+            [ring.util.response :refer [file-response]]))
 
 ;; Helper functions
 (defn- db->response
@@ -48,10 +53,28 @@
     0 (status/not-found {:message const/not-found-error-message})
     (status/internal-server-error {:message const/server-error-message})))
 
+(defn- request-free-lesson-handler
+  [conf db {:keys [email]}]
+  (let [token (crypt/generate-hash conf email)]
+    (email-subscriptions-db/add-email-subscription db email)
+    (mail/send-free-lesson-email-http conf token email)
+    (status/ok)))
+
+(defn serve-video-handler
+  [conf db token]
+  (let [email (crypt/decrypt-hash conf token)
+        exist? (some-> (email-subscriptions-db/get-email-subscription-by-email db email)
+                       (:email_subscriptions/email))]
+    (if exist?
+     (file-response (config/free-lesson-path conf)
+                    {:root         (config/video-lessons-root-path conf)
+                     :index-files? false})
+     (forbidden {:message const/no-access-error-message}))))
+
 ;; Define routes
 (defn lessons-routes
   "Define routes for lessons endpoint."
-  [db]
+  [db config]
   (context "/lessons" []
     :tags ["lessons"]
     (POST "/" []
@@ -82,6 +105,9 @@
                   404 {:description const/not-found-error-message
                        :schema      ::spec/error-response}}
       (update-lesson-handler db lesson-id lesson))
+    (GET "/free-lesson" []
+      :query-params [token :- string?]
+      (serve-video-handler config db token))
     (GET "/:lesson-id" []
       :path-params [lesson-id :- ::spec/id]
       :summary "Get lesson"
@@ -116,4 +142,12 @@
                        :schema      ::spec/error-response}
                   404 {:description const/not-found-error-message
                        :schema      ::spec/error-response}}
-      (delete-lesson-by-id-handler db lesson-id))))
+      (delete-lesson-by-id-handler db lesson-id))
+
+    (POST "/free-lesson" []
+      :summary "Request free video lesson"
+      :description "Request free video lesson by `email`"
+      :body [free-lesson-request ::spec/free-lesson-request]
+      :responses {400 {:description const/bad-request-error-message
+                       :schema ::spec/error-response}}
+      (request-free-lesson-handler config db free-lesson-request))))

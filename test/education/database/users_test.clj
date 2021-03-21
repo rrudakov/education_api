@@ -68,10 +68,10 @@
                          (assoc :users/roles td/user2-roles))) result))
         (is (spy/called-once-with?
              sql/query nil
-             [(str "SELECT u.id, u.user_name, u.user_email, array_agg(r.role_name) AS roles, u.created_on, u.updated_on "
-                   "FROM users u "
-                   "LEFT JOIN user_roles ur ON ur.user_id = u.id "
-                   "LEFT JOIN roles r ON r.id = ur.role_id "
+             [(str "SELECT u.id, u.user_name, u.user_email, ARRAY_AGG(r.role_name) AS roles, u.created_on, u.updated_on "
+                   "FROM users AS u "
+                   "LEFT JOIN user_roles AS ur ON ur.user_id = u.id "
+                   "LEFT JOIN roles AS r ON r.id = ur.role_id "
                    "GROUP BY u.id "
                    "ORDER BY u.id DESC")]))))))
 

@@ -1,6 +1,5 @@
 (ns education.http.endpoints.gymnastics-test
-  (:require [cheshire.core :as cheshire]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [education.database.gymnastics :as gymnastics-db]
             [education.http.constants :as const]
@@ -30,9 +29,8 @@
         (let [role     :admin
               app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/gymnastics")
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 201 (:status response)))
           (is (= {:id test-gymnastic-id} body))
@@ -43,9 +41,8 @@
       (with-redefs [gymnastics-db/add-gymnastic (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/gymnastics")
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string create-gymnastic-request))))
+                                (mock/json-body create-gymnastic-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called? gymnastics-db/add-gymnastic))
@@ -55,8 +52,7 @@
     (with-redefs [gymnastics-db/add-gymnastic (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :post "/api/gymnastics")
-                              (mock/content-type "application/json")
-                              (mock/body (cheshire/generate-string create-gymnastic-request))))
+                              (mock/json-body create-gymnastic-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? gymnastics-db/add-gymnastic))
@@ -87,9 +83,8 @@
       (with-redefs [gymnastics-db/add-gymnastic (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/gymnastics")
-                                (mock/content-type "application/json")
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/add-gymnastic))
@@ -114,9 +109,8 @@
         (let [role     :admin
               app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string request-body))))]
+                                (mock/json-body request-body)))]
           (is (= 204 (:status response)))
           (is (spy/called-once-with? gymnastics-db/update-gymnastic nil test-gymnastic-id request-body))
           (is (empty? (:body response)))))))
@@ -126,9 +120,8 @@
       (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{role}))
-                                (mock/body (cheshire/generate-string update-gymnastic-request))))
+                                (mock/json-body update-gymnastic-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
           (is (spy/not-called? gymnastics-db/update-gymnastic))
@@ -138,8 +131,7 @@
     (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
-                              (mock/content-type td/application-json)
-                              (mock/body (cheshire/generate-string update-gymnastic-request))))
+                              (mock/json-body update-gymnastic-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 401 (:status response)))
         (is (spy/not-called? gymnastics-db/update-gymnastic))
@@ -149,9 +141,8 @@
     (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch "/api/gymnastics/invalid")
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-gymnastic-request))))
+                              (mock/json-body update-gymnastic-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/update-gymnastic))
@@ -163,9 +154,8 @@
     (with-redefs [gymnastics-db/update-gymnastic (spy/stub 0)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-gymnastic-request))))
+                              (mock/json-body update-gymnastic-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 404 (:status response)))
         (is (spy/called-once-with? gymnastics-db/update-gymnastic nil test-gymnastic-id update-gymnastic-request))
@@ -175,9 +165,8 @@
     (with-redefs [gymnastics-db/update-gymnastic (spy/stub 2)]
       (let [app      (test-app/api-routes-with-auth)
             response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
-                              (mock/content-type td/application-json)
                               (mock/header :authorization (td/test-auth-token #{:admin}))
-                              (mock/body (cheshire/generate-string update-gymnastic-request))))
+                              (mock/json-body update-gymnastic-request)))
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (spy/called-once-with? gymnastics-db/update-gymnastic nil test-gymnastic-id update-gymnastic-request))
@@ -208,9 +197,8 @@
       (with-redefs [gymnastics-db/update-gymnastic (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :patch (str "/api/gymnastics/" test-gymnastic-id))
-                                (mock/content-type td/application-json)
                                 (mock/header :authorization (td/test-auth-token #{:admin}))
-                                (mock/body (cheshire/generate-string request-body))))
+                                (mock/json-body request-body)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/update-gymnastic))
@@ -301,7 +289,8 @@
     (with-redefs [gymnastics-db/get-all-gymnastics (spy/stub [gymnastic-from-db gymnastic-from-db-extra])]
       (let [subtype-id 4
             app        (test-app/api-routes-with-auth)
-            response   (app (mock/request :get (str "/api/gymnastics?subtype_id=" subtype-id)))
+            response   (app (-> (mock/request :get "/api/gymnastics")
+                                (mock/query-string {:subtype_id subtype-id})))
             body       (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (spy/called-once-with? gymnastics-db/get-all-gymnastics nil subtype-id :limit nil :offset nil))
@@ -313,9 +302,10 @@
             offset-param 20
             limit-param  20
             app          (test-app/api-routes-with-auth)
-            response     (app (mock/request :get (str "/api/gymnastics?subtype_id=" subtype-id
-                                                      "&limit=" limit-param
-                                                      "&offset=" offset-param)))
+            response     (app (-> (mock/request :get "/api/gymnastics")
+                                  (mock/query-string {:subtype_id subtype-id
+                                                      :limit      limit-param
+                                                      :offset     offset-param})))
             body         (test-app/parse-body (:body response))]
         (is (= 200 (:status response)))
         (is (spy/called-once-with? gymnastics-db/get-all-gymnastics
@@ -339,7 +329,8 @@
   (testing "Test GET /gymnastics with invalid `subtype_id`"
     (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
-            response (app (mock/request :get "/api/gymnastics?subtype_id=invalid"))
+            response (app (-> (mock/request :get "/api/gymnastics")
+                              (mock/query-string {:subtype_id "invalid"})))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/get-all-gymnastics))
@@ -347,12 +338,13 @@
                 :errors  ["Value is not valid"]}
                body)))))
 
-  (doseq [url ["/api/gymnastics?subtype_id=3&limit=invalid"
-               "/api/gymnastics?subtype_id=3&offset=invalid"]]
+  (doseq [query [{:limit "invalid"}
+                 {:offset "invalid"}]]
     (testing "Test GET /gymnastics with invalid `offset` and `limit` parameters"
       (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
-              response (app (mock/request :get url))
+              response (app (-> (mock/request :get "/api/gymnastics")
+                                (mock/query-string query)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/get-all-gymnastics))

@@ -6,6 +6,8 @@
 
 (s/def ::id pos-int?)
 
+(s/def ::email (s/and string? #(re-matches const/valid-email-regex %)))
+
 (s/def ::subtype_id pos-int?)
 
 (s/def ::title
@@ -79,6 +81,9 @@
 
 (s/def ::lessons-response
   (s/coll-of ::lesson-response :kind vector? :distinct true :into []))
+
+(s/def ::free-lesson-request
+  (s/keys :req-un [::email]))
 
 ;; Gymnastics
 (s/def ::gymnastic-create-request

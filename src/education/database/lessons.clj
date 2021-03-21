@@ -1,7 +1,8 @@
 (ns education.database.lessons
   (:require [education.utils.maps :refer [update-if-exist]]
-            [honeysql.core :as hsql]
-            [next.jdbc.sql :as sql])
+            [honey.sql :as hsql]
+            [next.jdbc.sql :as sql]
+            [honey.sql.helpers :as h])
   (:import java.time.Instant))
 
 (defn- request->db-create-statement
@@ -39,12 +40,11 @@
 (defn get-all-lessons
   "Get all lessons from database."
   [conn & {:keys [limit offset]}]
-  (->> offset
-       (hsql/build :select :*
-                   :from :lessons
-                   :order-by [[:created_on :asc]]
-                   :limit (or limit 20)
-                   :offset (or offset 0))
+  (->> (-> (h/select :*)
+           (h/from :lessons)
+           (h/order-by [:created_on :asc])
+           (h/limit (or limit 20))
+           (h/offset (or offset 0)))
        (hsql/format)
        (sql/query conn)))
 
