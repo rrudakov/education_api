@@ -6,4 +6,21 @@
  {:port      #long #or [#env PORT 3000]
   :tokensign #profile
   {:dev  "not_super_secure_token"
-   :prod "super_secure_token"}}}
+   :prod "super_secure_token"}
+  :base_url  #profile
+  {:dev  "http://127.0.0.1:3000"
+   :prod "https://prod.url"}
+  :storage   #profile
+  {:dev  "/tmp/"
+   :prod "/prod/storage"}
+  :crypto
+  {:key "key"
+   :iv  "iv"}
+  :send-grid
+  {:base-url "https://api.url"
+   :api-key  "api-key"
+   :templates
+   {:free-lesson "free-lesson-template-id"}}
+  :video-lessons
+  {:root-path        "/some/storage"
+   :free-lesson-path "zima.mp4"}}}

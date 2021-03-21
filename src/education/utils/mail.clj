@@ -2,7 +2,7 @@
   (:require [clj-http.client :as client]
             [education.config :as config]))
 
-(defn free-video-mail-request-body
+(defn- free-video-mail-request-body
   [conf token to]
   {:personalizations
    [{:to

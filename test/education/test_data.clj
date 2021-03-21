@@ -12,8 +12,16 @@
    :app
    {:tokensign "test_secret"
     :port      3000
-    :base_url "http://127.0.0.1:3000"
-    :storage "/tmp/"}})
+    :base_url  "http://127.0.0.1:3000"
+    :storage   "/tmp/"
+    :crypto
+    {:key "crypto_key_must_be_long_enough"
+     :iv  "0983728349123450"}
+    :send-grid
+    {:base-url "https://some.url.com/api"
+     :api-key  "random-string"
+     :templates
+     {:free-lesson "random-template-id"}}}})
 
 (def password
   "Password for test users."

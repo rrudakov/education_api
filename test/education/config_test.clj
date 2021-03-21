@@ -3,20 +3,41 @@
             [clojure.java.io :as io]
             [clojure.test :refer [deftest testing is]]
             [education.config :as sut]
-            [spy.core :as spy]))
+            [spy.core :as spy]
+            [buddy.core.hash :as hash]
+            [buddy.core.codecs :as codecs]))
 
 (def parsed-configs
   "Define parsed config."
   {:dev
    {:database
     {:url "test_database_url"}
-    :app {:port      3000
-          :tokensign "not_super_secure_token"}}
+    :app {:port          3000
+          :tokensign     "not_super_secure_token"
+          :base_url      "http://127.0.0.1:3000"
+          :storage       "/tmp/"
+          :crypto        {:key "key"
+                          :iv  "iv"}
+          :send-grid     {:base-url  "https://api.url"
+                          :api-key   "api-key"
+                          :templates {:free-lesson "free-lesson-template-id"}}
+          :video-lessons {:root-path        "/some/storage"
+                          :free-lesson-path "zima.mp4"}}}
    :prod
    {:database
     {:url "prod_database_url"}
     :app {:port      3000
-          :tokensign "super_secure_token"}}})
+          :tokensign "super_secure_token"
+          :base_url  "https://prod.url"
+          :storage   "/prod/storage"
+
+          :crypto        {:key "key"
+                          :iv  "iv"}
+          :send-grid     {:base-url  "https://api.url"
+                          :api-key   "api-key"
+                          :templates {:free-lesson "free-lesson-template-id"}}
+          :video-lessons {:root-path        "/some/storage"
+                          :free-lesson-path "zima.mp4"}}}})
 
 (def raw-config
   "Define raw test configuration."
@@ -67,3 +88,61 @@
                 :maxIdleTimeExcessConnections 10800
                 :maxPoolSize                  30}
                (sut/db-spec config)))))))
+
+(deftest base-url-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting base URL from config"
+      (let [config (profile parsed-configs)]
+        (is (= (get-in config [:app :base_url]) (sut/base-url config)))))))
+
+(deftest storage-path-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting storage path from config"
+      (let [config (profile parsed-configs)]
+        (is (= (get-in config [:app :storage]) (sut/storage-path config)))))))
+
+(deftest crypto-key-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting crypto key from config"
+      (with-redefs [hash/sha256 (spy/stub "value")]
+        (let [config (profile parsed-configs)]
+          (is (= "value" (sut/crypto-key config)))
+          (is (spy/called-once-with? hash/sha256 (get-in config [:app :crypto :key]))))))))
+
+(deftest crypto-iv-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting crypto iv from config"
+      (with-redefs [codecs/str->bytes (spy/stub "value")]
+        (let [config (profile parsed-configs)]
+          (is (= "value" (sut/crypto-iv config)))
+          (is (spy/called-once-with? codecs/str->bytes (get-in config [:app :crypto :iv]))))))))
+
+(deftest send-grid-base-url-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting send-grid base URL from config"
+      (let [config (profile parsed-configs)]
+        (is (= (get-in config [:app :send-grid :base-url]) (sut/send-grid-base-url config)))))))
+
+(deftest send-grid-api-key-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting send-grid API key from config"
+      (let [config (profile parsed-configs)]
+        (is (= (get-in config [:app :send-grid :api-key]) (sut/send-grid-api-key config)))))))
+
+(deftest free-lesson-template-id-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting send-grid free lesson template from config"
+      (let [config (profile parsed-configs)]
+        (is (= (get-in config [:app :send-grid :templates :free-lesson]) (sut/free-lesson-template-id config)))))))
+
+(deftest video-lessons-root-path-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting root path for video lessons files from config"
+      (let [config (profile parsed-configs)]
+        (is (= (get-in config [:app :video-lessons :root-path]) (sut/video-lessons-root-path config)))))))
+
+(deftest free-lesson-path-test
+  (doseq [profile [:dev :prod]]
+    (testing "Test getting free lesson path from config"
+      (let [config (profile parsed-configs)]
+        (is (= (get-in config [:app :video-lessons :free-lesson-path]) (sut/free-lesson-path config)))))))
