@@ -1,8 +1,9 @@
 (ns education.database.lessons
   (:require [education.utils.maps :refer [update-if-exist]]
             [honey.sql :as hsql]
-            [next.jdbc.sql :as sql]
-            [honey.sql.helpers :as h])
+            [honey.sql.helpers :as h]
+            next.jdbc.date-time
+            [next.jdbc.sql :as sql])
   (:import java.time.Instant))
 
 (defn- request->db-create-statement
