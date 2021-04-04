@@ -31,6 +31,7 @@
 (s/def ::screenshot ::url)
 (s/def ::attachment ::url)
 (s/def ::preview ::url)
+(s/def ::store_link ::url)
 
 (s/def ::pictures
   (s/coll-of ::picture :kind vector? :distinct true :into []))
@@ -134,6 +135,27 @@
 
 (s/def ::presentations-response
   (s/coll-of ::presentation-response :kind vector? :distinct true :into []))
+
+;;; Materials
+
+(s/def ::material-create-request
+  (s/keys :req-un [::title ::description ::preview ::store_link ::price]))
+
+(s/def ::material-update-request
+  (s/keys :opt-un [::title ::description ::preview ::store_link ::price]))
+
+(s/def ::material-response
+  (s/keys :req-un [::id
+                   ::title
+                   ::description
+                   ::preview
+                   ::store_link
+                   ::price
+                   ::created_on
+                   ::updated_on]))
+
+(s/def ::materials-response
+  (s/coll-of ::material-response :kind vector? :distinct true :into []))
 
 ;; Errors
 (s/def ::message string?)
