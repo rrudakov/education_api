@@ -1,7 +1,7 @@
 (ns education.database.materials
-  (:require [education.utils.maps :refer [update-if-exist]]
-            [next.jdbc.sql :as sql])
-  (:import java.time.Instant))
+  (:require [cljc.java-time.instant :as instant]
+            [education.utils.maps :refer [update-if-exist]]
+            [next.jdbc.sql :as sql]))
 
 (defn- ->db-model-create
   [material]
@@ -11,7 +11,7 @@
 (defn- ->db-model-update
   [material]
   (-> material
-      (assoc :update_on (Instant/now))
+      (assoc :updated_on (instant/now))
       (update-if-exist :price bigdec)))
 
 (defn add-material
