@@ -49,7 +49,7 @@
                                :is_main_featured is_main_featured
                                :description      description}
         values-for-update     (assoc (apply dissoc values (for [[k v] values :when (nil? v)] k))
-                                 :updated_on (java.time.Instant/now))]
+                                     :updated_on (java.time.Instant/now))]
     (:next.jdbc/update-count (sql/update! conn :articles values-for-update {:id article-id}))))
 
 (defn get-all-articles

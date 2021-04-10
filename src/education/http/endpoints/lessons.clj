@@ -66,10 +66,10 @@
         exist? (some-> (email-subscriptions-db/get-email-subscription-by-email db email)
                        (:email_subscriptions/email))]
     (if exist?
-     (file-response (config/free-lesson-path conf)
-                    {:root         (config/video-lessons-root-path conf)
-                     :index-files? false})
-     (forbidden {:message const/no-access-error-message}))))
+      (file-response (config/free-lesson-path conf)
+                     {:root         (config/video-lessons-root-path conf)
+                      :index-files? false})
+      (forbidden {:message const/no-access-error-message}))))
 
 ;; Define routes
 (defn lessons-routes

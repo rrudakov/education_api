@@ -48,7 +48,7 @@
                                 (mock/json-body create-dress-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
-          (is (spy/not-called?  dresses-db/add-dress))
+          (is (spy/not-called? dresses-db/add-dress))
           (is (= {:message const/no-access-error-message} body))))))
 
   (testing "Test POST /dresses without authorization header"
