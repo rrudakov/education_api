@@ -70,3 +70,39 @@
       (let [result (sut/get-material-by-id nil get-material-id)]
         (is (= create-material-result result))
         (is (spy/called-once-with? sql/get-by-id nil :materials get-material-id))))))
+
+(deftest get-all-materials-test
+  (testing "Test get all materials without optional parameters"
+    (with-redefs [sql/find-by-keys (spy/stub [create-material-result])]
+      (let [result (sut/get-all-materials nil)]
+        (is (= [create-material-result] result))
+        (is (spy/called-once-with? sql/find-by-keys nil :materials :all {:limit 20 :offset 0})))))
+
+  (testing "Test get all materials with `limit` specified"
+    (with-redefs [sql/find-by-keys (spy/stub [create-material-result])]
+      (let [limit  (rand-int 100)
+            result (sut/get-all-materials nil :limit limit)]
+        (is (= [create-material-result] result))
+        (is (spy/called-once-with? sql/find-by-keys nil :materials :all {:limit limit :offset 0})))))
+
+  (testing "Test get all materials with `offset` specified"
+    (with-redefs [sql/find-by-keys (spy/stub [create-material-result])]
+      (let [offset (rand-int 100)
+            result (sut/get-all-materials nil :offset offset)]
+        (is (= [create-material-result] result))
+        (is (spy/called-once-with? sql/find-by-keys nil :materials :all {:limit 20 :offset offset}))))))
+
+(def ^:private delete-material-result
+  "Stub data for delete material call."
+  {:next.jdbc/update-count 1})
+
+(def ^:private delete-material-id
+  "Test API material-id."
+  (rand-int 100))
+
+(deftest delete-material-test
+  (testing "Test delete material with valid `material-id`"
+    (with-redefs [sql/delete! (spy/stub delete-material-result)]
+      (let [result (sut/delete-material nil delete-material-id)]
+        (is (= (:next.jdbc/update-count delete-material-result) result))
+        (is (spy/called-once-with? sql/delete! nil :materials {:id delete-material-id}))))))

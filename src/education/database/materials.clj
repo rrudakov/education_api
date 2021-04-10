@@ -37,7 +37,7 @@
 (defn get-all-materials
   "Get all materials from database."
   [conn & {:keys [limit offset]}]
-  (sql/find-by-keys conn :materials
+  (sql/find-by-keys conn :materials :all
                     {:limit  (or limit 20)
                      :offset (or offset 0)}))
 
