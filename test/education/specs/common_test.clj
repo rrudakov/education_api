@@ -1,10 +1,10 @@
 (ns education.specs.common-test
-  (:require [clojure.spec.alpha :as s]
+  (:require [cljc.java-time.instant :as instant]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
-            [education.specs.common :as sut]
-            [education.http.constants :as const])
-  (:import java.time.Instant))
+            [education.http.constants :as const]
+            [education.specs.common :as sut]))
 
 (deftest id-test
   (doseq [id [1 33 9999999999992222]]
@@ -160,7 +160,7 @@
 
 (deftest created-on-test
   (testing "::created_on is valid"
-    (is (s/valid? ::sut/created_on (Instant/now))))
+    (is (s/valid? ::sut/created_on (instant/now))))
 
   (doseq [created-on ["2020-06-23T18:05:22.905106Z" "any_value" 1234567888 false]]
     (testing (str "::created_on is invalid " created-on)
@@ -168,7 +168,7 @@
 
 (deftest updated-on-test
   (testing "::updated_on is valid"
-    (is (s/valid? ::sut/updated_on (Instant/now))))
+    (is (s/valid? ::sut/updated_on (instant/now))))
 
   (doseq [updated-on ["2020-06-23T18:05:22.905106Z" "any_value" 1234567888 false]]
     (testing (str "::updated_on is ivalid " updated-on)
@@ -196,8 +196,16 @@
   (testing "::gymnastic-create-response is valid"
     (is (s/valid? ::sut/create-response {:id 2})))
 
-  (testing "::gymnastic-create-response is invalid"
-    (is (not (s/valid? ::sut/create-response {:id "2"})))))
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}
+                    {}
+                    {:wrong 3}
+                    {:id "2"}]]
+    (testing "::gymnastic-create-response is invalid"
+      (is (not (s/valid? ::sut/create-response response))))))
 
 (def ^:private gymnastic-create-request
   {:subtype_id  8
@@ -212,7 +220,12 @@
     (testing "::gymnastic-create-request is valid"
       (is (s/valid? ::sut/gymnastic-create-request request))))
 
-  (doseq [request [(dissoc gymnastic-create-request :subtype_id)
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}
+                   (dissoc gymnastic-create-request :subtype_id)
                    (dissoc gymnastic-create-request :title)
                    (dissoc gymnastic-create-request :description)]]
     (testing "::gymnastic-create-request is invalid"
@@ -226,7 +239,15 @@
                    {:picture nil}
                    {:picture "https://alenkinaskazka.net/new/picture.png"}]]
     (testing "::gymnastic-update-request is valid"
-      (is (s/valid? ::sut/gymnastic-update-request request)))))
+      (is (s/valid? ::sut/gymnastic-update-request request))))
+
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}]]
+    (testing "::gymnastic-update-request is invalid"
+      (is ((complement s/valid?) ::sut/gymnastic-update-request request)))))
 
 (def ^:private gymnastic-response
   {:id          1
@@ -234,8 +255,8 @@
    :title       "Gymnastic title"
    :description "Gymnastic description"
    :picture     "https://alenkinaskazka.net/img/picture.png"
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (def ^:private gymnastic-response2
   {:id          2
@@ -243,8 +264,8 @@
    :title       "Gymnastic title 2"
    :description "Gymnastic description 2"
    :picture     "https://alenkinaskazka.net/img/picture.png"
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (deftest gymnastic-response-test
   (doseq [response [gymnastic-response
@@ -253,7 +274,11 @@
     (testing "::gymnastic-response is valid"
       (is (s/valid? ::sut/gymnastic-response response))))
 
-  (doseq [response [(dissoc gymnastic-response :id)
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}(dissoc gymnastic-response :id)
                     (dissoc gymnastic-response :subtype_id)
                     (dissoc gymnastic-response :title)
                     (dissoc gymnastic-response :description)
@@ -266,8 +291,14 @@
   (testing "::gymnastics-response is valid"
     (is (s/valid? ::sut/gymnastics-response [gymnastic-response gymnastic-response2])))
 
-  (testing "::gymnastics-response is invalid"
-    (is (not (s/valid? ::sut/gymnastics-response [gymnastic-response gymnastic-response])))))
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}
+                    [gymnastic-response gymnastic-response]]]
+    (testing "::gymnastics-response is invalid"
+      (is ((complement s/valid?) ::sut/gymnastics-response response)))))
 
 (def ^:private dress-create-request
   {:title       "Dress title"
@@ -280,7 +311,13 @@
   (testing "::dress-create-request is valid"
     (is (s/valid? ::sut/dress-create-request dress-create-request)))
 
-  (doseq [request [(dissoc dress-create-request :title)
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}
+                   {}
+                   (dissoc dress-create-request :title)
                    (dissoc dress-create-request :description)
                    (dissoc dress-create-request :size)
                    (dissoc dress-create-request :pictures)
@@ -296,7 +333,15 @@
                    {:pictures ["https://alenkinaskazka.net/img/some_picture.jpg"]}
                    {:price "888"}]]
     (testing "::dress-update-request is valid"
-      (is (s/valid? ::sut/dress-update-request request)))))
+      (is (s/valid? ::sut/dress-update-request request))))
+
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}]]
+    (testing "::dress-update-request is invalid"
+      (is ((complement s/valid?) ::sut/dress-update-request request)))))
 
 (def ^:private dress-response
   {:id          1
@@ -305,8 +350,8 @@
    :size        22
    :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
    :price       "32.3"
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (def ^:private dress-response2
   {:id          2
@@ -315,8 +360,8 @@
    :size        22
    :pictures    ["https://alenkinaskazka.net/img/some_picture.jpg"]
    :price       "32.3"
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (deftest dress-response-test
   (doseq [response [dress-response
@@ -324,7 +369,13 @@
     (testing "::dress-response is valid"
       (is (s/valid? ::sut/dress-response response))))
 
-  (doseq [response [(dissoc dress-response :id)
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}
+                    {}
+                    (dissoc dress-response :id)
                     (dissoc dress-response :title)
                     (dissoc dress-response :description)
                     (dissoc dress-response :size)
@@ -333,16 +384,22 @@
                     (dissoc dress-response :created_on)
                     (dissoc dress-response :updated_on)]]
     (testing "::dress-response is invalid"
-      (is (not (s/valid? ::sut/dress-response response))))))
+      (is ((complement s/valid?) ::sut/dress-response response)))))
 
 (deftest dresses-response-test
   (testing "::dresses-response is valid"
     (is (s/valid? ::sut/dresses-response
                   [dress-response dress-response2])))
 
-  (testing "::dresses-response is invalid"
-    (is (not (s/valid? ::sut/dresses-response
-                       [dress-response dress-response])))))
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}
+                    {}
+                    [dress-response dress-response]]]
+    (testing "::dresses-response is invalid"
+      (is ((complement s/valid?) ::sut/dresses-response response)))))
 
 (deftest message-test
   (doseq [message [const/bad-request-error-message
@@ -357,7 +414,7 @@
 
   (doseq [message [123 true :keyword {:some "Object"}]]
     (testing (str "::message invalid " message)
-      (is (not (s/valid? ::sut/message message))))))
+      (is ((complement s/valid?) ::sut/message message)))))
 
 (deftest error-code-test
   (doseq [code ["22888" "00000" "88237" "anystring"]]
@@ -366,7 +423,7 @@
 
   (doseq [code [12345 22989 true {:some "object"} :keyword]]
     (testing (str "::error_code invalid " code)
-      (is (not (s/valid? ::sut/error_code code))))))
+      (is ((complement s/valid?) ::sut/error_code code)))))
 
 (deftest details-test
   (testing "::details valid"
@@ -374,7 +431,7 @@
 
   (doseq [details [1234 false {:some "Object"} :keywork]]
     (testing (str "::details invalid " details)
-      (is (not (s/valid? ::sut/details details))))))
+      (is ((complement s/valid?) ::sut/details details)))))
 
 (deftest error-response-test
   (doseq [resp [{:message const/bad-request-error-message}
@@ -385,12 +442,17 @@
     (testing (str "::error-response valid " resp)
       (is (s/valid? ::sut/error-response resp))))
 
-  (doseq [resp [{:message {:value "Some message"}}
+  (doseq [resp ["string"
+                123
+                true
+                ["vector"]
+                #{:set}
+                {:message {:value "Some message"}}
                 {:details "23456" :error_code "error code"}
                 {:message const/server-error-message :details :invalid :error_code "valid"}
                 {:message const/not-authorized-error-message :details "valid" :error_code 12345}]]
     (testing (str "::error-response invalid " resp)
-      (is (not (s/valid? ::sut/error-response resp))))))
+      (is ((complement s/valid?) ::sut/error-response resp)))))
 
 (def ^:private lesson-create-request
   {:title       "Some title"
@@ -403,7 +465,13 @@
   (testing "::lesson-create-request is valid"
     (is (s/valid? ::sut/lesson-create-request lesson-create-request)))
 
-  (doseq [request [(dissoc lesson-create-request :title)
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}
+                   {}
+                   (dissoc lesson-create-request :title)
                    (dissoc lesson-create-request :subtitle)
                    (dissoc lesson-create-request :description)
                    (dissoc lesson-create-request :screenshots)
@@ -419,7 +487,15 @@
                    {:screenshots ["https://alenkinaskazka.net/img/some_screenshot.jpg"]}
                    {:price "22.8383"}]]
     (testing "::lesson-update-request is valid"
-      (is (s/valid? ::sut/lesson-update-request request)))))
+      (is (s/valid? ::sut/lesson-update-request request))))
+
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}]]
+    (testing "::lesson-update-request is not valid"
+      (is ((complement s/valid?) ::sut/lesson-update-request request)))))
 
 (def ^:private lesson-response
   {:id          1
@@ -429,8 +505,8 @@
    :screenshots ["https://alenkinaskazka.net/img/some_picture.jpg"
                  "https://alenkinaskazka.net/img/some_screenshot.jpg"]
    :price       "22.33"
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (def ^:private lesson-response2
   {:id          2
@@ -440,8 +516,8 @@
    :screenshots ["https://alenkinaskazka.net/img/some_more_picture.jpg"
                  "https://alenkinaskazka.net/img/some_more_screenshot.jpg"]
    :price       "22.33"
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (deftest lesson-response-test
   (doseq [response [lesson-response
@@ -449,7 +525,13 @@
     (testing "::lesson-response is valid"
       (is (s/valid? ::sut/lesson-response response))))
 
-  (doseq [response [(dissoc lesson-response :id)
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}
+                    {}
+                    (dissoc lesson-response :id)
                     (dissoc lesson-response :title)
                     (dissoc lesson-response :subtitle)
                     (dissoc lesson-response :description)
@@ -458,16 +540,22 @@
                     (dissoc lesson-response :created_on)
                     (dissoc lesson-response :updated_on)]]
     (testing "::lesson-response is invalid"
-      (is (not (s/valid? ::sut/lesson-response response))))))
+      (is ((complement s/valid?) ::sut/lesson-response response)))))
 
 (deftest lessons-response-test
   (testing "::lessons-response is valid"
     (is (s/valid? ::sut/lessons-response
                   [lesson-response lesson-response2])))
 
-  (testing "::lessons-response is invalid"
-    (is (not (s/valid? ::sut/lessons-response
-                       [lesson-response lesson-response])))))
+  (doseq [response ["string"
+                    123
+                    true
+                    {}
+                    ["vector"]
+                    #{:set}
+                    [lesson-response lesson-response]]]
+    (testing "::lessons-response is invalid"
+      (is ((complement s/valid?) ::sut/lessons-response response)))))
 
 (def ^:private presentation-create-request
   {:title       "My awesome presentation"
@@ -485,22 +573,33 @@
     (testing "::presentations-create-request is valid"
       (is (s/valid? ::sut/presentation-create-request request))))
 
-  (doseq [request [(dissoc presentation-create-request :title)
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}
+                   {}
+                   (dissoc presentation-create-request :title)
                    (dissoc presentation-create-request :url)
                    (dissoc presentation-create-request :description)]]
     (testing "::presentation-create-request is invalid"
       (is ((complement s/valid?) ::sut/presentation-create-request request)))))
 
 (deftest presentations-update-request-test
-  (doseq [request [{}
-                   {:title "New title"}
-                   {:url "https://google.com/new-url"}
-                   {:description "Updated description"}
-                   {:is_public false}
-                   {:attachment "https://alenkinaskazka.net/some_file.pdf"}
-                   {:preview "https://alenkinaskazka.net/some_image.png"}]]
+  (doseq [request (conj
+                   (for [k (keys presentation-create-request)]
+                     (select-keys presentation-create-request [k]))
+                   {})]
     (testing "::presentation-update-request is valid"
-      (is (s/valid? ::sut/presentation-update-request request)))))
+      (is (s/valid? ::sut/presentation-update-request request))))
+
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}]]
+    (testing "::presentation-update-request is not valid"
+      (is ((complement s/valid?) ::sut/presentation-update-request request)))))
 
 (def ^:private presentation-response
   {:id          1
@@ -509,8 +608,8 @@
    :description "First presentation description"
    :is_public   false
    :subtype_id  2
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (def ^:private presentation-response2
   {:id          2
@@ -520,8 +619,8 @@
    :attachment  "https://alenkinaskazka.net/some-file.pdf"
    :preview     "https://alenkinaskazka.net/some_image.png"
    :subtype_id  1
-   :created_on  (Instant/now)
-   :updated_on  (Instant/now)})
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
 
 (deftest presentation-response-test
   (doseq [response [presentation-response
@@ -529,13 +628,15 @@
     (testing "::presentation-response is valid"
       (is (s/valid? ::sut/presentation-response response))))
 
-  (doseq [response [(dissoc presentation-response :id)
-                    (dissoc presentation-response :title)
-                    (dissoc presentation-response :description)
-                    (dissoc presentation-response :is_public)
-                    (dissoc presentation-response :subtype_id)
-                    (dissoc presentation-response :created_on)
-                    (dissoc presentation-response :updated_on)]]
+  (doseq [response (-> (for [k     (keys presentation-response)
+                             :when (not= k :url)]
+                         (dissoc presentation-response k))
+                       (conj "string")
+                       (conj 123)
+                       (conj true)
+                       (conj ["vector"])
+                       (conj #{:set})
+                       (conj {}))]
     (is ((complement s/valid?) ::sut/presentation-response response))))
 
 (deftest presentations-response-test
@@ -543,7 +644,98 @@
     (is (s/valid? ::sut/presentations-response
                   [presentation-response presentation-response2])))
 
-  (doseq [response [[presentation-response presentation-response]
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}
+                    [presentation-response presentation-response]
                     #{presentation-response presentation-response2}]]
     (testing "::presentations-response is invalid"
       (is ((complement s/valid?) ::sut/presentations-response response)))))
+
+(def ^:private material-create-request
+  {:title       "My awesome material"
+   :description "This material is for bla-bla-bla"
+   :preview     "https://alenkinaskazka.nl/api/materials/bla-bla-bla.png"
+   :store_link  "https://some.store/link"
+   :price       "99"})
+
+(deftest material-create-request-test
+  (testing "::material-create-request is valid"
+    (is (s/valid? ::sut/material-create-request material-create-request)))
+
+  (doseq [request (-> (for [k (keys material-create-request)]
+                        (dissoc material-create-request k))
+                      (conj "string")
+                      (conj 123)
+                      (conj true)
+                      (conj ["vector"])
+                      (conj #{:set})
+                      (conj {}))]
+    (testing "::material-create-request is invalid"
+      (is ((complement s/valid?) ::sut/material-create-request request)))))
+
+(deftest material-update-request-test
+  (doseq [request (-> (for [k (keys material-create-request)]
+                        (select-keys material-create-request [k]))
+                      (conj {}))]
+    (testing "::material-update-request is valid"
+      (is (s/valid? ::sut/material-update-request request))))
+
+  (doseq [request ["string"
+                   123
+                   true
+                   ["vector"]
+                   #{:set}]]
+    (testing "::material-update-request is not valid"
+      (is ((complement s/valid?) ::sut/material-update-request request)))))
+
+(def ^:private material-response
+  {:id          (rand-int 100)
+   :title       "Title"
+   :description "Description"
+   :preview     "https://alenkinaskazka.nl/img/some.png"
+   :store_link  "https://some.store/link"
+   :price       "3.99"
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
+
+(def ^:private material-response-2
+  {:id          (rand-int 100)
+   :title       "Title 2"
+   :description "description 2"
+   :preview     "https://alenkinaskazka.nl/img/another.png"
+   :store_link  "https://some.store/another/link"
+   :price       "2.99"
+   :created_on  (instant/now)
+   :updated_on  (instant/now)})
+
+(deftest material-response-test
+  (testing "::material-response is valid"
+    (is (s/valid? ::sut/material-response material-response)))
+
+  (doseq [response (-> (for [k (keys material-response)]
+                         (dissoc material-response k))
+                       (conj "string")
+                       (conj 123)
+                       (conj true)
+                       (conj ["vector"])
+                       (conj #{:set})
+                       (conj {}))]
+    (testing "::material-response is not valid"
+      (is ((complement s/valid?) ::sut/materials-response response)))))
+
+(deftest materials-response-test
+  (testing "::materials-response is valid"
+    (is (s/valid? ::sut/materials-response [material-response material-response-2])))
+
+  (doseq [response ["string"
+                    123
+                    true
+                    ["vector"]
+                    #{:set}
+                    [material-response material-response]
+                    #{material-response material-response-2}]]
+    (testing "::materials-response is not valid"
+      (is ((complement s/valid?) ::sut/materials-response response)))))

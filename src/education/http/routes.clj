@@ -8,6 +8,7 @@
             [education.http.endpoints.dresses :refer [dresses-routes]]
             [education.http.endpoints.gymnastics :refer [gymnastics-routes]]
             [education.http.endpoints.lessons :refer [lessons-routes]]
+            [education.http.endpoints.materials :refer [materials-routes]]
             [education.http.endpoints.presentations :refer [presentations-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
@@ -97,4 +98,5 @@
      (dresses-routes datasource)
      (gymnastics-routes datasource)
      (presentations-routes datasource)
+     (materials-routes datasource)
      (upload-routes config))))

@@ -32,6 +32,8 @@
                  [com.taoensso/timbre "5.1.1"]
                  ;; HTTP client
                  [clj-http "3.10.3"]
+                 ;; Date and time
+                 [cljc.java-time "0.1.16"]
                  ;; Content-type negotiation
                  [metosin/muuntaja "0.6.8"]]
   :repl-options {:init-ns education.core}

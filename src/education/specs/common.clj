@@ -31,6 +31,7 @@
 (s/def ::screenshot ::url)
 (s/def ::attachment ::url)
 (s/def ::preview ::url)
+(s/def ::store_link ::url)
 
 (s/def ::pictures
   (s/coll-of ::picture :kind vector? :distinct true :into []))
@@ -62,7 +63,8 @@
 (s/def ::create-response
   (s/keys :req-un [::id]))
 
-;; Lessons
+;;; Lessons
+
 (s/def ::lesson-create-request
   (s/keys :req-un [::title ::subtitle ::description ::screenshots ::price]))
 
@@ -85,7 +87,8 @@
 (s/def ::free-lesson-request
   (s/keys :req-un [::email]))
 
-;; Gymnastics
+;;; Gymnastics
+
 (s/def ::gymnastic-create-request
   (s/keys :req-un [::subtype_id ::title ::description]
           :opt-un [::g/picture]))
@@ -100,7 +103,8 @@
 (s/def ::gymnastics-response
   (s/coll-of ::gymnastic-response :kind vector? :distinct true :into []))
 
-;; Dresses
+;;; Dresses
+
 (s/def ::dress-create-request
   (s/keys :req-un [::title ::description ::size ::pictures ::price]))
 
@@ -120,7 +124,8 @@
 (s/def ::dresses-response
   (s/coll-of ::dress-response :kind vector? :distinct true :into []))
 
-;; Presentations
+;;; Presentations
+
 (s/def ::presentation-create-request
   (s/keys :req-un [::title ::url ::description]
           :opt-un [::attachment ::is_public ::preview ::subtype_id]))
@@ -135,7 +140,29 @@
 (s/def ::presentations-response
   (s/coll-of ::presentation-response :kind vector? :distinct true :into []))
 
-;; Errors
+;;; Materials
+
+(s/def ::material-create-request
+  (s/keys :req-un [::title ::description ::preview ::store_link ::price]))
+
+(s/def ::material-update-request
+  (s/keys :opt-un [::title ::description ::preview ::store_link ::price]))
+
+(s/def ::material-response
+  (s/keys :req-un [::id
+                   ::title
+                   ::description
+                   ::preview
+                   ::store_link
+                   ::price
+                   ::created_on
+                   ::updated_on]))
+
+(s/def ::materials-response
+  (s/coll-of ::material-response :kind vector? :distinct true :into []))
+
+;;; Errors
+
 (s/def ::message string?)
 
 (s/def ::error_code string?)
