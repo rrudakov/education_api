@@ -6,7 +6,7 @@
    :prod #env JDBC_DATABASE_URL}}
 
  :app
- {:port      #long #or [#env PORT 3001]
+ {:port      #long #or [#env PORT 3000]
   :base_url  #profile
   {:dev  "http://127.0.0.1:3000"
    :prod #env BASE_URL}
