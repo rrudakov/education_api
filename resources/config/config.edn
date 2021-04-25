@@ -6,7 +6,7 @@
    :prod #env JDBC_DATABASE_URL}}
 
  :app
- {:port      #long #or [#env PORT 3000]
+ {:port      #long #or [#env PORT 3001]
   :base_url  #profile
   {:dev  "http://127.0.0.1:3000"
    :prod #env BASE_URL}
@@ -35,5 +35,5 @@
    {:dev  #ref [:secrets :video-lessons-root-path]
     :prod #env VIDEO_LESSONS_ROOT_PATH}
    :free-lesson-path #profile
-   {:dev  "zima.mp4"
+   {:dev  "zima.webm"
     :prod #env FREE_VIDEO_LESSON_PATH}}}}
