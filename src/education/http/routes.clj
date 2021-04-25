@@ -78,7 +78,8 @@
              {:name "dresses" :description "Dresses rent"}
              {:name "gymnastics" :description "Different gymnastics for children"}
              {:name "presentations" :description "Interactive presentations"}
-             {:name "upload" :description "Upload media files"}]
+             {:name "upload" :description "Upload media files"}
+             {:name "materials" :description "Download materials for education"}]
       :securityDefinitions
       {:api_key
        {:type "apiKey"

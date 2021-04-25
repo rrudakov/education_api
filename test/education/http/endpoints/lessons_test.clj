@@ -459,7 +459,7 @@
                   email-subscriptions-db/add-email-subscription (spy/spy)
                   mail/send-free-lesson-email-http              (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
-            response (app (-> (mock/request :post "/api/lessons/free-lesson")
+            response (app (-> (mock/request :post "/api/free-lesson")
                               (mock/json-body {:email test-email})))]
         (is (= 200 (:status response)))
         (is (nil? (:body response)))
@@ -473,7 +473,7 @@
                           ["Field email is mandatory"]]]]
     (testing "Test POST /free-lesson with invalid request body"
       (let [app      (test-app/api-routes-with-auth)
-            response (app (-> (mock/request :post "/api/lessons/free-lesson")
+            response (app (-> (mock/request :post "/api/free-lesson")
                               (mock/json-body body)))
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
@@ -496,7 +496,7 @@
                     config/free-lesson-path                                (spy/stub free-lesson-path)
                     config/video-lessons-root-path                         (spy/stub video-lesson-root-path)]
         (let [app      (test-app/api-routes-with-auth)
-              response (app (-> (mock/request :get "/api/lessons/free-lesson")
+              response (app (-> (mock/request :get "/api/free-lesson")
                                 (mock/query-string {:token generated-hash})))]
           (is (= 200 (:status response)))
           (is (instance? java.io.File (:body response)))
@@ -507,7 +507,7 @@
     (with-redefs [crypt/decrypt-hash                                     (spy/stub nil)
                   email-subscriptions-db/get-email-subscription-by-email (spy/spy)]
       (let [app      (test-app/api-routes-with-auth)
-            response (app (-> (mock/request :get "/api/lessons/free-lesson")
+            response (app (-> (mock/request :get "/api/free-lesson")
                               (mock/query-string {:token generated-hash})))
             body     (test-app/parse-body (:body response))]
         (is (= 403 (:status response)))
@@ -519,7 +519,7 @@
     (with-redefs [crypt/decrypt-hash                                     (spy/stub test-email)
                   email-subscriptions-db/get-email-subscription-by-email (spy/stub nil)]
       (let [app      (test-app/api-routes-with-auth)
-            response (app (-> (mock/request :get "/api/lessons/free-lesson")
+            response (app (-> (mock/request :get "/api/free-lesson")
                               (mock/query-string {:token generated-hash})))
             body     (test-app/parse-body (:body response))]
         (is (= 403 (:status response)))
@@ -529,7 +529,7 @@
 
   (testing "Test GET /free-lesson without token"
     (let [app      (test-app/api-routes-with-auth)
-          response (app (mock/request :get "/api/lessons/free-lesson"))
+          response (app (mock/request :get "/api/free-lesson"))
           body     (test-app/parse-body (:body response))]
       (is (= 400 (:status response)))
       (is (= {:errors ["Value is not valid"] :message const/bad-request-error-message} body)))))
