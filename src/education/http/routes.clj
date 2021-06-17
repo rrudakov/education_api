@@ -9,6 +9,7 @@
             [education.http.endpoints.gymnastics :refer [gymnastics-routes]]
             [education.http.endpoints.lessons :refer [lessons-routes]]
             [education.http.endpoints.materials :refer [materials-routes]]
+            [education.http.endpoints.payments :refer [payments-routes]]
             [education.http.endpoints.presentations :refer [presentations-routes]]
             [education.http.endpoints.roles :refer [roles-routes]]
             [education.http.endpoints.upload :refer [upload-routes]]
@@ -79,7 +80,8 @@
              {:name "gymnastics" :description "Different gymnastics for children"}
              {:name "presentations" :description "Interactive presentations"}
              {:name "upload" :description "Upload media files"}
-             {:name "materials" :description "Download materials for education"}]
+             {:name "materials" :description "Download materials for education"}
+             {:name "payments" :description "Stripe payments API"}]
       :securityDefinitions
       {:api_key
        {:type "apiKey"
@@ -99,5 +101,6 @@
      (dresses-routes datasource)
      (gymnastics-routes datasource)
      (presentations-routes datasource)
-     (materials-routes datasource)
+     (materials-routes datasource config)
+     (payments-routes datasource)
      (upload-routes config))))

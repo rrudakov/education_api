@@ -36,4 +36,17 @@
     :prod #env VIDEO_LESSONS_ROOT_PATH}
    :free-lesson-path #profile
    {:dev  "zima.webm"
-    :prod #env FREE_VIDEO_LESSON_PATH}}}}
+    :prod #env FREE_VIDEO_LESSON_PATH}}
+  :stripe
+  {:api-key        #profile
+   {:dev  #ref [:secrets :stripe-api-key]
+    :prod #env STRIPE_API_KEY}
+   :webhook-secreth #profile
+   {:dev  #ref [:secrets :stripe-webhook-secret]
+    :prod #env STRIPE_WEBHOOK_SECRET}
+   :success-url    #profile
+   {:dev  "http://localhost:3001/payment?success=true"
+    :prod #env PAYMENT_SUCCESS_URL}
+   :fail-url       #profile
+   {:dev  "http://localhost:3001/payment?fail=true"
+    :prod #env PAYMENT_FAIL_URL}}}}

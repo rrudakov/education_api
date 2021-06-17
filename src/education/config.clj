@@ -78,3 +78,19 @@
 (defn free-lesson-path
   [config]
   (get-in config [:app :video-lessons :free-lesson-path]))
+
+(defn stripe-api-key
+  [config]
+  (get-in config [:app :stripe :api-key]))
+
+(defn stripe-webhook-secret
+  [config]
+  (get-in config [:app :stripe :webhook-secret]))
+
+(defn payment-success-url
+  [config]
+  (get-in config [:app :stripe :success-url]))
+
+(defn payment-fail-url
+  [config]
+  (get-in config [:app :stripe :fail-url]))

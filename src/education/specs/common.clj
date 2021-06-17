@@ -1,8 +1,9 @@
 (ns education.specs.common
   (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
             [education.http.constants :as const]
             [education.specs.gymnastics :as g]
-            [clojure.string :as str]))
+            [education.specs.payments :as payments]))
 
 (s/def ::id pos-int?)
 
@@ -160,6 +161,11 @@
 
 (s/def ::materials-response
   (s/coll-of ::material-response :kind vector? :distinct true :into []))
+
+;;; Payments
+
+(s/def ::create-checkout-session-response
+  (s/keys :req-un [::payments/id]))
 
 ;;; Errors
 

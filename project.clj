@@ -35,7 +35,9 @@
                  ;; Date and time
                  [cljc.java-time "0.1.16"]
                  ;; Content-type negotiation
-                 [metosin/muuntaja "0.6.8"]]
+                 [metosin/muuntaja "0.6.8"]
+                 ;; Payments
+                 [com.stripe/stripe-java "20.56.0"]]
   :repl-options {:init-ns education.core}
   :release-tasks [["vcs" "assert-committed"]
                   ["change" "version"
