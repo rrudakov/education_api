@@ -1,14 +1,13 @@
 (ns education.http.endpoints.materials-test
-  (:require [education.http.endpoints.materials :as sut]
-            [clojure.test :refer [testing deftest is]]
-            [education.database.materials :as materials-db]
-            [spy.core :as spy]
-            [education.http.endpoints.test-app :as test-app]
-            [ring.mock.request :as mock]
-            [education.test-data :as td]
-            [education.http.constants :as const]
+  (:require [cljc.java-time.instant :as instant]
             [clojure.string :as str]
-            [cljc.java-time.instant :as instant]))
+            [clojure.test :refer [deftest is testing]]
+            [education.database.materials :as materials-db]
+            [education.http.constants :as const]
+            [education.http.endpoints.test-app :as test-app]
+            [education.test-data :as td]
+            [ring.mock.request :as mock]
+            [spy.core :as spy]))
 
 (def ^:private test-material-id
   "Test API `material-id`."
@@ -289,8 +288,8 @@
 
   (testing "Test GET /materials with optional `limit` and `offset` parameters"
     (with-redefs [materials-db/get-all-materials (spy/stub [material-from-db material-from-db-extra])]
-      (let [offset-param (rand-int 20)
-            limit-param  (rand-int 100)
+      (let [offset-param (inc (rand-int 20))
+            limit-param  (inc (rand-int 100))
             app          (test-app/api-routes-with-auth)
             response     (app (-> (mock/request :get "/api/materials")
                                   (mock/query-string {:limit  limit-param
