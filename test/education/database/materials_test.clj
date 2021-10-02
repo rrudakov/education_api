@@ -80,14 +80,14 @@
 
   (testing "Test get all materials with `limit` specified"
     (with-redefs [sql/find-by-keys (spy/stub [create-material-result])]
-      (let [limit  (rand-int 100)
+      (let [limit  (inc (rand-int 100))
             result (sut/get-all-materials nil :limit limit)]
         (is (= [create-material-result] result))
         (is (spy/called-once-with? sql/find-by-keys nil :materials :all {:limit limit :offset 0})))))
 
   (testing "Test get all materials with `offset` specified"
     (with-redefs [sql/find-by-keys (spy/stub [create-material-result])]
-      (let [offset (rand-int 100)
+      (let [offset (inc (rand-int 100))
             result (sut/get-all-materials nil :offset offset)]
         (is (= [create-material-result] result))
         (is (spy/called-once-with? sql/find-by-keys nil :materials :all {:limit 20 :offset offset}))))))
@@ -98,7 +98,7 @@
 
 (def ^:private delete-material-id
   "Test API material-id."
-  (rand-int 100))
+  (inc (rand-int 100)))
 
 (deftest delete-material-test
   (testing "Test delete material with valid `material-id`"

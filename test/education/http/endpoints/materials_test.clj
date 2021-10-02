@@ -11,7 +11,7 @@
 
 (def ^:private test-material-id
   "Test API `material-id`."
-  (rand-int 100))
+  (inc (rand-int 100)))
 
 (def ^:private create-material-request
   "Test API request to create material."
@@ -204,7 +204,7 @@
 
 (def ^:private material-from-db
   "Test material database query result."
-  {:materials/id          (rand-int 100)
+  {:materials/id          (inc (rand-int 100))
    :materials/title       "New material"
    :materials/description "Long material description"
    :materials/preview     "https://alenkinaskazka.nl/img/preview.png"
@@ -256,7 +256,7 @@
 
 (def ^:private material-from-db-extra
   "One more test material database query result."
-  {:materials/id          (rand-int 100)
+  {:materials/id          (inc (rand-int 100))
    :materials/title       "Material 2"
    :materials/description "Material description 2"
    :materials/preview     "https://alenkinaskazka.nl/img/another.png"
