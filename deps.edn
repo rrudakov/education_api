@@ -1,0 +1,68 @@
+{:paths   [:clj-paths :resource-paths]
+
+ :deps    {aero/aero                         {:mvn/version "1.1.6"}
+           ;; Human readable errors
+           phrase/phrase                     {:mvn/version "0.3-alpha4"}
+           ;; Ring and compojure
+           ring/ring-defaults                {:mvn/version "0.3.3"}
+           metosin/compojure-api             {:mvn/version "2.0.0-alpha31"}
+           ring-cors/ring-cors               {:mvn/version "0.1.13"}
+           http-kit/http-kit                 {:mvn/version "2.5.3"}
+           ;; Database stuff
+           ragtime/ragtime                   {:mvn/version "0.8.1"}
+           com.github.seancorfield/next.jdbc {:mvn/version "1.2.724"}
+           com.github.seancorfield/honeysql  {:mvn/version "2.0.813"}
+           org.postgresql/postgresql         {:mvn/version "42.2.24"}
+           com.mchange/c3p0                  {:mvn/version "0.9.5.5"}
+           ;; Integrant framework
+           integrant/integrant               {:mvn/version "0.8.0"}
+           ;; Security
+           buddy/buddy-hashers               {:mvn/version "1.8.1"}
+           buddy/buddy-auth                  {:mvn/version "3.0.1"}
+           buddy/buddy-sign                  {:mvn/version "3.4.1"}
+           ;; Logging
+           com.taoensso/timbre               {:mvn/version "5.1.2"}
+           ;; HTTP client
+           clj-http/clj-http                 {:mvn/version "3.12.3"}
+           ;; Date and time
+           cljc.java-time/cljc.java-time     {:mvn/version "0.1.16"}
+           ;; Content-Type negotiation
+           metosin/muuntaja                  {:mvn/version "0.6.8"}}
+
+ :aliases {:clj-paths      ["src"]
+           :resource-paths ["resources"]
+
+           ;; Test
+           ;; Usage clj -X:test
+           :test
+           {:extra-paths ["test" "test-resources"]
+            :extra-deps  {io.github.cognitect-labs/test-runner {:git/tag "v0.5.0" :git/sha "b3fd0d2"}
+                          tortue/spy                           {:mvn/version "2.9.0"}
+                          ring/ring-mock                       {:mvn/version "0.4.0"}
+                          peridot/peridot                      {:mvn/version "0.5.3"}}
+            :main-opts   ["-m" "cognitect.test-runner"]
+            :exec-fn     cognitect.test-runner.api/test}
+
+           ;; Test coverage
+           ;; Usage clj -M:test:cloverage
+           :cloverage
+           {:extra-deps {cloverage/cloverage {:mvn/version "1.2.2"}}
+            :main-opts  ["-m" "cloverage.coverage"
+                         "-p" "src"
+                         "-s" "test"
+                         "--codecov"]}
+
+           ;; SQL migrations
+           :migrate
+           {:exec-fn   education.database.migrations/migrate
+            :exec-args {:profile :dev}}
+
+           :rollback
+           {:exec-fn   education.database.migrations/rollback
+            :exec-args {:profile :dev}}
+
+           ;; Build
+           :build
+           {:deps       {io.github.clojure/tools.build {:git/tag "v0.5.0"
+                                                        :git/sha "7d77952"}}
+            :ns-default build}}}

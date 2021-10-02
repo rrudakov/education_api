@@ -13,10 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: lein deps
     - name: Run tests and generate coverage report
-      run: lein cloverage --codecov
+      run: clj -M:test:cloverage
     - name: Upload coverage report to Codecov
       uses: codecov/codecov-action@v1
       with:

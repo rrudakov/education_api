@@ -26,7 +26,7 @@
                   jdbc/sql-database   (spy/spy)
                   jdbc/load-resources (spy/spy)
                   repl/migrate        (spy/spy)]
-      (sut/migrate "prod")
+      (sut/migrate {:profile :prod})
       (is (spy/called-once-with? config/config :prod))
       (is (spy/called-once-with? repl/migrate {:datastore nil :migrations nil})))))
 
@@ -36,6 +36,6 @@
                   jdbc/sql-database   (spy/spy)
                   jdbc/load-resources (spy/spy)
                   repl/rollback       (spy/spy)]
-      (sut/rollback "prod")
+      (sut/rollback {:profile :prod})
       (is (spy/called-once-with? config/config :prod))
       (is (spy/called-once-with? repl/rollback {:datastore nil :migrations nil})))))
