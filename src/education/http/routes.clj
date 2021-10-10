@@ -8,7 +8,7 @@
    [education.database.middleware :as db-mw]
    [education.error :as error]
    [education.http.constants :as const]
-   [education.http.endpoints.dresses :as dresses :refer [dresses-routes]]
+   [education.http.endpoints.dresses :as dresses]
    [education.http.endpoints.gymnastics :refer [gymnastics-routes]]
    [education.http.endpoints.lessons :as lessons]
    [education.http.endpoints.materials :refer [materials-routes]]
@@ -30,8 +30,7 @@
    [reitit.swagger-ui :as swagger-ui]
    [ring.middleware.cors :refer [wrap-cors]]
    [ring.util.http-response :as status]
-   [taoensso.timbre :refer [error trace]]
-   [education.specs.upload :as specs]))
+   [taoensso.timbre :refer [error trace]]))
 
 (defn response-validation-handler
   "Return error in case of invalid response."
@@ -51,7 +50,6 @@
   (api
    (context "/api" []
      :coercion :spec
-     (dresses-routes datasource)
      (gymnastics-routes datasource)
      (presentations-routes datasource)
      (materials-routes datasource)
