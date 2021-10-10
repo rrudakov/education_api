@@ -1,7 +1,7 @@
 (ns education.http.restructure-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [education.http.restructure :as sut]
-            [education.test-data :refer :all]))
+            [education.test-data :refer [auth-user-deserialized]]))
 
 (def users-expected-roles
   "Test data for `has-role?` test."

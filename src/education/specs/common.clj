@@ -60,6 +60,9 @@
 
 (s/def ::limit pos-int?)
 
+(s/def ::optional-limit-offset
+  (s/keys :opt-un [::limit ::offset]))
+
 (s/def ::create-response
   (s/keys :req-un [::id]))
 

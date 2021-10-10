@@ -36,10 +36,9 @@
   "Return database specification for pooled connection."
   [config]
   (let [db-uri (:url (db-config config))]
-    (-> {:jdbcUrl db-uri}
-        (assoc :maxIdleTime (* 3 60 60))
-        (assoc :maxIdleTimeExcessConnections (* 3 60 60))
-        (assoc :maxPoolSize 30))))
+    {:jdbc-url      db-uri
+     :pool-name     "education-pool"
+     :max-pool-size 30}))
 
 (defn base-url
   "Return BASE_URL for current application."
@@ -78,3 +77,10 @@
 (defn free-lesson-path
   [config]
   (get-in config [:app :video-lessons :free-lesson-path]))
+
+(def app-config-middleware
+  {:name    ::app-config
+   :compile (fn [{:keys [app-config]} _]
+              (fn [handler]
+                (fn [request]
+                  (handler (assoc request :app-config app-config)))))})

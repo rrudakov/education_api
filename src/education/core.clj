@@ -1,9 +1,12 @@
 (ns education.core
   (:gen-class)
-  (:require [education.system :refer [system-config]]
-            [integrant.core :as ig]
-            [next.jdbc.result-set :as rs])
-  (:import java.sql.Array))
+  (:require
+   [com.brunobonacci.mulog :as u]
+   [education.system :refer [system-config]]
+   [integrant.core :as ig]
+   [next.jdbc.result-set :as rs])
+  (:import
+   java.sql.Array))
 
 ;; Fetch arrays from database as vectors
 (extend-protocol rs/ReadableColumn
@@ -18,5 +21,7 @@
 
 (defn -main
   "Run HTTP server."
-  [& args]
+  [& _args]
+  (u/start-publisher! {:type :console})
+  (u/log ::start-system :env :prod)
   (ig/init (system-config :prod)))

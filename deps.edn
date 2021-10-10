@@ -8,12 +8,22 @@
            metosin/compojure-api             {:mvn/version "2.0.0-alpha31"}
            ring-cors/ring-cors               {:mvn/version "0.1.13"}
            http-kit/http-kit                 {:mvn/version "2.5.3"}
+
+           ;; Reitit
+           ring/ring-jetty-adapter           {:mvn/version "1.9.4"}
+           metosin/reitit-core               {:mvn/version "0.5.15"}
+           metosin/reitit-ring               {:mvn/version "0.5.15"}
+           metosin/reitit-middleware         {:mvn/version "0.5.15"}
+           metosin/reitit-spec               {:mvn/version "0.5.15"}
+           metosin/reitit-swagger            {:mvn/version "0.5.15"}
+           metosin/reitit-swagger-ui         {:mvn/version "0.5.15"}
            ;; Database stuff
            ragtime/ragtime                   {:mvn/version "0.8.1"}
            com.github.seancorfield/next.jdbc {:mvn/version "1.2.724"}
            com.github.seancorfield/honeysql  {:mvn/version "2.0.813"}
            org.postgresql/postgresql         {:mvn/version "42.2.24"}
            com.mchange/c3p0                  {:mvn/version "0.9.5.5"}
+           hikari-cp/hikari-cp               {:mvn/version "2.13.0"}
            ;; Integrant framework
            integrant/integrant               {:mvn/version "0.8.0"}
            ;; Security
@@ -22,6 +32,7 @@
            buddy/buddy-sign                  {:mvn/version "3.4.1"}
            ;; Logging
            com.taoensso/timbre               {:mvn/version "5.1.2"}
+           com.brunobonacci/mulog            {:mvn/version "0.8.1"}
            ;; HTTP client
            clj-http/clj-http                 {:mvn/version "3.12.3"}
            ;; Date and time
