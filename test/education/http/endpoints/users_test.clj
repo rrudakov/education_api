@@ -110,7 +110,7 @@
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["User-id is not valid"]}
                body))
         (is (spy/not-called? usersdb/get-user))))))
 
@@ -198,7 +198,7 @@
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Field id is mandatory"]}
+                :errors  ["User-id is not valid"]}
                body))
         (is (spy/not-called? usersdb/update-user)))))
 
@@ -258,7 +258,7 @@
             body     (parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["User-id is not valid"]}
                body))
         (is (spy/not-called? usersdb/delete-user))))))
 

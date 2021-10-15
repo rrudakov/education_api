@@ -78,6 +78,10 @@
   [config]
   (get-in config [:app :video-lessons :free-lesson-path]))
 
+(defn ulog-publishers
+  [config]
+  (get-in config [:app :logging :ulog]))
+
 (def app-config-middleware
   {:name    ::app-config
    :compile (fn [{:keys [app-config]} _]

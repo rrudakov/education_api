@@ -147,7 +147,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Field material-id is mandatory"]}
+                :errors  ["Material-id is not valid"]}
                body))
         (is (spy/not-called-with? materials-db/update-material)))))
 
@@ -250,7 +250,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Material-id is not valid"]}
                body))
         (is (spy/not-called? materials-db/get-material-by-id))))))
 
@@ -299,8 +299,8 @@
         (is (= [material-response-expected material-response-expected-extra] body))
         (is (spy/called-once-with? materials-db/get-all-materials nil :limit limit-param :offset offset-param)))))
 
-  (doseq [query [{:limit "invalid"}
-                 {:offset "invalid"}]]
+  (doseq [[query err] [[{:limit "invalid"} "Limit is not valid"]
+                       [{:offset "invalid"} "Offset is not valid"]]]
     (testing "Test GET /materials/ with invalid query parameters"
       (with-redefs [materials-db/get-all-materials (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -309,7 +309,7 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
-                  :errors  ["Value is not valid"]}
+                  :errors  [err]}
                  body))
           (is (spy/not-called? materials-db/get-all-materials)))))))
 
@@ -361,7 +361,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Material-id is not valid"]}
                body))
         (is (spy/not-called? materials-db/delete-material)))))
 

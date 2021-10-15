@@ -1,72 +1,19 @@
 (ns education.system
   (:require
-   [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
    [com.brunobonacci.mulog :as u]
-   [compojure.api.api :refer [api-defaults]]
    [education.config :as config]
-   [education.http.routes :as r :refer [api-routes]]
+   [education.http.routes :as r]
    [hikari-cp.core :refer [close-datasource make-datasource]]
    [integrant.core :as ig]
-   [muuntaja.middleware :refer [wrap-format]]
-   [next.jdbc.connection :as connection]
+   [next.jdbc.result-set :as rs]
    [org.httpkit.server :as server]
-   [reitit.ring :as ring]
-   [ring.adapter.jetty :refer [run-jetty]]
-   [ring.middleware.cors :refer [wrap-cors]]
-   [ring.middleware.defaults :refer [wrap-defaults]]
-   [taoensso.timbre :refer [info]])
+   [reitit.ring :as ring])
   (:import
-   com.mchange.v2.c3p0.ComboPooledDataSource))
-
-(defn system-config
-  [profile]
-  {:system/config           {:profile profile}
-   :adapter/http-kit        {:handler (ig/ref :handler/run-app)
-                             :config  (ig/ref :system/config)}
-   :handler/run-app         {:config (ig/ref :system/config)
-                             :db     (ig/ref :database.sql/connection)}
-   :database.sql/connection {:config (ig/ref :system/config)}})
-
-(defmethod ig/init-key :database.sql/connection
-  [_ {:keys [config]}]
-  (let [db-spec (config/db-spec config)]
-    (info "Initialize database connection pool")
-    (connection/->pool ComboPooledDataSource db-spec)))
-
-(defmethod ig/halt-key! :database.sql/connection
-  [_ datasource]
-  (info "Close database connections")
-  (.close datasource))
-
-(defmethod ig/init-key :handler/run-app
-  [_ {:keys [db config]}]
-  (let [auth-backend (config/auth-backend config)]
-    (info "Initialize handler")
-    (-> db
-        (api-routes config)
-        (wrap-cors :access-control-allow-origin [#".*"]
-                   :access-control-allow-headers ["Origin" "Accept" "Content-Type" "Authorization" "X-Requested-With" "Cache-Control"]
-                   :access-control-allow-methods [:get :post :patch :put :delete])
-        (wrap-authorization auth-backend)
-        (wrap-authentication auth-backend)
-        (wrap-format)
-        (wrap-defaults api-defaults))))
-
-(defmethod ig/init-key :adapter/http-kit
-  [_ {:keys [handler config]}]
-  (let [port (config/application-port config)]
-    (info "Start server on port " port)
-    (server/run-server handler {:port (config/application-port config)})))
-
-(defmethod ig/halt-key! :adapter/http-kit
-  [_ srv]
-  (info "Stop server")
-  (srv :timeout 100))
-
-;; Reitit
+   java.sql.Array))
 
 (def system-config-dev
   {:system/config    {:profile :dev}
+   :ulog/publisher   {:config (ig/ref :system/config)}
    :db/connection    {:config (ig/ref :system/config)}
    :http/router-opts {:config (ig/ref :system/config)
                       :db     (ig/ref :db/connection)}
@@ -76,7 +23,8 @@
                       :config  (ig/ref :system/config)}})
 
 (def system-config-prod
-  {:system/config    {:profile :dev}
+  {:system/config    {:profile :prod}
+   :ulog/publisher   {:config (ig/ref :system/config)}
    :db/connection    {:config (ig/ref :system/config)}
    :http/router-opts {:config (ig/ref :system/config)
                       :db     (ig/ref :db/connection)}
@@ -87,11 +35,29 @@
 
 (defmethod ig/init-key :system/config
   [_ {:keys [profile]}]
+  (u/set-global-context!
+   {:app-name "education-api"
+    :version  "1.6.0"
+    :env      profile})
   (u/log ::read-configuration :profile profile)
   (config/config profile))
 
+(defmethod ig/init-key :ulog/publisher
+  [_ {:keys [config]}]
+  (u/start-publisher!
+   {:type       :multi
+    :publishers (config/ulog-publishers config)}))
+
+(defmethod ig/halt-key! :ulog/publisher
+  [_ pub]
+  (pub))
+
 (defmethod ig/init-key :db/connection
   [_ {:keys [config]}]
+  (extend-protocol rs/ReadableColumn
+    Array
+    (read-column-by-label [^Array v _] (vec (.getArray v)))
+    (read-column-by-index [^Array v _ _] (vec (.getArray v))))
   (let [db-spec (config/db-spec config)]
     (u/log ::make-datasource :db-spec db-spec)
     (make-datasource db-spec)))
@@ -127,9 +93,10 @@
 (defmethod ig/init-key :http/adapter
   [_ {:keys [handler config]}]
   (let [port (config/application-port config)]
-    (u/log ::start-jetty :port port)
-    (run-jetty handler {:port port :join? false})))
+    (u/log ::start-http-kit :port port)
+    (server/run-server handler {:port (config/application-port config)})))
 
 (defmethod ig/halt-key! :http/adapter
   [_ srv]
-  (.stop srv))
+  (u/log ::stop-http-kit)
+  (srv :timeout 100))

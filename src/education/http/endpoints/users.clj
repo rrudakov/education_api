@@ -4,9 +4,11 @@
    [education.config :as config]
    [education.database.users :as usersdb]
    [education.http.constants :as const]
-   [ring.util.http-response :as status]))
+   [ring.util.http-response :as status]
+   [cljc.java-time.instant :as instant]))
 
-;; Converters
+;;; Converters
+
 (defn to-user-response
   "Convert database user to user response."
   [{:users/keys [id user_name user_email created_on updated_on roles]}]
@@ -17,12 +19,13 @@
    :created_on created_on
    :updated_on updated_on})
 
-;; Helpers
+;;; Helpers
+
 (defn create-auth-token
   "Create authorization token based on `credentials`."
   [db config credentials]
   (let [[ok? res] (usersdb/auth-user db credentials)
-        exp       (.plusSeconds (java.time.Instant/now) (* 60 60 24))]
+        exp       (instant/plus-seconds (instant/now) (* 60 60 24))]
     (if ok?
       [true {:token (-> res
                         (update-in [:user] to-user-response)
@@ -30,7 +33,8 @@
                         (jwt/sign (config/token-sign-secret config) {:alg :hs512}))}]
       [false res])))
 
-;; Handlers
+;;; Handlers
+
 (defn login-handler
   "Handle login request."
   [{:keys [conn app-config] {:keys [body]} :parameters}]

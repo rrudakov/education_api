@@ -1,44 +1,43 @@
 {:paths   [:clj-paths :resource-paths]
 
- :deps    {aero/aero                         {:mvn/version "1.1.6"}
+ :deps    {aero/aero                            {:mvn/version "1.1.6"}
            ;; Human readable errors
-           phrase/phrase                     {:mvn/version "0.3-alpha4"}
+           phrase/phrase                        {:mvn/version "0.3-alpha4"}
            ;; Ring and compojure
-           ring/ring-defaults                {:mvn/version "0.3.3"}
-           metosin/compojure-api             {:mvn/version "2.0.0-alpha31"}
-           ring-cors/ring-cors               {:mvn/version "0.1.13"}
-           http-kit/http-kit                 {:mvn/version "2.5.3"}
-
+           ring/ring-defaults                   {:mvn/version "0.3.3"}
+           ring-cors/ring-cors                  {:mvn/version "0.1.13"}
+           metosin/ring-http-response           {:mvn/version "0.9.3"}
+           http-kit/http-kit                    {:mvn/version "2.5.3"}
            ;; Reitit
-           ring/ring-jetty-adapter           {:mvn/version "1.9.4"}
-           metosin/reitit-core               {:mvn/version "0.5.15"}
-           metosin/reitit-ring               {:mvn/version "0.5.15"}
-           metosin/reitit-middleware         {:mvn/version "0.5.15"}
-           metosin/reitit-spec               {:mvn/version "0.5.15"}
-           metosin/reitit-swagger            {:mvn/version "0.5.15"}
-           metosin/reitit-swagger-ui         {:mvn/version "0.5.15"}
+           metosin/reitit-core                  {:mvn/version "0.5.15"}
+           metosin/reitit-ring                  {:mvn/version "0.5.15"}
+           metosin/reitit-middleware            {:mvn/version "0.5.15"}
+           metosin/reitit-spec                  {:mvn/version "0.5.15"}
+           metosin/reitit-swagger               {:mvn/version "0.5.15"}
+           metosin/reitit-swagger-ui            {:mvn/version "0.5.15"}
            ;; Database stuff
-           ragtime/ragtime                   {:mvn/version "0.8.1"}
-           com.github.seancorfield/next.jdbc {:mvn/version "1.2.724"}
-           com.github.seancorfield/honeysql  {:mvn/version "2.0.813"}
-           org.postgresql/postgresql         {:mvn/version "42.2.24"}
-           com.mchange/c3p0                  {:mvn/version "0.9.5.5"}
-           hikari-cp/hikari-cp               {:mvn/version "2.13.0"}
+           ragtime/ragtime                      {:mvn/version "0.8.1"}
+           com.github.seancorfield/next.jdbc    {:mvn/version "1.2.724"}
+           com.github.seancorfield/honeysql     {:mvn/version "2.0.813"}
+           org.postgresql/postgresql            {:mvn/version "42.2.24"}
+           hikari-cp/hikari-cp                  {:mvn/version "2.13.0"}
            ;; Integrant framework
-           integrant/integrant               {:mvn/version "0.8.0"}
+           integrant/integrant                  {:mvn/version "0.8.0"}
            ;; Security
-           buddy/buddy-hashers               {:mvn/version "1.8.1"}
-           buddy/buddy-auth                  {:mvn/version "3.0.1"}
-           buddy/buddy-sign                  {:mvn/version "3.4.1"}
+           buddy/buddy-hashers                  {:mvn/version "1.8.1"}
+           buddy/buddy-auth                     {:mvn/version "3.0.1"}
+           buddy/buddy-sign                     {:mvn/version "3.4.1"}
            ;; Logging
-           com.taoensso/timbre               {:mvn/version "5.1.2"}
-           com.brunobonacci/mulog            {:mvn/version "0.8.1"}
+           com.brunobonacci/mulog               {:mvn/version "0.8.1"}
+           com.brunobonacci/mulog-elasticsearch {:mvn/version "0.8.1"}
+           ;; JSON
+           org.clojure/data.json                {:mvn/version "2.4.0"}
            ;; HTTP client
-           clj-http/clj-http                 {:mvn/version "3.12.3"}
+           clj-http/clj-http                    {:mvn/version "3.12.3"}
            ;; Date and time
-           cljc.java-time/cljc.java-time     {:mvn/version "0.1.16"}
+           cljc.java-time/cljc.java-time        {:mvn/version "0.1.16"}
            ;; Content-Type negotiation
-           metosin/muuntaja                  {:mvn/version "0.6.8"}}
+           metosin/muuntaja                     {:mvn/version "0.6.8"}}
 
  :aliases {:clj-paths      ["src"]
            :resource-paths ["resources"]

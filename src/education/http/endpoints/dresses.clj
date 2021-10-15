@@ -6,13 +6,15 @@
    [education.utils.maps :refer [unqualify-map]]
    [ring.util.http-response :as status]))
 
-;; Helper functions
+;;; Helper functions
+
 (defn- db->response
   "Convert database query result to response."
   [db-dress]
   (update (unqualify-map db-dress) :price (partial format "%.2f")))
 
-;; Handlers
+;;; Handlers
+
 (defn create-dress-handler
   "Create new dress handler."
   [{:keys [conn] {:keys [body]} :parameters}]

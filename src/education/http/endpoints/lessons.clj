@@ -10,13 +10,15 @@
    [ring.util.http-response :as status :refer [forbidden]]
    [ring.util.response :refer [file-response]]))
 
-;; Helper functions
+;;; Helper functions
+
 (defn- db->response
   "Convert database query result to response."
   [db-lesson]
   (update (unqualify-map db-lesson) :price (partial format "%.2f")))
 
-;; Handlers
+;;; Handlers
+
 (defn create-lesson-handler
   "Create new lesson handler."
   [{:keys [conn] {:keys [body]} :parameters}]

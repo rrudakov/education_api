@@ -148,7 +148,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 500 (:status response)))
         (is (spy/called-once-with? lessons-db/add-lesson nil create-lesson-request))
-        (is (= {:message "java.sql.SQLException: Shit happens" :error_code "987987987"} body)))))
+        (is (= {:message "Shit happens" :error_code "987987987"} body)))))
 
   (testing "Test POST /lessons authorized with valid body, verify response validation"
     (with-redefs [sut/create-lesson-handler (spy/stub (status/created "/lessons/invalid" {:lessonId "invalid"}))]
@@ -220,7 +220,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? lessons-db/update-lesson))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Field lesson-id is mandatory"]}
+                :errors  ["Lesson-id is not valid"]}
                body)))))
 
   (testing "Test PATCH /lessons/:lesson-id with non-existing `lesson-id`"
@@ -320,7 +320,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Lesson-id is not valid"]}
                body))
         (is (spy/not-called? lessons-db/get-lesson-by-id))))))
 
@@ -369,8 +369,8 @@
         (is (= [lesson-response-expected lesson-response-expected-extra] body))
         (is (spy/called-once-with? lessons-db/get-all-lessons nil :limit limit-param :offset offset-param)))))
 
-  (doseq [query [{:limit "invalid"}
-                 {:offset "invalid"}]]
+  (doseq [[query err] [[{:limit "invalid"} "Limit is not valid"]
+                       [{:offset "invalid"} "Offset is not valid"]]]
     (testing "Test GET /lessons/ with invalid query parameters"
       (with-redefs [lessons-db/get-all-lessons (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -379,7 +379,7 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
-                  :errors  ["Value is not valid"]}
+                  :errors  [err]}
                  body))
           (is (spy/not-called? lessons-db/get-all-lessons)))))))
 
@@ -431,7 +431,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Lesson-id is not valid"]}
                body))
         (is (spy/not-called? lessons-db/delete-lesson)))))
 
@@ -532,4 +532,4 @@
           response (app (mock/request :get "/api/free-lesson"))
           body     (test-app/parse-body (:body response))]
       (is (= 400 (:status response)))
-      (is (= {:errors ["Value is not valid"] :message const/bad-request-error-message} body)))))
+      (is (= {:errors ["Field token is mandatory"] :message const/bad-request-error-message} body)))))
