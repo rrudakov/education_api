@@ -1,2 +1,2 @@
-release: lein migrate prod
-web: lein with-profile production trampoline run -m education.core
+release: clj -X:migrate :env :prod
+web: clj -X education.core/-main
