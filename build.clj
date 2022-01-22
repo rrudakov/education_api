@@ -2,7 +2,7 @@
   (:require [clojure.tools.build.api :as b]))
 
 (def lib 'io.github.rrudakov/education-api)
-(def version (format "1.6.%s" (b/git-count-revs nil)))
+(def version (format "1.7.%s" (b/git-count-revs nil)))
 (def class-dir "target/classes")
 (def basis (b/create-basis {:project "deps.edn"}))
 (def uber-file "target/education-api-standalone.jar")
