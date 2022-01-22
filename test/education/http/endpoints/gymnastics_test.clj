@@ -338,8 +338,10 @@
                 :errors  ["Subtype_id is not valid"]}
                body)))))
 
-  (doseq [[query-string err] [[{:subtype_id 3 :limit "invalid"} "Limit is not valid"]
-                              [{:subtype_id 3 :offset "invalid"} "Offset is not valid"]]]
+  (doseq [[query-string err] [[{:subtype_id 3 :limit "invalid"} ["Subtype_id is not valid"
+                                                                 "Limit is not valid"]]
+                              [{:subtype_id 3 :offset "invalid"} ["Subtype_id is not valid"
+                                                                  "Offset is not valid"]]]]
     (testing "Test GET /gymnastics with invalid `offset` and `limit` parameters"
       (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -349,7 +351,7 @@
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/get-all-gymnastics))
           (is (= {:message const/bad-request-error-message
-                  :errors  [err]}
+                  :errors  err}
                  body)))))))
 
 (deftest delete-gymnastic-by-id-test

@@ -83,10 +83,9 @@
   (doseq [profile [:dev :prod]]
     (testing "Test getting database specification from config"
       (let [config (get parsed-configs profile)]
-        (is (= {:jdbcUrl                      (get-in config [:database :url])
-                :maxIdleTime                  10800
-                :maxIdleTimeExcessConnections 10800
-                :maxPoolSize                  30}
+        (is (= {:jdbc-url      (get-in config [:database :url])
+                :pool-name     "education-pool"
+                :max-pool-size 30}
                (sut/db-spec config)))))))
 
 (deftest base-url-test
