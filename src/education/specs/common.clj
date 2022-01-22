@@ -60,6 +60,9 @@
 
 (s/def ::limit pos-int?)
 
+(s/def ::optional-limit-offset
+  (s/keys :opt-un [::limit ::offset]))
+
 (s/def ::create-response
   (s/keys :req-un [::id]))
 
@@ -100,6 +103,10 @@
   (s/keys :req-un [::id ::subtype_id ::title ::description ::created_on ::updated_on]
           :opt-un [::g/picture]))
 
+(s/def ::gymnastics-all-query-params
+  (s/keys :req-un [::subtype_id]
+          :opt-un [::limit ::offset]))
+
 (s/def ::gymnastics-response
   (s/coll-of ::gymnastic-response :kind vector? :distinct true :into []))
 
@@ -132,6 +139,10 @@
 
 (s/def ::presentation-update-request
   (s/keys :opt-un [::title ::url ::description ::attachment ::preview ::is_public ::subtype_id]))
+
+(s/def ::presentations-all-query-parameters
+  (s/keys :req-un [::subtype_id]
+          :opt-un [::limit ::offset]))
 
 (s/def ::presentation-response
   (s/keys :req-un [::id ::title ::description ::is_public ::created_on ::updated_on ::subtype_id]

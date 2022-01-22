@@ -1,14 +1,10 @@
 (ns education.http.endpoints.upload
-  (:require [clojure.java.io :refer [file input-stream output-stream]]
-            [clojure.string :as str]
-            [compojure.api.core :refer [POST]]
-            [education.config :as config]
-            [education.http.constants :as const]
-            [education.specs.common :as spec]
-            [education.specs.upload :as specs]
-            [education.utils.path :as path]
-            [ring.middleware.multipart-params :as mw]
-            [ring.util.http-response :refer [ok]]))
+  (:require
+   [clojure.java.io :refer [file input-stream output-stream]]
+   [clojure.string :as str]
+   [education.config :as config]
+   [education.utils.path :as path]
+   [ring.util.http-response :as status]))
 
 (def ^:private img-prefix "img")
 
@@ -34,23 +30,9 @@
     ""))
 
 (defn upload-file-handler
-  [{:keys [filename _content-type tempfile]} config]
+  [{:keys [app-config] {{{:keys [filename tempfile]} :file} :multipart} :parameters}]
   (let [extension (extract-file-extension filename)
         name      (str/join [(uuid) extension])
-        path      (path/join (config/storage-path config) img-prefix name)]
+        path      (path/join (config/storage-path app-config) img-prefix name)]
     (write-file tempfile path)
-    (ok {:url (path/join (config/base-url config) img-prefix name)})))
-
-(defn upload-routes
-  "Define routes for file upload."
-  [config]
-  (POST "/upload" []
-    :tags ["upload"]
-    :multipart-params [file :- ::specs/upload]
-    :middleware [mw/wrap-multipart-params]
-    :summary "Upload any file and get link to it"
-    :responses {200 {:description "Successful"
-                     :schema      ::specs/upload-response}
-                400 {:description const/bad-request-error-message
-                     :schema      ::spec/error-response}}
-    (upload-file-handler file config)))
+    (status/ok {:url (path/join (config/base-url app-config) img-prefix name)})))

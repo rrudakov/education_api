@@ -1,18 +1,17 @@
 (ns education.http.endpoints.materials-test
-  (:require [education.http.endpoints.materials :as sut]
-            [clojure.test :refer [testing deftest is]]
-            [education.database.materials :as materials-db]
-            [spy.core :as spy]
-            [education.http.endpoints.test-app :as test-app]
-            [ring.mock.request :as mock]
-            [education.test-data :as td]
-            [education.http.constants :as const]
+  (:require [cljc.java-time.instant :as instant]
             [clojure.string :as str]
-            [cljc.java-time.instant :as instant]))
+            [clojure.test :refer [deftest is testing]]
+            [education.database.materials :as materials-db]
+            [education.http.constants :as const]
+            [education.http.endpoints.test-app :as test-app]
+            [education.test-data :as td]
+            [ring.mock.request :as mock]
+            [spy.core :as spy]))
 
 (def ^:private test-material-id
   "Test API `material-id`."
-  (rand-int 100))
+  (inc (rand-int 100)))
 
 (def ^:private create-material-request
   "Test API request to create material."
@@ -148,7 +147,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Field material-id is mandatory"]}
+                :errors  ["Material-id is not valid"]}
                body))
         (is (spy/not-called-with? materials-db/update-material)))))
 
@@ -205,7 +204,7 @@
 
 (def ^:private material-from-db
   "Test material database query result."
-  {:materials/id          (rand-int 100)
+  {:materials/id          (inc (rand-int 100))
    :materials/title       "New material"
    :materials/description "Long material description"
    :materials/preview     "https://alenkinaskazka.nl/img/preview.png"
@@ -251,13 +250,13 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Material-id is not valid"]}
                body))
         (is (spy/not-called? materials-db/get-material-by-id))))))
 
 (def ^:private material-from-db-extra
   "One more test material database query result."
-  {:materials/id          (rand-int 100)
+  {:materials/id          (inc (rand-int 100))
    :materials/title       "Material 2"
    :materials/description "Material description 2"
    :materials/preview     "https://alenkinaskazka.nl/img/another.png"
@@ -289,8 +288,8 @@
 
   (testing "Test GET /materials with optional `limit` and `offset` parameters"
     (with-redefs [materials-db/get-all-materials (spy/stub [material-from-db material-from-db-extra])]
-      (let [offset-param (rand-int 20)
-            limit-param  (rand-int 100)
+      (let [offset-param (inc (rand-int 20))
+            limit-param  (inc (rand-int 100))
             app          (test-app/api-routes-with-auth)
             response     (app (-> (mock/request :get "/api/materials")
                                   (mock/query-string {:limit  limit-param
@@ -300,8 +299,8 @@
         (is (= [material-response-expected material-response-expected-extra] body))
         (is (spy/called-once-with? materials-db/get-all-materials nil :limit limit-param :offset offset-param)))))
 
-  (doseq [query [{:limit "invalid"}
-                 {:offset "invalid"}]]
+  (doseq [[query err] [[{:limit "invalid"} "Limit is not valid"]
+                       [{:offset "invalid"} "Offset is not valid"]]]
     (testing "Test GET /materials/ with invalid query parameters"
       (with-redefs [materials-db/get-all-materials (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -310,7 +309,7 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
-                  :errors  ["Value is not valid"]}
+                  :errors  [err]}
                  body))
           (is (spy/not-called? materials-db/get-all-materials)))))))
 
@@ -362,7 +361,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Material-id is not valid"]}
                body))
         (is (spy/not-called? materials-db/delete-material)))))
 

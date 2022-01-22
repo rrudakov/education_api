@@ -1,13 +1,14 @@
 (ns education.http.endpoints.dresses-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]
-            [education.database.dresses :as dresses-db]
-            [education.http.constants :as const]
-            [education.http.endpoints.test-app :as test-app]
-            [education.test-data :as td]
-            [ring.mock.request :as mock]
-            [spy.core :as spy])
-  (:import java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.dresses :as dresses-db]
+   [education.http.constants :as const]
+   [education.http.endpoints.test-app :as test-app]
+   [education.test-data :as td]
+   [ring.mock.request :as mock]
+   [spy.core :as spy]))
 
 (def ^:private test-dress-id
   "Test API `dress-id`."
@@ -45,6 +46,7 @@
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :post "/api/dresses")
                                 (mock/header :authorization (td/test-auth-token #{role}))
+                                (mock/header :content-type "application/json")
                                 (mock/json-body create-dress-request)))
               body     (test-app/parse-body (:body response))]
           (is (= 403 (:status response)))
@@ -162,7 +164,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? dresses-db/update-dress))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Field dress-id is mandatory"]}
+                :errors  ["Dress-id is not valid"]}
                body)))))
 
   (testing "Test PATCH /dresses/:dress-id with non-existing `dress-id`"
@@ -226,8 +228,8 @@
    :dresses/size        32
    :dresses/pictures    ["http://first.picture.com" "http://second.picture.com"]
    :dresses/price       (bigdec "8989.999999")
-   :dresses/created_on  (Instant/parse "2020-12-12T18:22:12Z")
-   :dresses/updated_on  (Instant/parse "2020-12-18T18:22:12Z")})
+   :dresses/created_on  (instant/parse "2020-12-12T18:22:12Z")
+   :dresses/updated_on  (instant/parse "2020-12-18T18:22:12Z")})
 
 (def ^:private dress-response-expected
   "Expected API dress response."
@@ -266,7 +268,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]} body))
+                :errors  ["Dress-id is not valid"]} body))
         (is (spy/not-called? dresses-db/get-dress-by-id))))))
 
 (def ^:private dress-from-db-extra
@@ -277,8 +279,8 @@
    :dresses/size        88
    :dresses/pictures    ["http://extra.picture.com" "https://extra.more.picture"]
    :dresses/price       (bigdec "2222")
-   :dresses/created_on  (Instant/parse "2020-03-13T12:22:33Z")
-   :dresses/updated_on  (Instant/parse "2020-04-13T12:22:33Z")})
+   :dresses/created_on  (instant/parse "2020-03-13T12:22:33Z")
+   :dresses/updated_on  (instant/parse "2020-04-13T12:22:33Z")})
 
 (def ^:private dress-response-expected-extra
   "One more expected API dress response."
@@ -312,8 +314,8 @@
         (is (= [dress-response-expected dress-response-expected-extra] body))
         (is (spy/called-once-with? dresses-db/get-all-dresses nil :limit limit-param :offset offset-param)))))
 
-  (doseq [url ["/api/dresses?limit=invalid"
-               "/api/dresses?offset=invalid"]]
+  (doseq [[url error] [["/api/dresses?limit=invalid" "Limit is not valid"]
+                       ["/api/dresses?offset=invalid" "Offset is not valid"]]]
     (testing "Test GET /dresses/ with invalid query parameters"
       (with-redefs [dresses-db/get-all-dresses (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -321,7 +323,7 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
-                  :errors  ["Value is not valid"]}
+                  :errors  [error]}
                  body))
           (is (spy/not-called? dresses-db/get-all-dresses)))))))
 
@@ -373,7 +375,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Dress-id is not valid"]}
                body))
         (is (spy/not-called? dresses-db/delete-dress)))))
 

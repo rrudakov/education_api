@@ -1,8 +1,8 @@
 (ns education.specs.upload-test
-  (:require [clojure.spec.alpha :as s]
-            [clojure.test :refer [deftest is testing]]
-            [education.specs.upload :as sut]
-            [spec-tools.swagger.core :as swagger]))
+  (:require
+   [clojure.spec.alpha :as s]
+   [clojure.test :refer [deftest is testing]]
+   [education.specs.upload :as sut]))
 
 (deftest url-test
   (testing "::url is valid"
@@ -23,16 +23,3 @@
                     {}]]
     (testing "::upload-response is invalid"
       (is (not (s/valid? ::sut/upload-response response))))))
-
-(deftest upload-test
-  (doseq [upload [{} nil "string" true]]
-    (testing "Test ::upload can be valid with any map"
-      (is (s/valid? ::sut/upload upload))))
-
-  (testing "Test ::upload can be converted to proper swagger spec"
-    (is (= {:description "The media file to upload",
-            :title       "education.specs.upload/upload",
-            :type        "file",
-            :in          "formData",
-            :name        "file"}
-           (swagger/transform ::sut/upload)))))

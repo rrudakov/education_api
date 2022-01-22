@@ -57,5 +57,5 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Field file is mandatory"]}
                body))))))

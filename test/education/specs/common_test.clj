@@ -692,7 +692,7 @@
       (is ((complement s/valid?) ::sut/material-update-request request)))))
 
 (def ^:private material-response
-  {:id          (rand-int 100)
+  {:id          (inc (rand-int 100))
    :title       "Title"
    :description "Description"
    :preview     "https://alenkinaskazka.nl/img/some.png"
@@ -702,7 +702,7 @@
    :updated_on  (instant/now)})
 
 (def ^:private material-response-2
-  {:id          (rand-int 100)
+  {:id          (inc (rand-int 100))
    :title       "Title 2"
    :description "description 2"
    :preview     "https://alenkinaskazka.nl/img/another.png"

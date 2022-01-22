@@ -181,7 +181,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/update-presentation))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Field presentation-id is mandatory"]}
+                :errors  ["Presentation-id is not valid"]}
                body)))))
 
   (testing "Test PATCH /presentations/:presentation-id with non-existing `presentation-id`"
@@ -327,7 +327,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/get-presentation-by-id))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Presentation-id is not valid"]}
                body))))))
 
 (def ^:private presentation-from-db-extra
@@ -390,7 +390,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/get-all-presentations))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Field subtype_id is mandatory"]}
                body)))))
 
   (testing "Test GET /presentations with invalid `subtype_id`"
@@ -402,11 +402,13 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? presentations-db/get-all-presentations))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Subtype_id is not valid"]}
                body)))))
 
-  (doseq [query [{:subtype_id 3 :limit "invalid"}
-                 {:subtype_id 3 :offset "invalid"}]]
+  (doseq [[query err] [[{:subtype_id 3 :limit "invalid"} ["Subtype_id is not valid"
+                                                          "Limit is not valid"]]
+                       [{:subtype_id 3 :offset "invalid"} ["Subtype_id is not valid"
+                                                           "Offset is not valid"]]]]
     (testing "Test GET /presentations with invalid query parameters"
       (with-redefs [presentations-db/get-all-presentations (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
@@ -415,7 +417,7 @@
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (= {:message const/bad-request-error-message
-                  :errors  ["Value is not valid"]}
+                  :errors  err}
                  body))
           (is (spy/not-called? presentations-db/get-all-presentations)))))))
 
@@ -467,7 +469,7 @@
             body     (test-app/parse-body (:body response))]
         (is (= 400 (:status response)))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Presentation-id is not valid"]}
                body))
         (is (spy/not-called? presentations-db/delete-presentation)))))
 

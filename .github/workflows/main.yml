@@ -33,8 +33,7 @@ jobs:
             git checkout master
             git reset --hard HEAD
             git pull
-            bash --login -c 'lein migrate prod'
-            bash --login -c 'lein clean'
-            bash --login -c 'lein uberjar'
+            bash --login -c 'clj -X:migrate :env :prod'
+            bash --login -c 'clj -T:build uber'
             cp target/education-api-standalone.jar /home/site/API/education-api-standalone.jar
             bash --login -c 'pm2 restart education-api'

@@ -1,30 +1,29 @@
 (ns education.http.endpoints.test-app
-  (:require [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
-            [compojure.api.api :refer [api-defaults]]
-            [education.config :as config]
-            [education.http.routes :as routes]
-            [education.test-data :refer [test-config]]
-            [jsonista.core :as j]
-            [muuntaja.middleware :refer [wrap-format]]
-            [ring.middleware.cors :refer [wrap-cors]]
-            [ring.middleware.defaults :refer [wrap-defaults]]))
+  (:require
+   [cheshire.generate :refer [add-encoder]]
+   [cljc.java-time.format.date-time-formatter :as dtf]
+   [clojure.data.json :as json]
+   [education.http.routes :as r]
+   [education.test-data :refer [test-config]]
+   [reitit.ring :as ring]))
 
 (defn api-routes-with-auth
-  "Return configured application with authorization middleware."
+  "Return configured application."
   []
-  (let [auth-backend (config/auth-backend test-config)]
-    (-> (routes/api-routes nil test-config)
-        (wrap-cors :access-control-allow-origin [#".*"]
-                   :access-control-allow-headers ["Origin" "Accept" "Content-Type" "Authorization" "X-Requested-With" "Cache-Control"]
-                   :access-control-allow-methods [:get :post :patch :put :delete])
-        (wrap-authorization auth-backend)
-        (wrap-authentication auth-backend)
-        (wrap-format)
-        (wrap-defaults api-defaults))))
+  (add-encoder
+   java.time.Instant
+   (fn [c json-generator]
+     (.writeString json-generator (dtf/format dtf/iso-instant c))))
+  (ring/ring-handler
+   (ring/router (r/routes) (r/router-options nil test-config))
+   (ring/routes
+    (ring/redirect-trailing-slash-handler)
+    (ring/create-default-handler
+     {:not-found          (constantly {:status 404 :body "Not found"})
+      :method-not-allowed (constantly {:status 405 :body "Method not allowed"})
+      :not-acceptable     (constantly {:status 406 :body "Not acceptable"})}))))
 
 (defn parse-body
   "Parse response body into clojure map."
   [body]
-  (-> body
-      slurp
-      (j/read-value j/keyword-keys-object-mapper)))
+  (-> body slurp (json/read-str :key-fn keyword)))

@@ -1,9 +1,10 @@
 (ns education.test-data
-  (:require [buddy.sign.jwt :as jwt]
-            [cheshire.core :as cheshire]
-            [education.config :as config]
-            [buddy.hashers :as hs])
-  (:import java.time.Instant))
+  (:require
+   [buddy.hashers :as hs]
+   [buddy.sign.jwt :as jwt]
+   [cljc.java-time.instant :as instant]
+   [clojure.data.json :as json]
+   [education.config :as config]))
 
 (def test-config
   "Mocked test configuration for using in unit tests."
@@ -54,8 +55,8 @@
    :users/user_name     (:username add-user1-request)
    :users/user_password (hs/encrypt password)
    :users/user_email    (:email add-user1-request)
-   :users/created_on    (Instant/parse "2020-12-12T18:22:12Z")
-   :users/updated_on    (Instant/parse "2020-12-12T19:22:12Z")})
+   :users/created_on    (instant/parse "2020-12-12T18:22:12Z")
+   :users/updated_on    (instant/parse "2020-12-12T19:22:12Z")})
 
 (def db-test-user2
   "Second mocked testing user."
@@ -63,8 +64,8 @@
    :users/user_name     (:username add-user2-request)
    :users/user_password (hs/encrypt password)
    :users/user_email    (:email add-user2-request)
-   :users/created_on    (Instant/parse "2019-12-12T18:22:12Z")
-   :users/updated_on    (Instant/parse "2019-12-12T18:22:12Z")})
+   :users/created_on    (instant/parse "2019-12-12T18:22:12Z")
+   :users/updated_on    (instant/parse "2019-12-12T18:22:12Z")})
 
 (def db-all-roles
   "All roles from database."
@@ -103,7 +104,7 @@
 (defn test-auth-token
   "Generate valid authorization token."
   [roles]
-  (let [exp   (.plusSeconds (Instant/now) (* 60 60 24))
+  (let [exp   (instant/plus-seconds (instant/now) (* 60 60 24))
         token (-> {:user (assoc auth-user :roles roles)}
                   (assoc :exp exp)
                   (jwt/sign (config/token-sign-secret test-config) {:alg :hs512}))]
@@ -116,7 +117,7 @@
 
 (def auth-user-deserialized
   "Authorized user deserialized from authorization token."
-  (cheshire/parse-string (cheshire/generate-string auth-user) true))
+  (json/read-str (json/write-str auth-user) :key-fn keyword))
 
 (defn auth-user-deserialized-with-role
   "Return authorized user with given `role`."
@@ -137,5 +138,5 @@
    :articles/body             (:body add-article-request)
    :articles/description      "Test description"
    :articles/is_main_featured false
-   :articles/created_on       (Instant/parse "2020-12-12T13:22:12Z")
-   :articles/updated_on       (Instant/parse "2020-12-12T15:22:12Z")})
+   :articles/created_on       (instant/parse "2020-12-12T13:22:12Z")
+   :articles/updated_on       (instant/parse "2020-12-12T15:22:12Z")})

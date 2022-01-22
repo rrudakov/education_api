@@ -12,12 +12,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: lein deps
-    - name: Run tests and generate coverage report
-      run: lein cloverage --codecov
-    - name: Upload coverage report to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        fail_ci_if_error: true
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@3.5
+        with:
+          cli: 1.10.3.986
+      - uses: actions/checkout@v2
+      - name: Run tests and generate coverage report
+        run: clojure -M:test:cloverage
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true

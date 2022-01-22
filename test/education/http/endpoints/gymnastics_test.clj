@@ -147,7 +147,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/update-gymnastic))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Field gymnastic-id is mandatory"]}
+                :errors  ["Gymnastic-id is not valid"]}
                body)))))
 
   (testing "Test PATCH /gymnastics/:gymnastic-id with non-existing `gymnastic-id`"
@@ -261,7 +261,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/get-gymnastic-by-id))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Gymnastic-id is not valid"]}
                body))))))
 
 (def ^:private gymnastic-from-db-extra
@@ -323,7 +323,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/get-all-gymnastics))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Field subtype_id is mandatory"]}
                body)))))
 
   (testing "Test GET /gymnastics with invalid `subtype_id`"
@@ -335,21 +335,23 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/get-all-gymnastics))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Subtype_id is not valid"]}
                body)))))
 
-  (doseq [query [{:limit "invalid"}
-                 {:offset "invalid"}]]
+  (doseq [[query-string err] [[{:subtype_id 3 :limit "invalid"} ["Subtype_id is not valid"
+                                                                 "Limit is not valid"]]
+                              [{:subtype_id 3 :offset "invalid"} ["Subtype_id is not valid"
+                                                                  "Offset is not valid"]]]]
     (testing "Test GET /gymnastics with invalid `offset` and `limit` parameters"
       (with-redefs [gymnastics-db/get-all-gymnastics (spy/spy)]
         (let [app      (test-app/api-routes-with-auth)
               response (app (-> (mock/request :get "/api/gymnastics")
-                                (mock/query-string query)))
+                                (mock/query-string query-string)))
               body     (test-app/parse-body (:body response))]
           (is (= 400 (:status response)))
           (is (spy/not-called? gymnastics-db/get-all-gymnastics))
           (is (= {:message const/bad-request-error-message
-                  :errors  ["Value is not valid"]}
+                  :errors  err}
                  body)))))))
 
 (deftest delete-gymnastic-by-id-test
@@ -401,7 +403,7 @@
         (is (= 400 (:status response)))
         (is (spy/not-called? gymnastics-db/delete-gymnastic))
         (is (= {:message const/bad-request-error-message
-                :errors  ["Value is not valid"]}
+                :errors  ["Gymnastic-id is not valid"]}
                body)))))
 
   (testing "Test DELETE /gymnastics/:gymnastic-id unexpected result from database"

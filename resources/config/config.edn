@@ -10,6 +10,10 @@
   :base_url  #profile
   {:dev  "http://127.0.0.1:3000"
    :prod #env BASE_URL}
+  :logging
+  {:ulog #profile
+   {:dev  #ref [:secrets :ulog]
+    :prod [{:type :console :pretty? true}]}}
   :storage   #profile
   {:dev  "/home/rrudakov/tmp/"
    :prod #env STORAGE_PATH}

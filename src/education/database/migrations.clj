@@ -11,9 +11,9 @@
      :migrations (jdbc/load-resources "migrations")}))
 
 (defn migrate
-  [profile]
-  (repl/migrate (load-db-config (keyword profile))))
+  [{:keys [profile]}]
+  (repl/migrate (load-db-config profile)))
 
 (defn rollback
-  [profile]
-  (repl/rollback (load-db-config (keyword profile))))
+  [{:keys [profile]}]
+  (repl/rollback (load-db-config profile)))

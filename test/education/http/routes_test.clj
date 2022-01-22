@@ -6,7 +6,8 @@
             [education.http.endpoints.test-app :as test-app]
             [education.specs.common :as spec]
             [ring.mock.request :as mock]
-            [spy.core :as spy])
+            [spy.core :as spy]
+            [ring.util.http-response :as status])
   (:import java.time.Instant))
 
 (def ^:private dress-response-invalid
@@ -22,7 +23,7 @@
 
 (deftest response-validation-handler-test
   (testing "Test exception handler for invalid response body"
-    (with-redefs [dresses-endpoint/get-dress-by-id-handler (spy/stub dress-response-invalid)]
+    (with-redefs [dresses-endpoint/get-dress-by-id-handler (spy/stub (status/ok dress-response-invalid))]
       (let [app      (test-app/api-routes-with-auth)
             response (app (mock/request :get "/api/dresses/22"))
             body     (test-app/parse-body (:body response))]
