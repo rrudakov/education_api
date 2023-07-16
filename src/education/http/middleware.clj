@@ -28,3 +28,10 @@
                       (if-not (has-role? (:user idt) roles)
                         (status/forbidden {:message const/no-access-error-message})
                         (handler request)))))))})
+
+(def wrap-send-grid-client
+  {:name    ::wrap-send-grid-client
+   :compile (fn [{:keys [send-grid]} _]
+              (fn [handler]
+                (fn [request]
+                  (handler (assoc request :send-grid send-grid)))))})

@@ -1,13 +1,13 @@
 (ns education.error
   (:require
+   [clojure.spec.alpha :as s]
    [com.brunobonacci.mulog :as u]
    [education.http.constants :as const]
    [reitit.coercion :as coercion]
    [reitit.ring.middleware.exception :as exception]
-   [ring.util.http-response :as status]
-   [clojure.spec.alpha :as s])
+   [ring.util.http-response :as status])
   (:import
-   java.sql.SQLException))
+   (java.sql SQLException)))
 
 (derive ::warning ::exception)
 

@@ -1,21 +1,23 @@
 (ns education.http.endpoints.lessons-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]
-            [education.database.lessons :as lessons-db]
-            [education.http.constants :as const]
-            [education.http.endpoints.lessons :as sut]
-            [education.http.endpoints.test-app :as test-app]
-            [education.test-data :as td]
-            [ring.mock.request :as mock]
-            [ring.util.http-response :as status]
-            [spy.core :as spy]
-            [education.utils.crypt :as crypt]
-            [education.database.email-subscriptions :as email-subscriptions-db]
-            [education.utils.mail :as mail]
-            [clojure.java.io :as io]
-            [education.config :as config])
-  (:import java.sql.SQLException
-           java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.java.io :as io]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [education.config :as config]
+   [education.database.email-subscriptions :as email-subscriptions-db]
+   [education.database.lessons :as lessons-db]
+   [education.http.constants :as const]
+   [education.http.endpoints.lessons :as sut]
+   [education.http.endpoints.test-app :as test-app]
+   [education.test-data :as td]
+   [education.utils.crypt :as crypt]
+   [education.utils.mail :as mail]
+   [ring.mock.request :as mock]
+   [ring.util.http-response :as status]
+   [spy.core :as spy])
+  (:import
+   (java.sql SQLException)))
 
 (def ^:private test-lesson-id
   "Test API `lesson-id`."
@@ -280,8 +282,8 @@
    :lessons/description "Long video lesson description"
    :lessons/screenshots ["http://first.screenshot.com" "http://second.screenshot.com"]
    :lessons/price       (bigdec "22.50000")
-   :lessons/created_on  (Instant/parse "2020-05-27T18:28:12Z")
-   :lessons/updated_on  (Instant/parse "2020-05-27T18:28:12Z")})
+   :lessons/created_on  (instant/parse "2020-05-27T18:28:12Z")
+   :lessons/updated_on  (instant/parse "2020-05-27T18:28:12Z")})
 
 (def ^:private lesson-response-expected
   "Expected API lesson response."
@@ -332,8 +334,8 @@
    :lessons/description "Long video lesson description"
    :lessons/screenshots ["http://first.screenshot.com" "http://second.screenshot.com"]
    :lessons/price       (bigdec "7.0000")
-   :lessons/created_on  (Instant/parse "2020-05-28T18:28:12Z")
-   :lessons/updated_on  (Instant/parse "2020-05-28T18:28:12Z")})
+   :lessons/created_on  (instant/parse "2020-05-28T18:28:12Z")
+   :lessons/updated_on  (instant/parse "2020-05-28T18:28:12Z")})
 
 (def ^:private lesson-response-expected-extra
   "One more expected API lesson response."
@@ -465,7 +467,11 @@
         (is (nil? (:body response)))
         (is (spy/called-once-with? crypt/generate-hash td/test-config test-email))
         (is (spy/called-once-with? email-subscriptions-db/add-email-subscription nil test-email))
-        (is (spy/called-once-with? mail/send-free-lesson-email-http td/test-config generated-hash test-email)))))
+        (is (spy/called-once-with? mail/send-free-lesson-email-http
+                                   :hato-client
+                                   td/test-config
+                                   generated-hash
+                                   test-email)))))
 
   (doseq [[body errors] [[{:email "invalid"}
                           ["Email is not valid"]]

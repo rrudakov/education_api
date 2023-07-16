@@ -1,14 +1,15 @@
 (ns education.http.endpoints.upload-test
-  (:require [clojure.java.io :as io]
-            [clojure.test :refer [deftest is testing]]
-            [education.config :as config]
-            [education.http.constants :as const]
-            [education.http.endpoints.test-app :as test-app]
-            [education.http.endpoints.upload :as sut]
-            [education.test-data :as td]
-            [peridot.multipart :as mp]
-            [ring.mock.request :as mock]
-            [spy.core :as spy]))
+  (:require
+   [clojure.java.io :as io]
+   [clojure.test :refer [deftest is testing]]
+   [education.config :as config]
+   [education.http.constants :as const]
+   [education.http.endpoints.test-app :as test-app]
+   [education.http.endpoints.upload :as sut]
+   [education.test-data :as td]
+   [peridot.multipart :as mp]
+   [ring.mock.request :as mock]
+   [spy.core :as spy]))
 
 (def ^:private test-img-name
   "Image name to be uploaded.

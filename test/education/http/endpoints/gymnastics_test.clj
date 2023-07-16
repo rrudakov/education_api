@@ -1,13 +1,14 @@
 (ns education.http.endpoints.gymnastics-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]
-            [education.database.gymnastics :as gymnastics-db]
-            [education.http.constants :as const]
-            [education.http.endpoints.test-app :as test-app]
-            [education.test-data :as td]
-            [ring.mock.request :as mock]
-            [spy.core :as spy])
-  (:import java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.gymnastics :as gymnastics-db]
+   [education.http.constants :as const]
+   [education.http.endpoints.test-app :as test-app]
+   [education.test-data :as td]
+   [ring.mock.request :as mock]
+   [spy.core :as spy]))
 
 (def ^:private test-gymnastic-id
   "Test API `gymnastic-id`."
@@ -208,11 +209,11 @@
 
 (def ^:private created-on
   "Constant `created_on` value for tests."
-  (Instant/now))
+  (instant/now))
 
 (def ^:private updated-on
   "Constant `updated_on` value for tests."
-  (Instant/now))
+  (instant/now))
 
 (def ^:private gymnastic-from-db
   "Test gymnastic database query result."

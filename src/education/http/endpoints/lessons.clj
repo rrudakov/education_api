@@ -56,10 +56,10 @@
     (status/internal-server-error {:message const/server-error-message})))
 
 (defn request-free-lesson-handler
-  [{:keys [conn app-config] {{:keys [email]} :body} :parameters}]
+  [{:keys [conn app-config send-grid] {{:keys [email]} :body} :parameters}]
   (let [token (crypt/generate-hash app-config email)]
     (email-subscriptions-db/add-email-subscription conn email)
-    (mail/send-free-lesson-email-http app-config token email)
+    (mail/send-free-lesson-email-http send-grid app-config token email)
     (status/ok)))
 
 (defn serve-video-handler

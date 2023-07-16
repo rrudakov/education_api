@@ -1,9 +1,12 @@
 (ns education.database.dresses-test
-  (:require [clojure.test :refer [deftest is testing]]
-            [education.database.dresses :as sut]
-            [next.jdbc.sql :as sql]
-            [spy.core :as spy])
-  (:import java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.dresses :as sut]
+   [next.jdbc.sql :as sql]
+   [spy.core :as spy])
+  (:import
+   (java.time Instant)))
 
 (def ^:private create-dress-request
   "Test create dress API request."
@@ -21,8 +24,8 @@
    :dresses/size        44
    :dresses/pictures    ["https://first.picture.net" "https://second.picture.net"]
    :dresses/price       (bigdec "7.33")
-   :dresses/created_on  (Instant/now)
-   :dresses/updated_on  (Instant/now)})
+   :dresses/created_on  (instant/now)
+   :dresses/updated_on  (instant/now)})
 
 (def ^:private create-dress-body-expected
   "Expected body passed to SQL call."

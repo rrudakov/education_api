@@ -1,9 +1,10 @@
 (ns education.http.constants-test
-  (:require [clojure.test :refer [deftest is testing]]
-            [education.http.constants :as sut]
-            [education.specs.common :as spec]
-            [education.specs.users :as user-spec]
-            [clojure.string :as str]))
+  (:require
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [education.http.constants :as sut]
+   [education.specs.common :as spec]
+   [education.specs.users :as user-spec]))
 
 (def test-data
   "Test cases."

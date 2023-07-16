@@ -1,11 +1,11 @@
 (ns education.http.endpoints.users
   (:require
    [buddy.sign.jwt :as jwt]
+   [cljc.java-time.instant :as instant]
    [education.config :as config]
    [education.database.users :as usersdb]
    [education.http.constants :as const]
-   [ring.util.http-response :as status]
-   [cljc.java-time.instant :as instant]))
+   [ring.util.http-response :as status]))
 
 ;;; Converters
 
@@ -46,10 +46,9 @@
 (defn all-users-handler
   "Return all users list."
   [{:keys [conn]}]
-  (->> conn
-       usersdb/get-all-users
-       (mapv to-user-response)
-       status/ok))
+  (->> (usersdb/get-all-users conn)
+       (into [] (map to-user-response))
+       (status/ok)))
 
 (defn get-user-handler
   "Get user by ID handler."

@@ -1,9 +1,10 @@
 (ns education.database.lessons-test
-  (:require [clojure.test :refer [deftest is testing]]
-            [education.database.lessons :as sut]
-            [next.jdbc.sql :as sql]
-            [spy.core :as spy])
-  (:import java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.lessons :as sut]
+   [next.jdbc.sql :as sql]
+   [spy.core :as spy]))
 
 (def ^:private create-lesson-request
   "Test create lesson API request."
@@ -21,8 +22,8 @@
    :lessons/description     "Long video lesson description"
    :lessons/screenshots     ["http://first.screenshot.com" "http://second.screenshot.com"]
    :lessons/price           (bigdec "22.50000")
-   :lessons/created_on      (Instant/now)
-   :lessons/updated_on      (Instant/now)})
+   :lessons/created_on      (instant/now)
+   :lessons/updated_on      (instant/now)})
 
 (def ^:private expected-create-body
   {:title           (:title create-lesson-request)

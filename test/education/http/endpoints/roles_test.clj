@@ -1,13 +1,13 @@
 (ns education.http.endpoints.roles-test
-  (:require [clojure.test :refer [deftest is testing]]
-            [education.database.roles :as rolesdb]
-            [education.http.constants :as const]
-            [education.http.endpoints.test-app
-             :refer
-             [parse-body api-routes-with-auth]]
-            [education.test-data :refer [db-all-roles test-auth-token]]
-            [ring.mock.request :as mock]
-            [spy.core :as spy]))
+  (:require
+   [clojure.test :refer [deftest is testing]]
+   [education.database.roles :as rolesdb]
+   [education.http.constants :as const]
+   [education.http.endpoints.test-app
+    :refer [api-routes-with-auth parse-body]]
+   [education.test-data :refer [db-all-roles test-auth-token]]
+   [ring.mock.request :as mock]
+   [spy.core :as spy]))
 
 (deftest roles-test
   (testing "Test GET /roles with admin role"

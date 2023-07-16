@@ -1,9 +1,10 @@
 (ns education.database.dresses
-  (:require [education.utils.maps :refer [update-if-exist]]
-            [next.jdbc.sql :as sql]
-            [honey.sql :as hsql]
-            [honey.sql.helpers :as h])
-  (:import java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [education.utils.maps :refer [update-if-exist]]
+   [honey.sql :as hsql]
+   [honey.sql.helpers :as h]
+   [next.jdbc.sql :as sql]))
 
 (defn- request->db-create-statement
   [dress]
@@ -14,24 +15,23 @@
 (defn- request->db-update-statement
   [dress]
   (-> dress
-      (assoc :updated_on (Instant/now))
+      (assoc :updated_on (instant/now))
       (update-if-exist :price bigdec)
       (update-if-exist :pictures (partial into-array String))))
 
 (defn add-dress
   "Create new `dress` entry in database with given `conn`."
   [conn dress]
-  (->> dress
-       (request->db-create-statement)
-       (sql/insert! conn :dresses)
-       (:dresses/id)))
+  (let [query (request->db-create-statement dress)]
+    (-> (sql/insert! conn :dresses query)
+        :dresses/id)))
 
 (defn update-dress
   "Update existing `dress` entry by `dress-id` with given `conn`."
   [conn dress-id dress]
-  (->> {:id dress-id}
-       (sql/update! conn :dresses (request->db-update-statement dress))
-       (:next.jdbc/update-count)))
+  (let [query (request->db-update-statement dress)]
+    (-> (sql/update! conn :dresses query {:id dress-id})
+        :next.jdbc/update-count)))
 
 (defn get-dress-by-id
   "Get existing dress from database by `dress-id` with given `conn`."
@@ -43,16 +43,16 @@
 
   Accept optional parameters `limit` and `offset` to support pagination."
   [conn & {:keys [limit offset]}]
-  (->> (-> (h/select :*)
-           (h/from :dresses)
-           (h/order-by [:updated_on :desc])
-           (h/limit (or limit 20))
-           (h/offset (or offset 0)))
-       (hsql/format)
-       (sql/query conn)))
+  (let [query (-> (h/select :*)
+                  (h/from :dresses)
+                  (h/order-by [:updated_on :desc])
+                  (h/limit (or limit 20))
+                  (h/offset (or offset 0))
+                  (hsql/format))]
+    (sql/query conn query)))
 
 (defn delete-dress
   "Delete dress by `dress-id` with given `conn`."
   [conn dress-id]
-  (->> (sql/delete! conn :dresses {:id dress-id})
-       (:next.jdbc/update-count)))
+  (-> (sql/delete! conn :dresses {:id dress-id})
+      :next.jdbc/update-count))

@@ -1,9 +1,10 @@
 (ns education.config
-  (:require [aero.core :refer [read-config]]
-            [buddy.auth.backends.token :refer [jws-backend]]
-            [clojure.java.io :as io]
-            [buddy.core.hash :as hash]
-            [buddy.core.codecs :as codecs]))
+  (:require
+   [aero.core :refer [read-config]]
+   [buddy.auth.backends.token :refer [jws-backend]]
+   [buddy.core.codecs :as codecs]
+   [buddy.core.hash :as hash]
+   [clojure.java.io :as io]))
 
 (defn config
   "Read application config from resources."

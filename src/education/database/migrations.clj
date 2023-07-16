@@ -1,19 +1,27 @@
 (ns education.database.migrations
-  (:require [education.config :as config]
-            [ragtime.jdbc :as jdbc]
-            [ragtime.repl :as repl]))
+  (:require
+   [education.system :as system]
+   [integrant.core :as ig]
+   [ragtime.next-jdbc]
+   [ragtime.repl :as repl]
+   [ragtime.strategy :as strategy]))
 
-;; Migrations
-(defn load-db-config
-  [profile]
-  (let [db-uri (:url (config/db-config (config/config profile)))]
-    {:datastore (jdbc/sql-database {:connection-uri db-uri})
-     :migrations (jdbc/load-resources "migrations")}))
+(defn- load-db-config
+  [conn]
+  {:datastore  (ragtime.next-jdbc/sql-database conn)
+   :migrations (ragtime.next-jdbc/load-resources "migrations")
+   :strategy   strategy/apply-new})
 
 (defn migrate
   [{:keys [profile]}]
-  (repl/migrate (load-db-config profile)))
+  (let [{:db/keys [connection] :as system}
+        (ig/init (system/system-migration profile))]
+    (repl/migrate (load-db-config connection))
+    (ig/halt! system)))
 
 (defn rollback
   [{:keys [profile]}]
-  (repl/rollback (load-db-config profile)))
+  (let [{:db/keys [connection] :as system}
+        (ig/init (system/system-migration profile))]
+    (repl/rollback (load-db-config connection))
+    (ig/halt! system)))

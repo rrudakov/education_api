@@ -3,20 +3,23 @@
    [com.brunobonacci.mulog :as u]
    [education.config :as config]
    [education.http.routes :as r]
+   [hato.client :as hato]
    [hikari-cp.core :refer [close-datasource make-datasource]]
    [integrant.core :as ig]
    [next.jdbc.result-set :as rs]
    [org.httpkit.server :as server]
    [reitit.ring :as ring])
   (:import
-   java.sql.Array))
+   (java.sql Array)))
 
 (def system-config-dev
   {:system/config    {:profile :dev}
    :ulog/publisher   {:config (ig/ref :system/config)}
    :db/connection    {:config (ig/ref :system/config)}
-   :http/router-opts {:config (ig/ref :system/config)
-                      :db     (ig/ref :db/connection)}
+   :send-grid/client {}
+   :http/router-opts {:config    (ig/ref :system/config)
+                      :db        (ig/ref :db/connection)
+                      :send-grid (ig/ref :send-grid/client)}
    :http/router-dev  {:router-opts (ig/ref :http/router-opts)}
    :http/handler     {:router (ig/ref :http/router-dev)}
    :http/adapter     {:handler (ig/ref :http/handler)
@@ -26,12 +29,20 @@
   {:system/config    {:profile :prod}
    :ulog/publisher   {:config (ig/ref :system/config)}
    :db/connection    {:config (ig/ref :system/config)}
-   :http/router-opts {:config (ig/ref :system/config)
-                      :db     (ig/ref :db/connection)}
+   :send-grid/client {}
+   :http/router-opts {:config    (ig/ref :system/config)
+                      :db        (ig/ref :db/connection)
+                      :send-grid (ig/ref :send-grid/client)}
    :http/router-prod {:router-opts (ig/ref :http/router-opts)}
    :http/handler     {:router (ig/ref :http/router-prod)}
    :http/adapter     {:handler (ig/ref :http/handler)
                       :config  (ig/ref :system/config)}})
+
+(defn system-migration
+  [profile]
+  {:system/config  {:profile profile}
+   :ulog/publisher {:config (ig/ref :system/config)}
+   :db/connection  {:config (ig/ref :system/config)}})
 
 (defmethod ig/init-key :system/config
   [_ {:keys [profile]}]
@@ -67,9 +78,14 @@
   (u/log ::close-datasource :datasource datasource)
   (close-datasource datasource))
 
+(defmethod ig/init-key :send-grid/client
+  [_ _]
+  (hato/build-http-client {:connect-timeout 60000
+                           :redirect-policy :always}))
+
 (defmethod ig/init-key :http/router-opts
-  [_ {:keys [config db]}]
-  (r/router-options db config))
+  [_ {:keys [config db send-grid]}]
+  (r/router-options db config send-grid))
 
 (defmethod ig/init-key :http/router-dev
   [_ {:keys [router-opts]}]

@@ -1,15 +1,16 @@
 (ns education.http.endpoints.users-test
-  (:require [clojure.string :refer [blank?]]
-            [clojure.test :refer [deftest is testing]]
-            [education.database.users :as usersdb]
-            [education.http.constants :as const]
-            [education.http.endpoints.test-app
-             :refer
-             [api-routes-with-auth parse-body]]
-            [education.test-data :as td]
-            [ring.mock.request :as mock]
-            [spy.core :as spy])
-  (:import java.sql.SQLException))
+  (:require
+   [clojure.string :refer [blank?]]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.users :as usersdb]
+   [education.http.constants :as const]
+   [education.http.endpoints.test-app
+    :refer [api-routes-with-auth parse-body]]
+   [education.test-data :as td]
+   [ring.mock.request :as mock]
+   [spy.core :as spy])
+  (:import
+   (java.sql SQLException)))
 
 (def test-response-user1
   "Expected user response."

@@ -5,7 +5,8 @@
    [clojure.data.json :as json]
    [education.http.routes :as r]
    [education.test-data :refer [test-config]]
-   [reitit.ring :as ring]))
+   [reitit.ring :as ring]
+   [clojure.java.io :as io]))
 
 (defn api-routes-with-auth
   "Return configured application."
@@ -15,7 +16,7 @@
    (fn [c json-generator]
      (.writeString json-generator (dtf/format dtf/iso-instant c))))
   (ring/ring-handler
-   (ring/router (r/routes) (r/router-options nil test-config))
+   (ring/router (r/routes) (r/router-options nil test-config :hato-client))
    (ring/routes
     (ring/redirect-trailing-slash-handler)
     (ring/create-default-handler
@@ -26,4 +27,5 @@
 (defn parse-body
   "Parse response body into clojure map."
   [body]
-  (-> body slurp (json/read-str :key-fn keyword)))
+  (with-open [r (io/reader body)]
+    (json/read r :key-fn keyword)))

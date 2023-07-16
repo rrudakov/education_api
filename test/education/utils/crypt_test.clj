@@ -1,8 +1,9 @@
 (ns education.utils.crypt-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]
-            [education.test-data :as td]
-            [education.utils.crypt :as sut]))
+  (:require
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [education.test-data :as td]
+   [education.utils.crypt :as sut]))
 
 (def email
   "some@email.com")

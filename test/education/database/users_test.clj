@@ -1,14 +1,15 @@
 (ns education.database.users-test
-  (:require [buddy.hashers :as hs]
-            [clojure.test :refer [testing is deftest]]
-            [education.database.roles :as roles]
-            [education.database.users :as sut]
-            [education.http.constants :as const]
-            [education.test-data :as td]
-            [next.jdbc :as jdbc]
-            [next.jdbc.protocols :as p]
-            [next.jdbc.sql :as sql]
-            [spy.core :as spy]))
+  (:require
+   [buddy.hashers :as hs]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.roles :as roles]
+   [education.database.users :as sut]
+   [education.http.constants :as const]
+   [education.test-data :as td]
+   [next.jdbc :as jdbc]
+   [next.jdbc.protocols :as p]
+   [next.jdbc.sql :as sql]
+   [spy.core :as spy]))
 
 (deftest add-user-test
   (testing "Test add user successful flow return user ID"

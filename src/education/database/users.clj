@@ -1,25 +1,34 @@
 (ns education.database.users
-  (:require [buddy.hashers :as hs]
-            [clojure.set :refer [rename-keys]]
-            [education.database.roles :as roles]
-            [education.http.constants :refer [invalid-credentials-error-message]]
-            [honey.sql :as hsql]
-            [next.jdbc :as jdbc]
-            [next.jdbc.sql :as sql]
-            [honey.sql.helpers :as h]))
+  (:require
+   [buddy.hashers :as hs]
+   [clojure.set :refer [rename-keys]]
+   [education.database.roles :as roles]
+   [education.http.constants :refer [invalid-credentials-error-message]]
+   [honey.sql :as hsql]
+   [honey.sql.helpers :as h]
+   [next.jdbc :as jdbc]
+   [next.jdbc.sql :as sql]
+   [cljc.java-time.instant :as instant]))
 
 (defn add-user
   "Create new `user` in database."
   [conn user]
   (jdbc/with-transaction [tx conn]
-    (let [{:keys [username password email]} user
-          user_id (->> (sql/insert! tx :users
-                                    {:user_name username
-                                     :user_password (hs/encrypt password)
-                                     :user_email email})
-                       (:users/id))
-          guest_role (roles/get-role-by-name tx "guest")]
-      (sql/insert! tx :user_roles
+    (let [{:keys [username password email]}
+          user
+
+          user_id
+          (-> (sql/insert! tx
+                           :users
+                           {:user_name     username
+                            :user_password (hs/encrypt password)
+                            :user_email    email})
+              (:users/id))
+
+          guest_role
+          (roles/get-role-by-name tx "guest")]
+      (sql/insert! tx
+                   :user_roles
                    {:user_id user_id
                     :role_id (:roles/id guest_role)})
       user_id)))
@@ -40,20 +49,20 @@
 (defn get-all-users
   "Fetch all users from `database`."
   [conn]
-  (->> (-> (h/select :u.id
-                     :u.user_name
-                     :u.user_email
-                     [[:array_agg :r.role_name] :roles]
-                     :u.created_on
-                     :u.updated_on)
-           (h/from [:users :u])
-           (h/left-join [:user_roles :ur] [:= :ur.user_id :u.id])
-           (h/left-join [:roles :r] [:= :r.id :ur.role_id])
-           (h/group-by :u.id)
-           (h/order-by [:u.id :desc]))
-       (hsql/format)
-       (sql/query conn)
-       (map #(rename-keys % {:roles :users/roles}))))
+  (let [query (-> (h/select :u.id
+                            :u.user_name
+                            :u.user_email
+                            [[:array_agg :r.role_name] :roles]
+                            :u.created_on
+                            :u.updated_on)
+                  (h/from [:users :u])
+                  (h/left-join [:user_roles :ur] [:= :ur.user_id :u.id])
+                  (h/left-join [:roles :r] [:= :r.id :ur.role_id])
+                  (h/group-by :u.id)
+                  (h/order-by [:u.id :desc])
+                  (hsql/format))]
+    (->> (sql/query conn query)
+         (into [] (map #(rename-keys % {:roles :users/roles}))))))
 
 (defn update-user
   "Update `user` and `roles`."
@@ -61,14 +70,17 @@
   (let [available-roles (roles/get-all-roles conn)]
     (jdbc/with-transaction [tx conn]
       (let [{:keys [roles]} user
-            new-roles (->> available-roles
-                           (filter #(some #{(:roles/role_name %)} (map keyword roles)))
-                           (map :roles/id))]
+            new-roles       (into []
+                                  (comp
+                                   (filter #(some #{(:roles/role_name %)} (map keyword roles)))
+                                   (map :roles/id))
+                                  available-roles)]
         (sql/delete! tx :user_roles {:user_id id})
-        (sql/insert-multi! tx :user_roles
+        (sql/insert-multi! tx
+                           :user_roles
                            [:user_id :role_id]
                            (map #(vector id %) new-roles))
-        (sql/update! tx :users {:updated_on (java.time.Instant/now)} {:id id})))))
+        (sql/update! tx :users {:updated_on (instant/now)} {:id id})))))
 
 (defn delete-user
   "Delete user from database by `user-id`."
@@ -85,7 +97,7 @@
 (defn auth-user
   "Check user credentials and authorize."
   [conn credentials]
-  (let [user (get-user-by-username conn (:username credentials))
+  (let [user   (get-user-by-username conn (:username credentials))
         noauth [false {:message invalid-credentials-error-message}]]
     (if user
       (if (hs/check (:password credentials) (:users/user_password user))

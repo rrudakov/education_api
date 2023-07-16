@@ -4,6 +4,7 @@
    [education.config :as config]
    [education.database.middleware :as db-mw]
    [education.error :as error]
+   [education.http.middleware :as http.middleware]
    [education.http.routes.dresses :as dresses]
    [education.http.routes.gymnastics :as gymnastics]
    [education.http.routes.lessons :as lessons]
@@ -31,10 +32,11 @@
    "Cache-Control"])
 
 (defn router-options
-  [db config]
+  [db config send-grid]
   (let [auth-backend (config/auth-backend config)]
     {:data {:app-config config
             :db         db
+            :send-grid  send-grid
             :muuntaja   m/instance
             :coercion   rcs/coercion
             :middleware [parameters/parameters-middleware
@@ -49,6 +51,7 @@
                           :access-control-allow-methods [:get :post :patch :put :delete]]
                          config/app-config-middleware
                          db-mw/db-middleware
+                         http.middleware/wrap-send-grid-client
                          [wrap-authentication auth-backend]]}}))
 
 (defn routes

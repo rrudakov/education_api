@@ -9,7 +9,7 @@
 (def ^:private img-prefix "img")
 
 (defn uuid []
-  (str (java.util.UUID/randomUUID)))
+  (str (random-uuid)))
 
 (defn file->byte-array
   [f]

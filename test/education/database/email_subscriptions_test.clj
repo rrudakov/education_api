@@ -1,9 +1,10 @@
 (ns education.database.email-subscriptions-test
-  (:require [education.database.email-subscriptions :as sut]
-            [clojure.test :refer [deftest testing is]]
-            [next.jdbc :as jdbc]
-            [spy.core :as spy]
-            [next.jdbc.sql :as sql]))
+  (:require
+   [clojure.test :refer [deftest is testing]]
+   [education.database.email-subscriptions :as sut]
+   [next.jdbc :as jdbc]
+   [next.jdbc.sql :as sql]
+   [spy.core :as spy]))
 
 (def add-email-subscription-query
   "Expected SQL query."

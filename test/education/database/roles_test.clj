@@ -1,9 +1,10 @@
 (ns education.database.roles-test
-  (:require [clojure.test :refer [testing deftest is]]
-            [education.database.roles :as sut]
-            [education.test-data :as td]
-            [next.jdbc.sql :as sql]
-            [spy.core :as spy]))
+  (:require
+   [clojure.test :refer [deftest is testing]]
+   [education.database.roles :as sut]
+   [education.test-data :as td]
+   [next.jdbc.sql :as sql]
+   [spy.core :as spy]))
 
 (def db-user-roles
   "Result of database query for user roles."

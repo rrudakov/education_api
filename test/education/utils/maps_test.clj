@@ -1,6 +1,7 @@
 (ns education.utils.maps-test
-  (:require [education.utils.maps :as sut]
-            [clojure.test :refer [testing deftest is]]))
+  (:require
+   [clojure.test :refer [deftest is testing]]
+   [education.utils.maps :as sut]))
 
 (deftest unqualify-keywork-test
   (testing "Test unqualify keyword with namespace"

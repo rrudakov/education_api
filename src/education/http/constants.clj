@@ -1,20 +1,15 @@
 (ns education.http.constants
-  (:require [phrase.alpha :as p]
-            [clojure.spec.alpha :as s]
-            [clojure.string :as str]))
+  (:require
+   [clojure.spec.alpha :as s]
+   [clojure.string :as str]
+   [phrase.alpha :as p]))
 
 (def not-found-error-message "Resource not found")
-
 (def conflict-error-message "Resource already exist")
-
 (def bad-request-error-message "Please check request data")
-
 (def not-authorized-error-message "You are not authorized")
-
 (def no-access-error-message "You don't have access to this resource")
-
 (def server-error-message "Something went wrong! Please, be patient, we're working on fix!")
-
 (def invalid-credentials-error-message "Invalid username or password")
 
 (def valid-url-regex
@@ -85,6 +80,8 @@
   [spec x]
   (some->> (s/explain-data spec x)
            ::s/problems
-           (mapv #(p/phrase {} %))
-           (distinct)
-           (filterv (complement nil?))))
+           (into []
+                 (comp
+                  (map #(p/phrase {} %))
+                  (distinct)
+                  (filter some?)))))

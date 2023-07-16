@@ -1,13 +1,14 @@
 (ns education.http.endpoints.materials-test
-  (:require [cljc.java-time.instant :as instant]
-            [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]
-            [education.database.materials :as materials-db]
-            [education.http.constants :as const]
-            [education.http.endpoints.test-app :as test-app]
-            [education.test-data :as td]
-            [ring.mock.request :as mock]
-            [spy.core :as spy]))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.materials :as materials-db]
+   [education.http.constants :as const]
+   [education.http.endpoints.test-app :as test-app]
+   [education.test-data :as td]
+   [ring.mock.request :as mock]
+   [spy.core :as spy]))
 
 (def ^:private test-material-id
   "Test API `material-id`."

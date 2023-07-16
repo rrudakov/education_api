@@ -1,9 +1,10 @@
 (ns education.database.materials-test
-  (:require [cljc.java-time.instant :as instant]
-            [clojure.test :refer [deftest is testing]]
-            [education.database.materials :as sut]
-            [next.jdbc.sql :as sql]
-            [spy.core :as spy]))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.materials :as sut]
+   [next.jdbc.sql :as sql]
+   [spy.core :as spy]))
 
 (def ^:private instant-stub
   (instant/now))

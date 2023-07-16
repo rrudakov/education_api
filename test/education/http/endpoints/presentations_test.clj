@@ -1,13 +1,14 @@
 (ns education.http.endpoints.presentations-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing]]
-            [education.database.presentations :as presentations-db]
-            [education.http.constants :as const]
-            [education.http.endpoints.test-app :as test-app]
-            [education.test-data :as td]
-            [ring.mock.request :as mock]
-            [spy.core :as spy])
-  (:import java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.string :as str]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.presentations :as presentations-db]
+   [education.http.constants :as const]
+   [education.http.endpoints.test-app :as test-app]
+   [education.test-data :as td]
+   [ring.mock.request :as mock]
+   [spy.core :as spy]))
 
 (def ^:private test-presentation-id
   "Test API `presentation-id`."
@@ -249,8 +250,8 @@
    :presentations/attachment  "https://alenkinaskazka.net/some_file.pdf"
    :presentations/preview     "https://alenkinaskazka.net/some_image.png"
    :presentations/subtype_id  2
-   :presentations/created_on  (Instant/now)
-   :presentations/updated_on  (Instant/now)})
+   :presentations/created_on  (instant/now)
+   :presentations/updated_on  (instant/now)})
 
 (def ^:private presentation-response-expected
   "Expected API presentation response."
@@ -339,8 +340,8 @@
    :presentations/attachment  nil
    :presentations/preview     nil
    :presentations/subtype_id  1
-   :presentations/created_on  (Instant/now)
-   :presentations/updated_on  (Instant/now)})
+   :presentations/created_on  (instant/now)
+   :presentations/updated_on  (instant/now)})
 
 (def ^:private presentation-response-expected-extra
   "One more expected API presentation response."

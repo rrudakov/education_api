@@ -1,5 +1,6 @@
 (ns education.utils.maps
-  (:require [clojure.string :as str]))
+  (:require
+   [clojure.string :as str]))
 
 (defn unqualify-keyword
   "Take pair of qualified key and value and produce map entry with unqualified

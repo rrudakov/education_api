@@ -1,17 +1,18 @@
 (ns education.database.presentations-test
-  (:require [clojure.test :refer [deftest is testing]]
-            [education.database.presentations :as sut]
-            [next.jdbc.sql :as sql]
-            [spy.core :as spy])
-  (:import java.time.Instant))
+  (:require
+   [cljc.java-time.instant :as instant]
+   [clojure.test :refer [deftest is testing]]
+   [education.database.presentations :as sut]
+   [next.jdbc.sql :as sql]
+   [spy.core :as spy]))
 
 (def ^:private created-on
   "Constant value of `created_on` field."
-  (Instant/now))
+  (instant/now))
 
 (def ^:private updated-on
   "Constant value of `updated_on` field."
-  (Instant/now))
+  (instant/now))
 
 (def ^:private create-presentation-request
   "Test create presentation API request."

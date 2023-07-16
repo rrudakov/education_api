@@ -1,11 +1,12 @@
 (ns education.config-test
-  (:require [buddy.auth.backends.token :refer [jws-backend]]
-            [clojure.java.io :as io]
-            [clojure.test :refer [deftest testing is]]
-            [education.config :as sut]
-            [spy.core :as spy]
-            [buddy.core.hash :as hash]
-            [buddy.core.codecs :as codecs]))
+  (:require
+   [buddy.auth.backends.token :refer [jws-backend]]
+   [buddy.core.codecs :as codecs]
+   [buddy.core.hash :as hash]
+   [clojure.java.io :as io]
+   [clojure.test :refer [deftest is testing]]
+   [education.config :as sut]
+   [spy.core :as spy]))
 
 (def parsed-configs
   "Define parsed config."
