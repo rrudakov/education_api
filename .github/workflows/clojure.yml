@@ -12,13 +12,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Clojure
-        uses: DeLaGuardo/setup-clojure@3.5
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Prepare java
+        uses: actions/setup-java@v3
         with:
-          cli: 1.10.3.986
-      - uses: actions/checkout@v2
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@11.0
+        with:
+          cli: latest
+
+      - name: Cache clojure dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.gitlibs
+            ~/.deps.clj
+          # List all files containing dependencies:
+          key: cljdeps-${{ hashFiles('deps.edn') }}
+          restore-keys: cljdeps-
+
       - name: Run tests and generate coverage report
         run: clojure -M:test:cloverage
+
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v1
         with:
