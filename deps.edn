@@ -4,7 +4,7 @@
         ;; Human readable errors
         phrase/phrase                        {:mvn/version "0.3-alpha4"}
         ;; Ring and compojure
-        ring/ring-defaults                   {:mvn/version "0.3.4"}
+        ring/ring-defaults                   {:mvn/version "0.4.0"}
         ring-cors/ring-cors                  {:mvn/version "0.1.13"}
         metosin/ring-http-response           {:mvn/version "0.9.3"}
         http-kit/http-kit                    {:mvn/version "2.7.0"}
@@ -18,14 +18,14 @@
         ;; Database stuff
         ragtime/ragtime                      {:mvn/version "0.8.1"}
         dev.weavejester/ragtime.next-jdbc    {:mvn/version "0.9.3"}
-        com.github.seancorfield/next.jdbc    {:mvn/version "1.3.883"}
+        com.github.seancorfield/next.jdbc    {:mvn/version "1.3.894"}
         com.github.seancorfield/honeysql     {:mvn/version "2.4.980"}
         org.postgresql/postgresql            {:mvn/version "42.6.0"}
         hikari-cp/hikari-cp                  {:mvn/version "3.0.1"}
         ;; Integrant framework
         integrant/integrant                  {:mvn/version "0.8.1"}
         ;; Security
-        buddy/buddy-hashers                  {:mvn/version "2.0.162"}
+        buddy/buddy-hashers                  {:mvn/version "2.0.167"}
         buddy/buddy-auth                     {:mvn/version "3.0.323"}
         buddy/buddy-sign                     {:mvn/version "3.5.351"}
         ;; Logging
@@ -54,6 +54,10 @@
             :main-opts   ["-m" "cognitect.test-runner"]
             :exec-fn     cognitect.test-runner.api/test}
 
+           ;; Dev profile
+           :dev
+           {:extra-paths ["dev/src"]}
+
            ;; Test coverage
            ;; Usage clj -M:test:cloverage
            :cloverage
@@ -74,5 +78,5 @@
 
            ;; Build
            :build
-           {:deps       {io.github.clojure/tools.build {:mvn/version "0.9.4"}}
+           {:deps       {io.github.clojure/tools.build {:mvn/version "0.9.6"}}
             :ns-default build}}}

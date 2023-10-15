@@ -14,10 +14,11 @@
 
 (defn update-gymnastic-handler
   [{:keys [conn] {:keys [body] {:keys [gymnastic-id]} :path} :parameters}]
-  (case (gymnastics-db/update-gymnastic conn gymnastic-id body)
-    1 (status/no-content)
-    0 (status/not-found {:message const/not-found-error-message})
-    (status/internal-server-error {:message const/server-error-message})))
+  (let [data (update body :picture identity)]
+    (case (gymnastics-db/update-gymnastic conn gymnastic-id data)
+      1 (status/no-content)
+      0 (status/not-found {:message const/not-found-error-message})
+      (status/internal-server-error {:message const/server-error-message}))))
 
 (defn get-gymnastic-by-id-handler
   [{:keys [conn] {{:keys [gymnastic-id]} :path} :parameters}]
@@ -28,7 +29,7 @@
 (defn get-all-gymnastics-handler
   [{:keys [conn] {{:keys [subtype_id limit offset]} :query} :parameters}]
   (->> (gymnastics-db/get-all-gymnastics conn subtype_id :limit limit :offset offset)
-       (mapv unqualify-map)
+       (into [] (map unqualify-map))
        (status/ok)))
 
 (defn delete-gymnastic-by-id-handler

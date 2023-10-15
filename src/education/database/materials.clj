@@ -38,7 +38,8 @@
   [conn & {:keys [limit offset]}]
   (sql/find-by-keys conn :materials :all
                     {:limit  (or limit 20)
-                     :offset (or offset 0)}))
+                     :offset (or offset 0)
+                     :order-by [[:created_on :desc]]}))
 
 (defn delete-material
   "Delete material by `material-id` with given `conn`."

@@ -4,8 +4,7 @@
             [clojure.string :as str]))
 
 (s/def ::picture
-  (s/nilable
-   (s/and string?
-          (complement str/blank?)
-          (partial re-matches const/valid-url-regex)
-          #(<= (count %) 1000))))
+  (s/and string?
+         (complement str/blank?)
+         (partial re-matches const/valid-url-regex)
+         #(<= (count %) 1000)))

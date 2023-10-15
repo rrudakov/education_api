@@ -8,7 +8,7 @@
  :app
  {:port      #long #or [#env PORT 3000]
   :base_url  #profile
-  {:dev  "http://127.0.0.1:3000"
+  {:dev  "http://localhost:1339"
    :prod #env BASE_URL}
   :logging
   {:ulog #profile

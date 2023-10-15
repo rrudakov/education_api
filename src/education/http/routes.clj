@@ -39,16 +39,16 @@
             :send-grid  send-grid
             :muuntaja   m/instance
             :coercion   rcs/coercion
-            :middleware [parameters/parameters-middleware
+            :middleware [[wrap-cors
+                          :access-control-allow-origin [#".*"]
+                          :access-control-allow-headers allowed-headers
+                          :access-control-allow-methods [:get :post :patch :put :delete]]
+                         parameters/parameters-middleware
                          muuntaja/format-middleware
                          error/exception-middleware
                          rrc/coerce-response-middleware
                          rrc/coerce-request-middleware
                          multipart/multipart-middleware
-                         [wrap-cors
-                          :access-control-allow-origin [#".*"]
-                          :access-control-allow-headers allowed-headers
-                          :access-control-allow-methods [:get :post :patch :put :delete]]
                          config/app-config-middleware
                          db-mw/db-middleware
                          http.middleware/wrap-send-grid-client

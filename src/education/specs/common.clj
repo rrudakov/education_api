@@ -97,7 +97,8 @@
           :opt-un [::g/picture]))
 
 (s/def ::gymnastic-update-request
-  (s/keys :opt-un [::subtype_id ::title ::description ::g/picture]))
+  (s/keys :req-un [::subtype_id ::title ::description]
+          :opt-un [::g/picture]))
 
 (s/def ::gymnastic-response
   (s/keys :req-un [::id ::subtype_id ::title ::description ::created_on ::updated_on]
